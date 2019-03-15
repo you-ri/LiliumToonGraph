@@ -1,0 +1,28 @@
+{
+    "name": "Lilium.Toon.Editor",
+    "references": [
+        "Unity.RenderPipelines.Lightweight.Runtime",
+        "Unity.Postprocessing.Runtime",
+        "Unity.Postprocessing.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Core.Editor",
+        "Unity.ShaderGraph.Editor"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.lightweight",
+            "expression": "5.4.0",
+            "define": "LWRP_5_4_0_OR_NEWER"
+        }
+    ]
+}
