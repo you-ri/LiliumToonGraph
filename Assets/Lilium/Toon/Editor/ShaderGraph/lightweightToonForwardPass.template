@@ -74,6 +74,7 @@ ${VertexShader}
 ${VertexShaderDescriptionInputs}
 	    VertexDescription vd = PopulateVertexData(vdi);
 		v.vertex.xyz = vd.Position;
+		//float outlineWidth = vd.OutlineWidth;
 
 		// Vertex shader outputs defined by graph
 ${VertexShaderOutputs}
@@ -123,7 +124,7 @@ ${PixelShaderSurfaceInputs}
 		float AlphaClipThreshold = 0;
 
 		float3 Shade = float3(0.25, 0.25, 0.25);
-		float ShadeShift = 0;
+		float ShadeShift = 0.5;
 		float ShadeToony = 1;
 
 		// Surface description remap performed by graph
@@ -163,6 +164,7 @@ ${PixelShaderSurfaceRemap}
 			Albedo,
 			Shade,
 			float4(Specular, 1), 
+			Occlusion,
 			Smoothness,
 			Emission, 
 			Alpha,
@@ -261,7 +263,6 @@ ${VertexShaderDescriptionInputs}
 	    VertexDescription vd = PopulateVertexData(vdi);
 		v.vertex.xyz = vd.Position;
 
-
 		// Vertex shader outputs defined by graph
 ${VertexShaderOutputs}
 		float3 lwWNormal = TransformObjectToWorldNormal(v.normal);
@@ -279,7 +280,7 @@ ${VertexShaderOutputs}
 	    half fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
 	    o.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 	    o.clipPos = vertexInput.positionCS;
-        o.clipPos = TransformOutlineToHClipScreenSpace(v.vertex.xyz, v.normal.xyz, 2);
+        o.clipPos = TransformOutlineToHClipScreenSpace(v.vertex.xyz, v.normal.xyz, vd.OutlineWidth);
 
 	#ifdef _MAIN_LIGHT_SHADOWS
 		o.shadowCoord = GetShadowCoord(vertexInput);
@@ -310,7 +311,7 @@ ${PixelShaderSurfaceInputs}
 		float Alpha = 1;
 		float AlphaClipThreshold = 0;
 		float3 Shade = float3(0.25, 0.25, 0.25);
-		float ShadeShift = 0;
+		float ShadeShift = 0.5;
 		float ShadeToony = 1;
 
 
@@ -345,13 +346,14 @@ ${PixelShaderSurfaceRemap}
 	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
 	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
-		ShadeShift = 1;
+		ShadeShift = 0;
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
 			Albedo,
 			Shade,
 			float4(Specular, 1), 
+			Occlusion,
 			Smoothness,
 			Emission, 
 			Alpha,

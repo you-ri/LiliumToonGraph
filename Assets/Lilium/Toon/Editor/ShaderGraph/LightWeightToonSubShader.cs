@@ -40,7 +40,8 @@ namespace UnityEditor.Rendering.LWRP
             },
             VertexShaderSlots = new List<int>()
             {
-                ToonMasterNode.PositionSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.OutlineWidthSlotId
             }
         };
 
@@ -63,7 +64,8 @@ namespace UnityEditor.Rendering.LWRP
             },
             VertexShaderSlots = new List<int>()
             {
-                ToonMasterNode.PositionSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.OutlineWidthSlotId
             }
         };
 

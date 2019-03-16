@@ -27,6 +27,7 @@ namespace UnityEditor.ShaderGraph
         public const string ShadeSlotName = "Shade";
         public const string ShadeShiftSlotName = "ShadeShift";
         public const string ShadeToonySlotName = "ShadeToony";
+        public const string OutlineWidthSlotName = "OutlineWidth";
 
         public const int AlbedoSlotId = 0;
         public const int NormalSlotId = 1;
@@ -42,6 +43,7 @@ namespace UnityEditor.ShaderGraph
         public const int ShadeSlotId = 10;
         public const int ShadeShiftSlotId = 11;
         public const int ShadeToonySlotId = 12;
+        public const int OutlineWidthSlotId = 13;
 
         public enum Model
         {
@@ -142,10 +144,11 @@ namespace UnityEditor.ShaderGraph
             AddSlot(new Vector1MaterialSlot(OcclusionSlotId, OcclusionSlotName, OcclusionSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(AlphaSlotId, AlphaSlotName, AlphaSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(AlphaThresholdSlotId, AlphaClipThresholdSlotName, AlphaClipThresholdSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
+            AddSlot (new Vector1MaterialSlot (OutlineWidthSlotId, OutlineWidthSlotName, OutlineWidthSlotName, SlotType.Input, 1f, ShaderStageCapability.Vertex));
 
             // clear out slot names that do not match the slots
             // we support
-            RemoveSlotsNameNotMatching(
+            RemoveSlotsNameNotMatching (
                 new[]
             {
                 PositionSlotId,
@@ -159,7 +162,8 @@ namespace UnityEditor.ShaderGraph
                 SmoothnessSlotId,
                 OcclusionSlotId,
                 AlphaSlotId,
-                AlphaThresholdSlotId
+                AlphaThresholdSlotId,
+                OutlineWidthSlotId
             }, true);
         }
 
