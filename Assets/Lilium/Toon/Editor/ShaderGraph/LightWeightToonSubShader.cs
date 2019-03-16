@@ -33,7 +33,10 @@ namespace UnityEditor.Rendering.LWRP
                 ToonMasterNode.SmoothnessSlotId,
                 ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
-                ToonMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlphaThresholdSlotId,
+                ToonMasterNode.ShadeSlotId,
+                ToonMasterNode.ShadeShiftSlotId,
+                ToonMasterNode.ShadeToonySlotId
             },
             VertexShaderSlots = new List<int>()
             {
@@ -53,7 +56,10 @@ namespace UnityEditor.Rendering.LWRP
                 ToonMasterNode.SmoothnessSlotId,
                 ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
-                ToonMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlphaThresholdSlotId,
+                ToonMasterNode.ShadeSlotId,
+                ToonMasterNode.ShadeShiftSlotId,
+                ToonMasterNode.ShadeToonySlotId
             },
             VertexShaderSlots = new List<int>()
             {

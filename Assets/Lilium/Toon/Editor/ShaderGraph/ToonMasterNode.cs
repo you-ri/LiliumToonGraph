@@ -24,6 +24,10 @@ namespace UnityEditor.ShaderGraph
         public const string AlphaClipThresholdSlotName = "AlphaClipThreshold";
         public const string PositionName = "Position";
 
+        public const string ShadeSlotName = "Shade";
+        public const string ShadeShiftSlotName = "ShadeShift";
+        public const string ShadeToonySlotName = "ShadeToony";
+
         public const int AlbedoSlotId = 0;
         public const int NormalSlotId = 1;
         public const int MetallicSlotId = 2;
@@ -34,6 +38,10 @@ namespace UnityEditor.ShaderGraph
         public const int AlphaSlotId = 7;
         public const int AlphaThresholdSlotId = 8;
         public const int PositionSlotId = 9;
+
+        public const int ShadeSlotId = 10;
+        public const int ShadeShiftSlotId = 11;
+        public const int ShadeToonySlotId = 12;
 
         public enum Model
         {
@@ -121,7 +129,10 @@ namespace UnityEditor.ShaderGraph
             name = "Toon Master";
             AddSlot(new PositionMaterialSlot(PositionSlotId, PositionName, PositionName, CoordinateSpace.Object, ShaderStageCapability.Vertex));
             AddSlot(new ColorRGBMaterialSlot(AlbedoSlotId, AlbedoSlotName, AlbedoSlotName, SlotType.Input, Color.grey.gamma, ColorMode.Default, ShaderStageCapability.Fragment));
-            AddSlot(new NormalMaterialSlot(NormalSlotId, NormalSlotName, NormalSlotName, CoordinateSpace.Tangent, ShaderStageCapability.Fragment));
+            AddSlot (new ColorRGBMaterialSlot (ShadeSlotId, ShadeSlotName, ShadeSlotName, SlotType.Input, Color.grey, ColorMode.Default, ShaderStageCapability.Fragment));
+            AddSlot (new Vector1MaterialSlot (ShadeShiftSlotId, ShadeShiftSlotName, ShadeShiftSlotName, SlotType.Input, 0, ShaderStageCapability.Fragment));
+            AddSlot (new Vector1MaterialSlot (ShadeToonySlotId, ShadeToonySlotName, ShadeToonySlotName, SlotType.Input, 0.8f, ShaderStageCapability.Fragment));
+            AddSlot (new NormalMaterialSlot(NormalSlotId, NormalSlotName, NormalSlotName, CoordinateSpace.Tangent, ShaderStageCapability.Fragment));
             AddSlot(new ColorRGBMaterialSlot(EmissionSlotId, EmissionSlotName, EmissionSlotName, SlotType.Input, Color.black, ColorMode.Default, ShaderStageCapability.Fragment));
             if (model == Model.Metallic)
                 AddSlot(new Vector1MaterialSlot(MetallicSlotId, MetallicSlotName, MetallicSlotName, SlotType.Input, 0, ShaderStageCapability.Fragment));
@@ -139,6 +150,9 @@ namespace UnityEditor.ShaderGraph
             {
                 PositionSlotId,
                 AlbedoSlotId,
+                ShadeSlotId,
+                ShadeShiftSlotId,
+                ShadeToonySlotId,
                 NormalSlotId,
                 EmissionSlotId,
                 model == Model.Metallic ? MetallicSlotId : SpecularSlotId,
