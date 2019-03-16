@@ -92,9 +92,9 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    float shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation) * occlusion;
+    half shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation) * occlusion;
     half3 attenuatedLightColor = mainLight.color;
-    float lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
+    half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
     half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
     half3 shade1Color = inputData.bakedGI * diffuse * shade;
     half3 shade2Color = inputData.bakedGI * diffuse * shade * 0.3f;
@@ -106,9 +106,10 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
-        half3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
-        diffuseColor += LightingToon(attenuatedLightColor, light.direction, inputData.normalWS, shadeShift, shadeToony) * diffuse;
-        specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess);
+        half shadow = light.distanceAttenuation * light.shadowAttenuation;
+        half3 attenuatedLightColor = light.color;
+        diffuseColor += LightingToon(attenuatedLightColor, light.direction, inputData.normalWS, shadeShift, shadeToony) * diffuse * shadow * occlusion;
+        specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow * occlusion;
     }
 #endif
 
