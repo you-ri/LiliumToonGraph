@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Graphing;
 using UnityEditor.ShaderGraph;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.LWRP;
-    
-namespace UnityEditor.Rendering.LWRP
+
+namespace LiliumEditor.Toon
 {
     [Serializable]
     class LightWeightToonSubShader : IToonSubShader
@@ -138,7 +139,7 @@ namespace UnityEditor.Rendering.LWRP
                         mode,
                         materialOptions));
             }
-            subShader.Append("CustomEditor \"UnityEditor.ShaderGraph.ToonMasterGUI\"");
+            subShader.Append("CustomEditor \"LiliumEditor.Toon.ToonMasterGUI\"");
 
             return subShader.ToString();
         }

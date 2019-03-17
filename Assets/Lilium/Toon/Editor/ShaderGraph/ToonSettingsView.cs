@@ -6,8 +6,10 @@ using UnityEditor.Graphing.Util;
 using UnityEditor.ShaderGraph.Drawing.Controls;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
+using UnityEditor.ShaderGraph;
+using UnityEditor.ShaderGraph.Drawing;
 
-namespace UnityEditor.ShaderGraph.Drawing
+namespace LiliumEditor.Toon
 {
     class ToonSettingsView : VisualElement
     {

@@ -6,8 +6,9 @@ using UnityEditor.ShaderGraph.Drawing;
 using UnityEditor.ShaderGraph.Drawing.Controls;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEditor.ShaderGraph;
 
-namespace UnityEditor.ShaderGraph
+namespace LiliumEditor.Toon
 {
     [Serializable]
     [Title("Master", "Toon")]

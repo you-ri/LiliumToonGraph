@@ -1,6 +1,7 @@
 using System;
+using UnityEditor.ShaderGraph;
 
-namespace UnityEditor.ShaderGraph
+namespace LiliumEditor.Toon
 {
     interface IToonSubShader : ISubShader
     {

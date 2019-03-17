@@ -1,7 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using UnityEditor;
 
-namespace UnityEditor.ShaderGraph
+namespace LiliumEditor.Toon
 {
     class ToonMasterGUI : ShaderGUI
     {
