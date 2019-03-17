@@ -9,7 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: bf2edee5c58d82540a51f03df9d42094, type: 3}
   m_Name: LWRP-HighQuality
   m_EditorClassIdentifier: 
@@ -30,7 +29,7 @@ MonoBehaviour:
   m_ShadowDistance: 65
   m_ShadowCascades: 2
   m_Cascade2Split: 0.1
-  m_Cascade4Split: {x: 0.067, y: 0.2, z: 0.467}
+  m_Cascade4Split: {x: 0.024602335, y: 0.08596486, z: 0.3032572}
   m_ShadowDepthBias: 1
   m_ShadowNormalBias: 1
   m_SoftShadowsSupported: 1

@@ -156,6 +156,7 @@ ${PixelShaderSurfaceRemap}
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
 	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
+	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
 	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
 		half4 color = LightweightFragmentToon(
@@ -347,6 +348,7 @@ ${PixelShaderSurfaceRemap}
 	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
 		ShadeShift = 0;
+		Occlusion = 0.5;
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,

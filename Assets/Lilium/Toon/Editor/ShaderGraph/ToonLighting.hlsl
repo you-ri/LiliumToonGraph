@@ -32,7 +32,7 @@ inline float3 TransformViewToProjection(float3 v) {
 float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
 {
     //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
-    half _OutlineScaledMaxDistance = 1;
+    half _OutlineScaledMaxDistance = 4;
 
     float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
     float aspect = abs(nearUpperRight.y / nearUpperRight.x);
@@ -40,7 +40,7 @@ float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float 
     float3 viewNormal = mul((float3x3)UNITY_MATRIX_IT_MV, normal.xyz);
     float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
     float2 projectedNormal = normalize(clipNormal.xy);
-    //projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
+    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
     projectedNormal.x *= aspect;
     vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
     return vertex;
@@ -92,13 +92,13 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation) * occlusion;
+    half shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation);
     half3 attenuatedLightColor = mainLight.color;
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
-    half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
-    half3 shade1Color = inputData.bakedGI * diffuse * shade;
-    half3 shade2Color = inputData.bakedGI * diffuse * shade * 0.3f;
-    half3 diffuseColor = lerp3(shade2Color, shade1Color, lightColor, (lighing + 1) * occlusion);
+    half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse *  occlusion;
+    half3 shade1Color = inputData.bakedGI * shade *  occlusion;
+    half3 shade2Color = inputData.bakedGI * shade * 0.3f *  occlusion;
+    half3 diffuseColor = lerp3(shade2Color, shade1Color, lightColor, (lighing + 1));
     half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow;
 
 #ifdef _ADDITIONAL_LIGHTS
@@ -108,7 +108,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
         Light light = GetAdditionalLight(i, inputData.positionWS);
         half shadow = light.distanceAttenuation * light.shadowAttenuation;
         half3 attenuatedLightColor = light.color;
-        diffuseColor += LightingToon(attenuatedLightColor, light.direction, inputData.normalWS, shadeShift, shadeToony) * diffuse * shadow * occlusion;
+        diffuseColor += LightingToon(attenuatedLightColor, light.direction, inputData.normalWS, shadeShift, shadeToony) * diffuse * occlusion;
         specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow * occlusion;
     }
 #endif
