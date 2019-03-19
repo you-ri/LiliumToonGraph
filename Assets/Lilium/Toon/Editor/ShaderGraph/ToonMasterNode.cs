@@ -53,7 +53,7 @@ namespace LiliumEditor.Toon
         }
 
         [SerializeField]
-        Model m_Model = Model.Metallic;
+        Model m_Model = Model.Specular;
 
         public Model model
         {
@@ -133,15 +133,15 @@ namespace LiliumEditor.Toon
             AddSlot(new PositionMaterialSlot(PositionSlotId, PositionName, PositionName, CoordinateSpace.Object, ShaderStageCapability.Vertex));
             AddSlot(new ColorRGBMaterialSlot(AlbedoSlotId, AlbedoSlotName, AlbedoSlotName, SlotType.Input, Color.grey.gamma, ColorMode.Default, ShaderStageCapability.Fragment));
             AddSlot (new ColorRGBMaterialSlot (ShadeSlotId, ShadeSlotName, ShadeSlotName, SlotType.Input, Color.grey, ColorMode.Default, ShaderStageCapability.Fragment));
-            AddSlot (new Vector1MaterialSlot (ShadeShiftSlotId, ShadeShiftSlotName, ShadeShiftSlotName, SlotType.Input, 0, ShaderStageCapability.Fragment));
+            AddSlot (new Vector1MaterialSlot (ShadeShiftSlotId, ShadeShiftSlotName, ShadeShiftSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
             AddSlot (new Vector1MaterialSlot (ShadeToonySlotId, ShadeToonySlotName, ShadeToonySlotName, SlotType.Input, 0.8f, ShaderStageCapability.Fragment));
             AddSlot (new NormalMaterialSlot(NormalSlotId, NormalSlotName, NormalSlotName, CoordinateSpace.Tangent, ShaderStageCapability.Fragment));
             AddSlot(new ColorRGBMaterialSlot(EmissionSlotId, EmissionSlotName, EmissionSlotName, SlotType.Input, Color.black, ColorMode.Default, ShaderStageCapability.Fragment));
             if (model == Model.Metallic)
                 AddSlot(new Vector1MaterialSlot(MetallicSlotId, MetallicSlotName, MetallicSlotName, SlotType.Input, 0, ShaderStageCapability.Fragment));
             else
-                AddSlot(new ColorRGBMaterialSlot(SpecularSlotId, SpecularSlotName, SpecularSlotName, SlotType.Input, Color.grey, ColorMode.Default, ShaderStageCapability.Fragment));
-            AddSlot(new Vector1MaterialSlot(SmoothnessSlotId, SmoothnessSlotName, SmoothnessSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
+                AddSlot(new ColorRGBMaterialSlot(SpecularSlotId, SpecularSlotName, SpecularSlotName, SlotType.Input, Color.black, ColorMode.Default, ShaderStageCapability.Fragment));
+            //AddSlot(new Vector1MaterialSlot(SmoothnessSlotId, SmoothnessSlotName, SmoothnessSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(OcclusionSlotId, OcclusionSlotName, OcclusionSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(AlphaSlotId, AlphaSlotName, AlphaSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(AlphaThresholdSlotId, AlphaClipThresholdSlotName, AlphaClipThresholdSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
