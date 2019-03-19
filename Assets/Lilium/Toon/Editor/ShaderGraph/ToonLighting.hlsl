@@ -1,3 +1,7 @@
+//
+// referenced: com.unity.render-pipelines.lightweight@5.6.1\ShaderLibrary\Lighting.hlsl
+// referenced: MToon Copyright (c) 2018 Masataka SUMI https://github.com/Santarh/MToon
+//
 #ifndef LIGHTWEIGHT_TOONLIGHTING_INCLUDED
 #define LIGHTWEIGHT_TOONLIGHTING_INCLUDED
 
@@ -23,11 +27,11 @@ inline half lerpToony(half value, half shift, half toony)
     return value;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 inline float3 TransformViewToProjection(float3 v) {
     return mul((float3x3)UNITY_MATRIX_P, v);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
 {
@@ -55,7 +59,7 @@ float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outl
 
 
 ///////////////////////////////////////////////////////////////////////////////
-half3 LightingToon(half3 lightColor, half3 lightDir, half3 normal, half shadeShift, half shadeToony)
+half3 LightingToonyBased(half3 lightColor, half3 lightDir, half lightAttenuation,  half3 normal, half viewDir, half shadeShift, half shadeToony)
 {
     half lightIntensity = dot(normal, lightDir);
 	//lightIntensity = lightIntensity * 0.5 + 0.5; // from [-1, +1] to [0, 1]
@@ -65,8 +69,14 @@ half3 LightingToon(half3 lightColor, half3 lightDir, half3 normal, half shadeShi
     shadeShift = (1 - shadeShift) * 2 - 1;
     lightIntensity = smoothstep(shadeShift, shadeShift + (1.0 - shadeToony), lightIntensity); // shade & tooned
     //lightIntensity = lightIntensity * (1.0 - receiveShadow * (1.0 - (atten))); // receive shadow 落ちる影に関してはトーン処理しないほうが綺麗になるので、トーン化の後に処理
-	return lightIntensity * lightColor;
+    return lightIntensity * lightColor * lightAttenuation;
 }
+
+half3 LightingToonyBased(Light light, half3 normalWS, half3 viewDirectionWS, half shadeShift, half shadeToony)
+{
+    return LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS, shadeShift, shadeToony);
+}
+
 
 half3 ToonyIntensity(half3 lightDir, half3 normal, half shadeShift, half shadeToony)
 {
@@ -108,7 +118,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
         Light light = GetAdditionalLight(i, inputData.positionWS);
         half shadow = light.distanceAttenuation * light.shadowAttenuation;
         half3 attenuatedLightColor = light.color;
-        diffuseColor += LightingToon(attenuatedLightColor, light.direction, inputData.normalWS, shadeShift, shadeToony) * diffuse * occlusion;
+        diffuseColor += LightingToonyBased(light, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
         specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow * occlusion;
     }
 #endif

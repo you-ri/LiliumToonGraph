@@ -1,3 +1,6 @@
+//
+// baed on: com.unity.render-pipelines.lightweight@5.6.1\Editor\ShaderGraph\lightweightPBRExtraPasses.template
+//
 Pass
 {
 	Name "ShadowCaster"

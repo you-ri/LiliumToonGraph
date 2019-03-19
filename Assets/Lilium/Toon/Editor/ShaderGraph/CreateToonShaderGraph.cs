@@ -1,3 +1,6 @@
+//
+// based on: com.unity.shadergraph@5.6.1\Editor\AssetCallbacks\CreatePBRShaderGraph.cs
+//
 using System.IO;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;

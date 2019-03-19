@@ -1,3 +1,7 @@
+//
+// based on: com.unity.shadergraph@5.6.1\Editor\Data\MasterNodes.cs
+//
+
 using System;
 using System.Linq;
 using System.Collections.Generic;

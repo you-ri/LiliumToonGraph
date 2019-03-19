@@ -1,3 +1,6 @@
+//
+// based on: com.unity.render-pipelines.lightweight@5.6.1\Editor\ShaderGraph\LightWeightPBRSubShader.cs
+//
 using System;
 using System.Collections.Generic;
 using System.IO;
