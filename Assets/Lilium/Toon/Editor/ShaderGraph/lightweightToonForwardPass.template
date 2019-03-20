@@ -116,7 +116,7 @@ ${PixelShader}
 ${PixelShaderSurfaceInputs}
         SurfaceDescription surf = PopulateSurfaceData(surfaceInput);
 
-		float3 Albedo = float3(0.5, 0.5, 0.5);
+		float3 Base = float3(0.5, 0.5, 0.5);
 		float3 Specular = float3(0, 0, 0);
 		float Metallic = 1;
 		float3 Normal = float3(0, 0, 1);
@@ -164,7 +164,7 @@ ${PixelShaderSurfaceRemap}
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
-			Albedo,
+			Base,
 			Shade,
 			float4(Specular, 1), 
 			Occlusion,
@@ -304,7 +304,7 @@ ${PixelShader}
 ${PixelShaderSurfaceInputs}
         SurfaceDescription surf = PopulateSurfaceData(surfaceInput);
 
-		float3 Albedo = float3(0.5, 0.5, 0.5);
+		float3 Base = float3(0.5, 0.5, 0.5);
 		float3 Specular = float3(0, 0, 0);
 		float Metallic = 1;
 		float3 Normal = float3(0, 0, 1);
@@ -354,7 +354,7 @@ ${PixelShaderSurfaceRemap}
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
-			Albedo,
+			Base,
 			Shade,
 			float4(Specular, 1), 
 			Occlusion,

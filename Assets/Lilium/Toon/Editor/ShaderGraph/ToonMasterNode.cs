@@ -18,7 +18,7 @@ namespace LiliumEditor.Toon
     [Title("Master", "Toon")]
     class ToonMasterNode : MasterNode<IToonSubShader>, IMayRequirePosition, IMayRequireNormal
     {
-        public const string AlbedoSlotName = "Albedo";
+        public const string AlbedoSlotName = "Base";
         public const string NormalSlotName = "Normal";
         public const string EmissionSlotName = "Emission";
         public const string MetallicSlotName = "Metallic";
@@ -135,7 +135,7 @@ namespace LiliumEditor.Toon
             base.UpdateNodeAfterDeserialization();
             name = "Toon Master";
             AddSlot(new PositionMaterialSlot(PositionSlotId, PositionName, PositionName, CoordinateSpace.Object, ShaderStageCapability.Vertex));
-            AddSlot(new ColorRGBMaterialSlot(AlbedoSlotId, AlbedoSlotName, AlbedoSlotName, SlotType.Input, Color.grey.gamma, ColorMode.Default, ShaderStageCapability.Fragment));
+            AddSlot(new ColorRGBMaterialSlot(AlbedoSlotId, AlbedoSlotName, AlbedoSlotName, SlotType.Input, Color.white, ColorMode.Default, ShaderStageCapability.Fragment));
             AddSlot (new ColorRGBMaterialSlot (ShadeSlotId, ShadeSlotName, ShadeSlotName, SlotType.Input, Color.grey, ColorMode.Default, ShaderStageCapability.Fragment));
             AddSlot (new Vector1MaterialSlot (ShadeShiftSlotId, ShadeShiftSlotName, ShadeShiftSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
             AddSlot (new Vector1MaterialSlot (ShadeToonySlotId, ShadeToonySlotName, ShadeToonySlotName, SlotType.Input, 0.8f, ShaderStageCapability.Fragment));
@@ -164,7 +164,6 @@ namespace LiliumEditor.Toon
                 NormalSlotId,
                 EmissionSlotId,
                 model == Model.Metallic ? MetallicSlotId : SpecularSlotId,
-                SmoothnessSlotId,
                 OcclusionSlotId,
                 AlphaSlotId,
                 AlphaThresholdSlotId,
