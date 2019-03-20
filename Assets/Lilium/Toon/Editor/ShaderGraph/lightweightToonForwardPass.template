@@ -187,6 +187,9 @@ ${PixelShaderSurfaceRemap}
 }
 
 
+//
+// outline pass
+// 
 
 Pass
 {
@@ -196,7 +199,7 @@ Pass
 ${Tags}
 ${Blending}
 Cull Front
-${ZTest}
+ZTest Less
 ${ZWrite}
 	HLSLPROGRAM
     // Required to compile gles 2.0 with standard srp library
@@ -282,8 +285,9 @@ ${VertexShaderOutputs}
 	    half3 vertexLight = VertexLighting(vertexInput.positionWS, lwWNormal);
 	    half fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
 	    o.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
-	    o.clipPos = vertexInput.positionCS;
+		//o.clipPos = vertexInput.positionCS;
         o.clipPos = TransformOutlineToHClipScreenSpace(v.vertex.xyz, v.normal.xyz, vd.OutlineWidth);
+        //o.clipPos = TransformOutlineToHClipWorldSpace(v.vertex.xyz, v.normal.xyz, vd.OutlineWidth);
 
 	#ifdef _MAIN_LIGHT_SHADOWS
 		o.shadowCoord = GetShadowCoord(vertexInput);
@@ -316,7 +320,6 @@ ${PixelShaderSurfaceInputs}
 		float3 Shade = float3(0.25, 0.25, 0.25);
 		float ShadeShift = 0.5;
 		float ShadeToony = 1;
-
 
 		// Surface description remap performed by graph
 ${PixelShaderSurfaceRemap}

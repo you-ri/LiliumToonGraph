@@ -13,7 +13,7 @@
 #include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Lighting.hlsl"
 
 
-half3 lerp3(half3 one, half3 two, half3 three, float value)
+inline half3 lerp3(half3 one, half3 two, half3 three, float value)
 {
     half3 v = lerp(two, three, max(value - 1, 0));
     v = lerp(one, v, min(value, 1));
@@ -36,7 +36,8 @@ inline float3 TransformViewToProjection(float3 v) {
 float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
 {
     //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
-    half _OutlineScaledMaxDistance = 4;
+    half _OutlineScaledMaxDistance = 10;
+
 
     float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
     float aspect = abs(nearUpperRight.y / nearUpperRight.x);
@@ -47,6 +48,9 @@ float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float 
     projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
     projectedNormal.x *= aspect;
     vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
+
+    // 少し奥方向に移動しないとアーティファクトが発生することがある
+    //vertex.z += -0.00002 / vertex.w;
     return vertex;
 }
 
@@ -89,10 +93,10 @@ half3 ToonyIntensity(half3 lightDir, half3 normal, half shadeShift, half shadeTo
 }
 
 
-half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3 viewDir, half4 specular, half smoothness)
+half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3 viewDir, half4 specular, half smoothness, half shadeToony)
 {
     half NdotH = dot(SafeNormalize(viewDir + lightDir), normal);
-    half modifier = lerpToony(NdotH, 0.8, 0.9);
+    half modifier = lerpToony(NdotH, smoothness, shadeToony);
     return lightColor * specular.rgb * modifier;
 }
 
@@ -105,11 +109,11 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     half shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation);
     half3 attenuatedLightColor = mainLight.color;
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
-    half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse *  occlusion;
-    half3 shade1Color = inputData.bakedGI * shade *  occlusion;
-    half3 shade2Color = inputData.bakedGI * shade * 0.3f *  occlusion;
-    half3 diffuseColor = lerp3(shade2Color, shade1Color, lightColor, (lighing + 1));
-    half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow;
+    half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
+    half3 shade1stColor = inputData.bakedGI * shade;
+    half3 shade2ndColor = inputData.bakedGI * shade;
+    half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, lightColor, lighing + occlusion) * occlusion;
+    half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess, shadeToony) * shadow * occlusion;
 
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
@@ -119,7 +123,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
         half shadow = light.distanceAttenuation * light.shadowAttenuation;
         half3 attenuatedLightColor = light.color;
         diffuseColor += LightingToonyBased(light, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
-        specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess) * shadow * occlusion;
+        specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess, shadeToony) * shadow * occlusion;
     }
 #endif
 

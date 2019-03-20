@@ -10,6 +10,7 @@ using UnityEditor.Graphing;
 using UnityEditor.ShaderGraph;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.LWRP;
+using UnityEngine;
 
 namespace LiliumEditor.Toon
 {
@@ -34,7 +35,7 @@ namespace LiliumEditor.Toon
                 ToonMasterNode.NormalSlotId,
                 ToonMasterNode.EmissionSlotId,
                 ToonMasterNode.MetallicSlotId,
-                //ToonMasterNode.SmoothnessSlotId,
+                ToonMasterNode.SmoothnessSlotId,
                 ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
                 ToonMasterNode.AlphaThresholdSlotId,
@@ -58,7 +59,7 @@ namespace LiliumEditor.Toon
                 ToonMasterNode.NormalSlotId,
                 ToonMasterNode.EmissionSlotId,
                 ToonMasterNode.SpecularSlotId,
-                //ToonMasterNode.SmoothnessSlotId,
+                ToonMasterNode.SmoothnessSlotId,
                 ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
                 ToonMasterNode.AlphaThresholdSlotId,
