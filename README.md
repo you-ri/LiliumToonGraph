@@ -20,7 +20,7 @@
 ## How to use
 
 ### Exsample Scene
-Assets/Lilium/Toon/ToonExsample.unity
+Assets/Lilium/Toon/Exsample/ToonExsample.unity
 
 ### Create toon shader graph
 1. Projectウインドウで右クリック
