@@ -14,7 +14,7 @@
 
 ## System requirements
 
-+ Unity 2019.1.0b8
++ Unity 2019.1.0b9
 + Windows: Direct3D 11 support
 
 ## How to use
