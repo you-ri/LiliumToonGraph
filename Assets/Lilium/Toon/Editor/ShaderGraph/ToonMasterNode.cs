@@ -33,6 +33,7 @@ namespace LiliumEditor.Toon
         public const string ShadeShiftSlotName = "ShadeShift";
         public const string ShadeToonySlotName = "ShadeToony";
         public const string OutlineWidthSlotName = "OutlineWidth";
+        public const string ToonyGradientSlotName = "ToonyGradient";
 
         public const int AlbedoSlotId = 0;
         public const int NormalSlotId = 1;
@@ -49,6 +50,7 @@ namespace LiliumEditor.Toon
         public const int ShadeShiftSlotId = 11;
         public const int ShadeToonySlotId = 12;
         public const int OutlineWidthSlotId = 13;
+        public const int ToonyGradientSlotId = 14;
 
         public enum Model
         {

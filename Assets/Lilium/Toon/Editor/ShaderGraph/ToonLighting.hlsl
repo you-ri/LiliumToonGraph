@@ -93,52 +93,51 @@ half3 ToonyIntensity(half3 lightDir, half3 normal, half shadeShift, half shadeTo
 }
 
 
-half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3 viewDir, half4 specular, half smoothness, half shadeToony)
+half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3 viewDir, half3 specular, half smoothness, half shadeToony)
 {
     half NdotH = dot(SafeNormalize(viewDir + lightDir), normal);
     half modifier = lerpToony(NdotH, smoothness, shadeToony);
-    return lightColor * specular.rgb * modifier;
+    return lightColor * specular * modifier;
 }
 
 
-half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 diffuse, half3 shade, half4 specularGloss, half occlusion, half shininess, half3 emission, half alpha, half shadeShift, half shadeToony)
+half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 diffuse, half3 shade, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony)
 {
+    half metallic = 0;
+    //BRDFData brdfData;
+    //InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData);
+
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half shadow = (mainLight.distanceAttenuation * mainLight.shadowAttenuation);
-    half3 attenuatedLightColor = mainLight.color;
+    //half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+
+    half shadow = mainLight.shadowAttenuation;
+    half3 attenuatedLightColor = mainLight.color * mainLight.distanceAttenuation;
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
     half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
     half3 shade1stColor = inputData.bakedGI * shade;
     half3 shade2ndColor = inputData.bakedGI * shade;
     half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, lightColor, lighing + occlusion) * occlusion;
-    half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess, shadeToony) * shadow * occlusion;
+    half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specular, smoothness, shadeToony) * shadow * occlusion;
+
+
+    half3 color = diffuseColor;
 
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
-        half shadow = light.distanceAttenuation * light.shadowAttenuation;
-        half3 attenuatedLightColor = light.color;
-        diffuseColor += LightingToonyBased(light, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
-        specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specularGloss, shininess, shadeToony) * shadow * occlusion;
+        half shadow = light.shadowAttenuation;
+        half3 attenuatedLightColor = light.color * light.distanceAttenuation;
+        color += LightingToonyBased(light, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
+        //specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specular, shininess, shadeToony) * shadow * occlusion;
     }
 #endif
 
-#ifdef _ADDITIONAL_LIGHTS_VERTEX
-    diffuseColor += inputData.vertexLighting * diffuse;
-#endif
-
-    half3 finalColor = diffuseColor + emission;
-
-#if defined(_SPECGLOSSMAP) || defined(_SPECULAR_COLOR)
-    finalColor += specularColor;
-#endif
-    finalColor += specularColor;
-
-    return half4(finalColor, alpha);
+    color += emission;
+    return half4(color, alpha);
 }
 
 
