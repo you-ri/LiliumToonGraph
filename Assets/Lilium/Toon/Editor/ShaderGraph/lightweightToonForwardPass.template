@@ -156,13 +156,13 @@ ${PixelShaderSurfaceRemap}
 
 	    inputData.fogCoord = IN.fogFactorAndVertexLight.x;
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
-
+		
+	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
+	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
-	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
-	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
-	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
+	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
+	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
 		Metallic = 0;
 		Smoothness = 0;
