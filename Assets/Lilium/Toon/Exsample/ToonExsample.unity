@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.46392104, g: 0.4823159, b: 0.4931714, a: 1}
+  m_IndirectSpecularColor: {r: 0.46341118, g: 0.48192707, b: 0.49292088, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -96,7 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
-  m_LightingDataAsset: {fileID: 112000000, guid: a7c6b543b6da6eb4184fe7072f22732a,
+  m_LightingDataAsset: {fileID: 112000000, guid: 729533078339e0b489134216459fd154,
     type: 2}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -878,6 +878,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SD_unitychan_humanoid
       objectReference: {fileID: 0}
+    - target: {fileID: 100264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 400070, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
@@ -1200,7 +1204,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1807655836}
   m_LocalRotation: {x: -0.19139908, y: -0.6245348, z: 0.0029477556, w: 0.75717497}
-  m_LocalPosition: {x: 5.64, y: 1.16, z: 8.7}
+  m_LocalPosition: {x: 1.6, y: 1.1, z: 5.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1836709578}
@@ -1293,14 +1297,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1836709576}
-  m_LocalRotation: {x: 0.19139908, y: 0.6245348, z: -0.0029477556, w: 0.75717497}
+  m_LocalRotation: {x: -0.18942237, y: -0.71693355, z: 0.02759759, w: -0.6703461}
   m_LocalPosition: {x: -0.89, y: 0, z: 1.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1807655838}
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: -342.931, y: -278.824, z: -1425.793}
+  m_LocalEulerAnglesHint: {x: -342.931, y: 95.989006, z: -1425.794}
 --- !u!75 &1836709579
 ConstantForce:
   m_ObjectHideFlags: 0
