@@ -66,13 +66,8 @@ float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outl
 half3 LightingToonyBased(half3 lightColor, half3 lightDir, half lightAttenuation,  half3 normal, half viewDir, half shadeShift, half shadeToony)
 {
     half lightIntensity = dot(normal, lightDir);
-	//lightIntensity = lightIntensity * 0.5 + 0.5; // from [-1, +1] to [0, 1]
-    //lightIntensity = lightIntensity * (1.0 - receiveShadow * (1.0 - (atten * 0.5 + 0.5))); // receive shadow
-    //lightIntensity = lightIntensity; // darker
-    //lightIntensity = lightIntensity * 2.0 - 1.0; // from [0, 1] to [-1, +1]
     shadeShift = (1 - shadeShift) * 2 - 1;
     lightIntensity = smoothstep(shadeShift, shadeShift + (1.0 - shadeToony), lightIntensity); // shade & tooned
-    //lightIntensity = lightIntensity * (1.0 - receiveShadow * (1.0 - (atten))); // receive shadow 落ちる影に関してはトーン処理しないほうが綺麗になるので、トーン化の後に処理
     return lightIntensity * lightColor * lightAttenuation;
 }
 
@@ -85,9 +80,7 @@ half3 LightingToonyBased(Light light, half3 normalWS, half3 viewDirectionWS, hal
 half3 ToonyIntensity(half3 lightDir, half3 normal, half shadeShift, half shadeToony)
 {
     half lightIntensity = dot(normal, lightDir);
-    //lightIntensity = lightIntensity * 0.5 + 0.5; // from [-1, +1] to [0, 1]
-    //lightIntensity = lightIntensity * 2.0 - 1.0; // from [0, 1] to [-1, +1]
-    shadeShift = (1-shadeShift) * 2 - 1;
+    shadeShift = (1 - shadeShift) * 2 - 1;
     lightIntensity = smoothstep(shadeShift, shadeShift + (1.0 - shadeToony), lightIntensity); // shade & tooned
     return lightIntensity;
 }
@@ -101,16 +94,32 @@ half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3
 }
 
 
+half3 GlobalIlluminationToon(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+{
+    int div = 2;
+        
+    half3 reflectVector = reflect(-viewDirectionWS, normalWS);
+    half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
+
+    half3 indirectDiffuse = bakedGI * occlusion;
+    half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
+    indirectSpecular = normalize(indirectSpecular) * (floor(length(indirectSpecular) * (div))+0.5) / div;
+    return indirectSpecular;
+
+    //return EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+}
+
+
 half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 diffuse, half3 shade, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony)
 {
     half metallic = 0;
-    //BRDFData brdfData;
-    //InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData);
+    
+    BRDFData brdfData;
+    InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData);
 
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    //half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
 
     half shadow = mainLight.shadowAttenuation;
     half3 attenuatedLightColor = mainLight.color * mainLight.distanceAttenuation;
@@ -119,8 +128,8 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     half3 shade1stColor = inputData.bakedGI * shade;
     half3 shade2ndColor = inputData.bakedGI * shade;
     half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, lightColor, lighing + occlusion) * occlusion;
-    half3 specularColor = LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specular, smoothness, shadeToony) * shadow * occlusion;
 
+    half3 specularColor = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) * specular;
 
     half3 color = diffuseColor;
 
@@ -129,14 +138,17 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
-        half shadow = light.shadowAttenuation;
+
+        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, lighing + occlusion) * occlusion;
+        color += LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
+
         half3 attenuatedLightColor = light.color * light.distanceAttenuation;
-        color += LightingToonyBased(light, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
-        //specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specular, shininess, shadeToony) * shadow * occlusion;
+        half shadow = light.shadowAttenuation;
+        //specularColor += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specular, smoothness, shadeToony) * shadow * occlusion;
     }
 #endif
 
-    color += emission;
+    color += specularColor + emission;
     return half4(color, alpha);
 }
 

@@ -165,7 +165,6 @@ ${PixelShaderSurfaceRemap}
 	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
 		Metallic = 0;
-		Smoothness = 0;
 
 		half4 toonColor = LightweightFragmentToon(
 			inputData, 

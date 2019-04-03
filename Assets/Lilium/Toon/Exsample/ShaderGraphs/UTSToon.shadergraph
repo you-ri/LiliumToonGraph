@@ -61,9 +61,6 @@
             "JSONnodeData": "{\n    \"m_Name\": \"OutlineMap\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"9b03cd1c-4a21-4eff-9398-395664d03ec9\"\n    },\n    \"m_DefaultReferenceName\": \"Texture2D_785B64F1\",\n    \"m_OverrideReferenceName\": \"\",\n    \"m_Value\": {\n        \"m_SerializedTexture\": \"\",\n        \"m_Guid\": \"\"\n    },\n    \"m_Modifiable\": true,\n    \"m_DefaultType\": 0\n}"
         }
     ],
-    "m_GUID": {
-        "m_GuidSerialized": "85f6616b-d286-4f74-ba1c-fc714d2bb518"
-    },
     "m_SerializableNodes": [
         {
             "typeInfo": {
@@ -319,6 +316,12 @@
                 "fullName": "UnityEditor.Graphing.Edge"
             },
             "JSONnodeData": "{\n    \"m_OutputSlot\": {\n        \"m_SlotId\": 0,\n        \"m_NodeGUIDSerialized\": \"93cbdeed-b131-4907-a3d1-120511c690cf\"\n    },\n    \"m_InputSlot\": {\n        \"m_SlotId\": 1,\n        \"m_NodeGUIDSerialized\": \"cad587a4-50f4-499a-88aa-1d5a5a0d33c5\"\n    }\n}"
+        },
+        {
+            "typeInfo": {
+                "fullName": "UnityEditor.Graphing.Edge"
+            },
+            "JSONnodeData": "{\n    \"m_OutputSlot\": {\n        \"m_SlotId\": 2,\n        \"m_NodeGUIDSerialized\": \"cad587a4-50f4-499a-88aa-1d5a5a0d33c5\"\n    },\n    \"m_InputSlot\": {\n        \"m_SlotId\": 3,\n        \"m_NodeGUIDSerialized\": \"81fa1ec3-53b4-4227-aa0a-cab0c9698d65\"\n    }\n}"
         }
     ],
     "m_PreviewData": {
