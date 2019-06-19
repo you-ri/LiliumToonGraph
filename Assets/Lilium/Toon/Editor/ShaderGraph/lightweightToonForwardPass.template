@@ -125,6 +125,7 @@ ${PixelShaderSurfaceInputs}
 		float Occlusion = 1;
 		float Alpha = 1;
 		float AlphaClipThreshold = 0;
+		float ToonyLighting = 1;
 
 		float3 Shade = float3(0.25, 0.25, 0.25);
 		float ShadeShift = 0.5;
@@ -177,7 +178,7 @@ ${PixelShaderSurfaceRemap}
 			Alpha,
 			ShadeShift,
 			ShadeToony);
-#if false
+
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
 			Base, 
@@ -187,8 +188,8 @@ ${PixelShaderSurfaceRemap}
 			Occlusion, 
 			Emission, 
 			Alpha);
-		color = lerp(toonColor, pbrColor, 0);
-#endif
+		color = lerp(pbrColor, color, ToonyLighting);
+
 
 		// Computes fog factor per-vertex
     	color.rgb = MixFog(color.rgb, IN.fogFactorAndVertexLight.x);
@@ -336,6 +337,7 @@ ${PixelShaderSurfaceInputs}
 		float3 Shade = float3(0.25, 0.25, 0.25);
 		float ShadeShift = 0.5;
 		float ShadeToony = 1;
+		float ToonyLighting = 1;
 
 		// Surface description remap performed by graph
 ${PixelShaderSurfaceRemap}

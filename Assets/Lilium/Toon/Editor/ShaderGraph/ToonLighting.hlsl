@@ -158,7 +158,7 @@ half3 DirectToonBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, 
 
     half maxd = NoH * NoH * brdfData.roughness2MinusOne + 1.00001h;
     half maxSpecularTerm = brdfData.roughness2 / ((maxd * maxd) * max(0.1h, LoH2) * brdfData.normalizationTerm);
-    specularTerm = smoothstep(0.5, 0.5, specularTerm / maxSpecularTerm) * maxSpecularTerm;
+    specularTerm = smoothstep(0.1, 0.1, specularTerm / maxSpecularTerm) * maxSpecularTerm;
 
     half3 color = specularTerm * brdfData.specular;// +brdfData.diffuse;
     return color;
@@ -181,18 +181,12 @@ half3 EnvironmentToon(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 
 half3 GlobalIlluminationToon(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
-    int div = 2;
-        
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
 
     //half3 indirectDiffuse = bakedGI * occlusion;
     half3 indirectDiffuse = half3(0, 0, 0);// bakedGI * occlusion;
     half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
-
-    half3 hsv = rgb2hsv(indirectSpecular);
-    hsv.z = (floor(hsv.z * div) + 0.13) / div;
-    indirectSpecular = hsv2rgb(hsv);
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }

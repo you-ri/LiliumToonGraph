@@ -41,7 +41,8 @@ namespace LiliumEditor.Toon
                 ToonMasterNode.AlphaThresholdSlotId,
                 ToonMasterNode.ShadeSlotId,
                 ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId
+                ToonMasterNode.ShadeToonySlotId,
+                ToonMasterNode.ToonyLightingSlotId
             },
             VertexShaderSlots = new List<int>()
             {
@@ -65,7 +66,8 @@ namespace LiliumEditor.Toon
                 ToonMasterNode.AlphaThresholdSlotId,
                 ToonMasterNode.ShadeSlotId,
                 ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId
+                ToonMasterNode.ShadeToonySlotId,
+                ToonMasterNode.ToonyLightingSlotId
             },
             VertexShaderSlots = new List<int>()
             {
