@@ -158,7 +158,7 @@ half3 DirectToonBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, 
 
     half maxd = NoH * NoH * brdfData.roughness2MinusOne + 1.00001h;
     half maxSpecularTerm = brdfData.roughness2 / ((maxd * maxd) * max(0.1h, LoH2) * brdfData.normalizationTerm);
-    specularTerm = smoothstep(0.1, 0.1, specularTerm / maxSpecularTerm) * maxSpecularTerm;
+    specularTerm = smoothstep(0.1, 0.15, specularTerm / maxSpecularTerm) * maxSpecularTerm;
 
     half3 color = specularTerm * brdfData.specular;// +brdfData.diffuse;
     return color;

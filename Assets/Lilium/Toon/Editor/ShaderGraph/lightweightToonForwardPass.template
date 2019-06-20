@@ -181,7 +181,7 @@ ${PixelShaderSurfaceRemap}
 
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
-			Base, 
+			Base / (1-Specular), 
 			Metallic, 
 			Specular, 
 			Smoothness, 
@@ -292,8 +292,6 @@ ${VertexShaderOutputs}
 
         VertexPositionInputs vertexInput = GetVertexPositionInputs(v.vertex.xyz);
         
- 		// We either sample GI from lightmap or SH.
-	    // Lightmap UV and vertex SH coefficients use the same interpolator ("float2 lightmapUV" for lightmap or "half3 vertexSH" for SH)
         // see DECLARE_LIGHTMAP_OR_SH macro.
 	    // The following funcions initialize the correct variable with correct data
 	    OUTPUT_LIGHTMAP_UV(v.texcoord1, unity_LightmapST, o.lightmapUV);
@@ -372,8 +370,6 @@ ${PixelShaderSurfaceRemap}
 	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
 	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
-		ShadeShift = 0;
-		Occlusion = 0.5;
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
