@@ -161,7 +161,7 @@ ${PixelShaderSurfaceRemap}
 	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
 	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
 
-	    //Light mainLight = GetMainLight(inputData.shadowCoord);
+	    Light mainLight = GetMainLight(inputData.shadowCoord);
 	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
 	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
@@ -179,14 +179,15 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
+		half lightIntensity = dot(inputData.normalWS, mainLight.direction);
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
 			Base / (1-Specular), 
 			Metallic, 
 			Specular, 
 			Smoothness, 
-			Occlusion, 
-			Emission, 
+			Occlusion,// * ((ShadeShift*2) + lightBakedGI),
+			Emission + (Shade - Base) * 0.5 * (1-lightIntensity),
 			Alpha);
 		color = lerp(pbrColor, color, ToonyLighting);
 
