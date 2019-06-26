@@ -33,7 +33,7 @@ namespace LiliumEditor.Toon
         public const string ShadeShiftSlotName = "ShadeShift";
         public const string ShadeToonySlotName = "ShadeToony";
         public const string OutlineWidthSlotName = "OutlineWidth";
-        public const string ToonyGradientSlotName = "ToonyGradient";
+        public const string ToonyLightingSlotName = "ToonyLighting";
 
         public const int AlbedoSlotId = 0;
         public const int NormalSlotId = 1;
@@ -50,7 +50,7 @@ namespace LiliumEditor.Toon
         public const int ShadeShiftSlotId = 11;
         public const int ShadeToonySlotId = 12;
         public const int OutlineWidthSlotId = 13;
-        public const int ToonyGradientSlotId = 14;
+        public const int ToonyLightingSlotId = 14;
 
         public enum Model
         {
@@ -129,7 +129,7 @@ namespace LiliumEditor.Toon
 
         public override string documentationURL
         {
-            get { return "https://github.com/Unity-Technologies/ShaderGraph/wiki/PBR-Master-Node"; }
+            get { return "https://github.com/you-ri/LiliumToonGraph/wiki"; }
         }
 
         public sealed override void UpdateNodeAfterDeserialization()
@@ -152,6 +152,7 @@ namespace LiliumEditor.Toon
             AddSlot(new Vector1MaterialSlot(AlphaSlotId, AlphaSlotName, AlphaSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
             AddSlot(new Vector1MaterialSlot(AlphaThresholdSlotId, AlphaClipThresholdSlotName, AlphaClipThresholdSlotName, SlotType.Input, 0.5f, ShaderStageCapability.Fragment));
             AddSlot (new Vector1MaterialSlot (OutlineWidthSlotId, OutlineWidthSlotName, OutlineWidthSlotName, SlotType.Input, 1f, ShaderStageCapability.Vertex));
+            AddSlot (new Vector1MaterialSlot (ToonyLightingSlotId, ToonyLightingSlotName, ToonyLightingSlotName, SlotType.Input, 1f, ShaderStageCapability.Fragment));
 
             // clear out slot names that do not match the slots
             // we support
@@ -170,7 +171,8 @@ namespace LiliumEditor.Toon
                 OcclusionSlotId,
                 AlphaSlotId,
                 AlphaThresholdSlotId,
-                OutlineWidthSlotId
+                OutlineWidthSlotId,
+                ToonyLightingSlotId
             }, true);
         }
 

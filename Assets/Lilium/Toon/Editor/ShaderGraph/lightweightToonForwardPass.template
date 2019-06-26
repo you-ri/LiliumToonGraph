@@ -125,6 +125,7 @@ ${PixelShaderSurfaceInputs}
 		float Occlusion = 1;
 		float Alpha = 1;
 		float AlphaClipThreshold = 0;
+		float ToonyLighting = 1;
 
 		float3 Shade = float3(0.25, 0.25, 0.25);
 		float ShadeShift = 0.5;
@@ -157,21 +158,19 @@ ${PixelShaderSurfaceRemap}
 	    inputData.fogCoord = IN.fogFactorAndVertexLight.x;
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 		
-	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
+	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
+	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
-	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
-	    float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
+	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
+	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
-		Metallic = 0;
-		Smoothness = 0;
-
-		half4 toonColor = LightweightFragmentToon(
+		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
 			Base,
 			Shade,
+			Metallic,
 			Specular,
 			Occlusion,
 			Smoothness,
@@ -180,17 +179,18 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
+		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation;
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
-			Base, 
+			Base / (1-Specular), 
 			Metallic, 
 			Specular, 
 			Smoothness, 
-			Occlusion, 
-			Emission, 
+			Occlusion,// * ((ShadeShift*2) + lightBakedGI),
+			Emission + (Shade - Base) * 0.5 * (1-lightIntensity),
 			Alpha);
+		color = lerp(pbrColor, color, ToonyLighting);
 
-		half4 color = lerp(toonColor, pbrColor, 0);
 
 		// Computes fog factor per-vertex
     	color.rgb = MixFog(color.rgb, IN.fogFactorAndVertexLight.x);
@@ -293,8 +293,6 @@ ${VertexShaderOutputs}
 
         VertexPositionInputs vertexInput = GetVertexPositionInputs(v.vertex.xyz);
         
- 		// We either sample GI from lightmap or SH.
-	    // Lightmap UV and vertex SH coefficients use the same interpolator ("float2 lightmapUV" for lightmap or "half3 vertexSH" for SH)
         // see DECLARE_LIGHTMAP_OR_SH macro.
 	    // The following funcions initialize the correct variable with correct data
 	    OUTPUT_LIGHTMAP_UV(v.texcoord1, unity_LightmapST, o.lightmapUV);
@@ -338,6 +336,7 @@ ${PixelShaderSurfaceInputs}
 		float3 Shade = float3(0.25, 0.25, 0.25);
 		float ShadeShift = 0.5;
 		float ShadeToony = 1;
+		float ToonyLighting = 1;
 
 		// Surface description remap performed by graph
 ${PixelShaderSurfaceRemap}
@@ -372,13 +371,12 @@ ${PixelShaderSurfaceRemap}
 	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
 	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
 
-		ShadeShift = 0;
-		Occlusion = 0.5;
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
 			Base,
 			Shade,
+			Metallic,
 			Specular,
 			Occlusion,
 			Smoothness,
