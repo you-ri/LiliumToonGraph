@@ -9,7 +9,7 @@
 + HDRP 対応もできたらいいな。
 + カスタムマスターノードのサンプルにどうぞ。ソースファイルの　`Toon` を `PBR` に変換してパッケージ内を検索すると元になったソースファイルが見つかります。Wikiの方にも書いています。 https://github.com/you-ri/LiliumToonGraph/wiki
 
-![](https://imgur.com/bZlHaz0.png)
+![](https://github.com/you-ri/LiliumToonGraph/blob/master/Docs/screenshot.png?raw=true)
 
 
 ## System requirements
