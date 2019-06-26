@@ -179,7 +179,7 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
-		half lightIntensity = dot(inputData.normalWS, mainLight.direction);
+		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation;
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
 			Base / (1-Specular), 

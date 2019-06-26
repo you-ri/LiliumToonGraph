@@ -177,6 +177,24 @@ half3 EnvironmentToon(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
     return c;
 }
 
+half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
+{
+#if !defined(_ENVIRONMENTREFLECTIONS_OFF)
+    half mip = PerceptualRoughnessToMipmapLevel(1);     // ラフネス１の反射環境マップを割り当てる
+    half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
+
+#if !defined(UNITY_USE_NATIVE_HDR)
+    half3 irradiance = DecodeHDREnvironment(encodedIrradiance, unity_SpecCube0_HDR);
+#else
+    half3 irradiance = encodedIrradiance.rbg;
+#endif
+
+    return irradiance * occlusion;
+#endif // GLOSSY_REFLECTIONS
+
+    return _GlossyEnvironmentColor.rgb * occlusion;
+}
+
 
 
 half3 GlobalIlluminationToon(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
@@ -186,10 +204,13 @@ half3 GlobalIlluminationToon(BRDFData brdfData, half3 bakedGI, half occlusion, h
 
     //half3 indirectDiffuse = bakedGI * occlusion;
     half3 indirectDiffuse = half3(0, 0, 0);// bakedGI * occlusion;
-    half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
+    half3 indirectSpecular = GlossyEnvironmentReflectionToon(reflectVector, brdfData.perceptualRoughness, occlusion);
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }
+
+
+
 
 half3 LightingToon(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
