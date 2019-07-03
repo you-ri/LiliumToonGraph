@@ -270,5 +270,16 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     return half4(color, alpha);
 }
 
+float3 SampleDomeGI(half3 vertexSH) {
+    float3 gi = float3(0, 0, 0);
+
+    gi += SampleSHPixel(vertexSH, half3(1, 0, 0));
+    gi += SampleSHPixel(vertexSH, half3(-1, 0, 0));	
+    gi += SampleSHPixel(vertexSH, half3(0, 1, 0));
+    gi += SampleSHPixel(vertexSH, half3(0, -1, 0));	
+    gi += SampleSHPixel(vertexSH, half3(0, 0, 1));
+    gi += SampleSHPixel(vertexSH, half3(0, 0, -1));	
+    return gi / 6;
+}
 
 #endif
