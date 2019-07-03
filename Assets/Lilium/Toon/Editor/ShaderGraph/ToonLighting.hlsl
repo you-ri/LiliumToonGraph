@@ -180,7 +180,7 @@ half3 EnvironmentToon(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(1) + 4;     // 最大限に粗い反射環境マップを割り当てる
+    half mip = PerceptualRoughnessToMipmapLevel(1) + 1;     // 最大限に粗い反射環境マップを割り当てる
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
 #if !defined(UNITY_USE_NATIVE_HDR)

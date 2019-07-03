@@ -186,6 +186,7 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
+	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
 		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation;
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
@@ -373,11 +374,10 @@ ${PixelShaderSurfaceRemap}
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
-		inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-		float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-	    //inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, -mainLight.direction);
-	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, mainLight.direction);
-
+	    inputData.bakedGI = SampleDomeGI(IN.vertexSH);
+	    float3 lightBakedGI = SampleDomeGI(IN.vertexSH);		
+		ShadeToony = 0;
+		Occlusion = 0.5;
 		half4 color = LightweightFragmentToon(
 			inputData, 
 			lightBakedGI,
