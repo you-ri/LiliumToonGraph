@@ -162,6 +162,9 @@ ${PixelShaderSurfaceRemap}
 #endif
 	    inputData.shadowCoord = IN.shadowCoord;
 
+		//Occlusion = Occlusion * 0.5 + 0.5;
+
+
 	    inputData.fogCoord = IN.fogFactorAndVertexLight.x;
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 		
@@ -170,11 +173,10 @@ ${PixelShaderSurfaceRemap}
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
 	    inputData.bakedGI = SampleDomeGI(IN.vertexSH);
-	    float3 lightBakedGI = SampleDomeGI(IN.vertexSH);
 
 		half4 color = LightweightFragmentToon(
 			inputData, 
-			lightBakedGI,
+			inputData.bakedGI,
 			Base,
 			Shade,
 			Metallic,
@@ -186,16 +188,22 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
+	    mainLight = GetMainLight(inputData.shadowCoord);
 	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation;
+		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation * mainLight.color;
+
+		MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
+		half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation;
+	    half3 sssColor = lerp3((Shade - Base)*0.2, (Shade - Base)* 0.2, half3(0, 0, 0), (lighing + 1) * Occlusion );
+
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
 			Base / (1-Specular), 
 			Metallic, 
 			Specular, 
 			Smoothness, 
-			Occlusion,// * ((ShadeShift*2) + lightBakedGI),
-			Emission + (Shade - Base) * 0.5 * (1-lightIntensity),
+			Occlusion,
+			Emission + sssColor,
 			Alpha);
 		color = lerp(pbrColor, color, ToonyLighting);
 
