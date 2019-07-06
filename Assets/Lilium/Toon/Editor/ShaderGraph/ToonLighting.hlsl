@@ -241,10 +241,10 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
     half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
     half3 shade1stColor = inputData.bakedGI * shade;
-    half3 shade2ndColor = inputData.bakedGI * shade;
+    half3 shade2ndColor = half3(0, 0, 0);
 
     half3 color = half3(0,0,0);
-    color += lerp3(shade2ndColor, shade1stColor, lightColor, lighing + occlusion) * occlusion;
+    color += lerp3(shade2ndColor, shade1stColor, lightColor, (lighing + 1) * occlusion ) ;
     
     color += GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) * specular;
     color += LightingToon(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
@@ -256,7 +256,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
 
-        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, lighing + occlusion) * occlusion;
+        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, (lighing + 1) * occlusion) ;
         color += LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
 
         half3 attenuatedLightColor = light.color * light.distanceAttenuation;
