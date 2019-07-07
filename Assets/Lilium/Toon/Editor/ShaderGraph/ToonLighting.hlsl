@@ -241,10 +241,10 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
     half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
     half3 shade1stColor = inputData.bakedGI * shade;
-    half3 shade2ndColor = inputData.bakedGI * shade;
+    half3 shade2ndColor = half3(0, 0, 0);
 
     half3 color = half3(0,0,0);
-    color += lerp3(shade2ndColor, shade1stColor, lightColor, lighing + occlusion) * occlusion;
+    color += lerp3(shade2ndColor, shade1stColor, lightColor, (lighing + 1) * occlusion ) ;
     
     color += GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) * specular;
     color += LightingToon(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
@@ -256,7 +256,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
 
-        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, lighing + occlusion) * occlusion;
+        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, (lighing + 1) * occlusion) ;
         color += LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
 
         half3 attenuatedLightColor = light.color * light.distanceAttenuation;
@@ -270,7 +270,29 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     return half4(color, alpha);
 }
 
-float3 SampleDomeGI(half3 vertexSH) {
+// GIの全天からの平均値を算出
+// TODO: 高速化
+#ifdef LIGHTMAP_ON
+#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOminidirectionalLightmap(lmName)
+#else
+#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOmnidirectionalSHPixel(shName)
+#endif
+
+float3 SampleOminidirectionalLightmap(float2 lightmapUV)
+{
+    float3 gi = float3(0, 0, 0);
+
+    gi += SampleLightmap(lightmapUV, half3(1, 0, 0));
+    gi += SampleLightmap(lightmapUV, half3(-1, 0, 0));	
+    gi += SampleLightmap(lightmapUV, half3(0, 1, 0));
+    gi += SampleLightmap(lightmapUV, half3(0, -1, 0));	
+    gi += SampleLightmap(lightmapUV, half3(0, 0, 1));
+    gi += SampleLightmap(lightmapUV, half3(0, 0, -1));	
+    return gi / 6;
+}
+
+float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
+{
     float3 gi = float3(0, 0, 0);
 
     gi += SampleSHPixel(vertexSH, half3(1, 0, 0));
@@ -281,5 +303,6 @@ float3 SampleDomeGI(half3 vertexSH) {
     gi += SampleSHPixel(vertexSH, half3(0, 0, -1));	
     return gi / 6;
 }
+
 
 #endif
