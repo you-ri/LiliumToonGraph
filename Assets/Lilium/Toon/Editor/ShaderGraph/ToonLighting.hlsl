@@ -270,7 +270,29 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     return half4(color, alpha);
 }
 
-float3 SampleDomeGI(half3 vertexSH) {
+// GIの全天からの平均値を算出
+// TODO: 高速化
+#ifdef LIGHTMAP_ON
+#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOminidirectionalLightmap(lmName)
+#else
+#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOmnidirectionalSHPixel(shName)
+#endif
+
+float3 SampleOminidirectionalLightmap(float2 lightmapUV)
+{
+    float3 gi = float3(0, 0, 0);
+
+    gi += SampleLightmap(lightmapUV, half3(1, 0, 0));
+    gi += SampleLightmap(lightmapUV, half3(-1, 0, 0));	
+    gi += SampleLightmap(lightmapUV, half3(0, 1, 0));
+    gi += SampleLightmap(lightmapUV, half3(0, -1, 0));	
+    gi += SampleLightmap(lightmapUV, half3(0, 0, 1));
+    gi += SampleLightmap(lightmapUV, half3(0, 0, -1));	
+    return gi / 6;
+}
+
+float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
+{
     float3 gi = float3(0, 0, 0);
 
     gi += SampleSHPixel(vertexSH, half3(1, 0, 0));
@@ -281,5 +303,6 @@ float3 SampleDomeGI(half3 vertexSH) {
     gi += SampleSHPixel(vertexSH, half3(0, 0, -1));	
     return gi / 6;
 }
+
 
 #endif

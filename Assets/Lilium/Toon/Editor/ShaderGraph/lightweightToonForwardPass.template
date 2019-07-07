@@ -162,9 +162,6 @@ ${PixelShaderSurfaceRemap}
 #endif
 	    inputData.shadowCoord = IN.shadowCoord;
 
-		//Occlusion = Occlusion * 0.5 + 0.5;
-
-
 	    inputData.fogCoord = IN.fogFactorAndVertexLight.x;
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 		
@@ -172,7 +169,7 @@ ${PixelShaderSurfaceRemap}
 	    //float3 lightBakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);		
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
-	    inputData.bakedGI = SampleDomeGI(IN.vertexSH);
+	    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(IN.lightmapUV, IN.vertexSH);
 
 		half4 color = LightweightFragmentToon(
 			inputData, 
@@ -188,13 +185,10 @@ ${PixelShaderSurfaceRemap}
 			ShadeShift,
 			ShadeToony);
 
-	    mainLight = GetMainLight(inputData.shadowCoord);
 	    inputData.bakedGI = SAMPLE_GI(IN.lightmapUV, IN.vertexSH, inputData.normalWS);
-		half lightIntensity = dot(inputData.normalWS, mainLight.direction) * mainLight.distanceAttenuation * mainLight.shadowAttenuation * mainLight.color;
-
-		MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 		half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation;
-	    half3 sssColor = lerp3((Shade - Base)*0.2, (Shade - Base)* 0.2, half3(0, 0, 0), (lighing + 1) * Occlusion );
+		half giLighinting = inputData.bakedGI;
+	    half3 sssColor = lerp3(half3(0, 0, 0), (Shade - Base) * giLighinting, half3(0, 0, 0), (lighing + 1) * Occlusion );
 
 		half4 pbrColor = LightweightFragmentPBR(
 			inputData, 
@@ -382,13 +376,12 @@ ${PixelShaderSurfaceRemap}
 	    inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
 
 	    Light mainLight = GetMainLight(inputData.shadowCoord);
-	    inputData.bakedGI = SampleDomeGI(IN.vertexSH);
-	    float3 lightBakedGI = SampleDomeGI(IN.vertexSH);		
+	    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(IN.lightmapUV, IN.vertexSH);
 		ShadeToony = 0;
 		Occlusion = 0.5;
 		half4 color = LightweightFragmentToon(
 			inputData, 
-			lightBakedGI,
+			inputData.bakedGI,
 			Base,
 			Shade,
 			Metallic,
