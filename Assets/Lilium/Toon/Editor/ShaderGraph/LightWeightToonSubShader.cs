@@ -1,456 +1,483 @@
 //
-// based on: com.unity.render-pipelines.lightweight@5.6.1\Editor\ShaderGraph\LightWeightPBRSubShader.cs
+// based on: com.unity.render-pipelines.universal@7.1.2\Editor\ShaderGraph\SubShaders\UniversalPBRSubShader.cs
 //
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Graphing;
 using UnityEditor.ShaderGraph;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.LWRP;
-using UnityEngine;
+using UnityEngine.Rendering.Universal;
+using Data.Util;
+using UnityEditor.Rendering.Universal;
+using UnityEditor.Rendering;
+using UnityEditor;
 
 namespace LiliumEditor.Toon
 {
     [Serializable]
-    class LightWeightToonSubShader : IToonSubShader
+    [FormerName ("UnityEditor.Experimental.Rendering.LightweightPipeline.LightWeightPBRSubShader")]
+    [FormerName ("UnityEditor.ShaderGraph.LightWeightPBRSubShader")]
+    [FormerName ("UnityEditor.Rendering.LWRP.LightWeightPBRSubShader")]
+    class UniversalPBRSubShader : IPBRSubShader
     {
-        static readonly NeededCoordinateSpace k_PixelCoordinateSpace = NeededCoordinateSpace.World;
+        #region Passes
+        ShaderPass m_ForwardPass = new ShaderPass {
+            // Definition
+            displayName = "Universal Forward",
+            referenceName = "SHADERPASS_FORWARD",
+            lightMode = "UniversalForward",
+            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRForwardPass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+            useInPreview = true,
 
-        struct Pass
-        {
-            public string Name;
-            public List<int> VertexShaderSlots;
-            public List<int> PixelShaderSlots;
-        }
-
-        Pass m_ForwardPassMetallic = new Pass
-        {
-            Name = "LightweightForward",
-            PixelShaderSlots = new List<int>
+            // Port mask
+            vertexPorts = new List<int> ()
             {
-                ToonMasterNode.AlbedoSlotId,
-                ToonMasterNode.NormalSlotId,
-                ToonMasterNode.EmissionSlotId,
-                ToonMasterNode.MetallicSlotId,
-                ToonMasterNode.SmoothnessSlotId,
-                ToonMasterNode.OcclusionSlotId,
-                ToonMasterNode.AlphaSlotId,
-                ToonMasterNode.AlphaThresholdSlotId,
-                ToonMasterNode.ShadeSlotId,
-                ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId,
-                ToonMasterNode.ToonyLightingSlotId
+                PBRMasterNode.PositionSlotId,
+                PBRMasterNode.VertNormalSlotId,
+                PBRMasterNode.VertTangentSlotId
             },
-            VertexShaderSlots = new List<int>()
+            pixelPorts = new List<int>
             {
-                ToonMasterNode.PositionSlotId,
-                ToonMasterNode.OutlineWidthSlotId
+                PBRMasterNode.AlbedoSlotId,
+                PBRMasterNode.NormalSlotId,
+                PBRMasterNode.EmissionSlotId,
+                PBRMasterNode.MetallicSlotId,
+                PBRMasterNode.SpecularSlotId,
+                PBRMasterNode.SmoothnessSlotId,
+                PBRMasterNode.OcclusionSlotId,
+                PBRMasterNode.AlphaSlotId,
+                PBRMasterNode.AlphaThresholdSlotId
+            },
+
+            // Required fields
+            requiredAttributes = new List<string> ()
+            {
+                "Attributes.uv1", //needed for meta vertex position
+            },
+
+            // Required fields
+            requiredVaryings = new List<string> ()
+            {
+                "Varyings.positionWS",
+                "Varyings.normalWS",
+                "Varyings.tangentWS", //needed for vertex lighting
+                "Varyings.bitangentWS",
+                "Varyings.viewDirectionWS",
+                "Varyings.lightmapUV",
+                "Varyings.sh",
+                "Varyings.fogFactorAndVertexLight", //fog and vertex lighting, vert input is dependency
+                "Varyings.shadowCoord", //shadow coord, vert input is dependency
+            },
+
+            // Pass setup
+            includes = new List<string> ()
+            {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl",
+            },
+            pragmas = new List<string> ()
+            {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+                "multi_compile_fog",
+                "multi_compile_instancing",
+            },
+            keywords = new KeywordDescriptor[]
+            {
+                s_LightmapKeyword,
+                s_DirectionalLightmapCombinedKeyword,
+                s_MainLightShadowsKeyword,
+                s_MainLightShadowsCascadeKeyword,
+                s_AdditionalLightsKeyword,
+                s_AdditionalLightShadowsKeyword,
+                s_ShadowsSoftKeyword,
+                s_MixedLightingSubtractiveKeyword,
+            },
+        };
+
+        ShaderPass m_DepthOnlyPass = new ShaderPass () {
+            // Definition
+            displayName = "DepthOnly",
+            referenceName = "SHADERPASS_DEPTHONLY",
+            lightMode = "DepthOnly",
+            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthOnlyPass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+            useInPreview = true,
+
+            // Port mask
+            vertexPorts = new List<int> ()
+            {
+                PBRMasterNode.PositionSlotId,
+                PBRMasterNode.VertNormalSlotId,
+                PBRMasterNode.VertTangentSlotId
+            },
+            pixelPorts = new List<int> ()
+            {
+                PBRMasterNode.AlphaSlotId,
+                PBRMasterNode.AlphaThresholdSlotId
+            },
+
+            // Render State Overrides
+            ZWriteOverride = "ZWrite On",
+            ColorMaskOverride = "ColorMask 0",
+
+            // Pass setup
+            includes = new List<string> ()
+            {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+            },
+            pragmas = new List<string> ()
+            {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+                "multi_compile_instancing",
+            },
+        };
+
+        ShaderPass m_ShadowCasterPass = new ShaderPass () {
+            // Definition
+            displayName = "ShadowCaster",
+            referenceName = "SHADERPASS_SHADOWCASTER",
+            lightMode = "ShadowCaster",
+            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShadowCasterPass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+
+            // Port mask
+            vertexPorts = new List<int> ()
+            {
+                PBRMasterNode.PositionSlotId,
+                PBRMasterNode.VertNormalSlotId,
+                PBRMasterNode.VertTangentSlotId
+            },
+            pixelPorts = new List<int> ()
+            {
+                PBRMasterNode.AlphaSlotId,
+                PBRMasterNode.AlphaThresholdSlotId
+            },
+
+            // Required fields
+            requiredAttributes = new List<string> ()
+            {
+                "Attributes.normalOS",
+            },
+
+            // Render State Overrides
+            ZWriteOverride = "ZWrite On",
+            ZTestOverride = "ZTest LEqual",
+
+            // Pass setup
+            includes = new List<string> ()
+            {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
+            },
+            pragmas = new List<string> ()
+            {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+                "multi_compile_instancing",
+            },
+        };
+        ShaderPass m_LitMetaPass = new ShaderPass () {
+            // Definition
+            displayName = "Meta",
+            referenceName = "SHADERPASS_META",
+            lightMode = "Meta",
+            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/LightingMetaPass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+
+            // Port mask
+            vertexPorts = new List<int> ()
+            {
+                PBRMasterNode.PositionSlotId,
+                PBRMasterNode.VertNormalSlotId,
+                PBRMasterNode.VertTangentSlotId
+            },
+            pixelPorts = new List<int> ()
+            {
+                PBRMasterNode.AlbedoSlotId,
+                PBRMasterNode.EmissionSlotId,
+                PBRMasterNode.AlphaSlotId,
+                PBRMasterNode.AlphaThresholdSlotId
+            },
+
+            // Required fields
+            requiredAttributes = new List<string> ()
+            {
+                "Attributes.uv1", //needed for meta vertex position
+                "Attributes.uv2", //needed for meta vertex position
+            },
+
+            // Render State Overrides
+            ZWriteOverride = "ZWrite On",
+            ZTestOverride = "ZTest LEqual",
+
+            // Pass setup
+            includes = new List<string> ()
+            {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl",
+            },
+            pragmas = new List<string> ()
+            {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+            },
+            keywords = new KeywordDescriptor[]
+            {
+                s_SmoothnessChannelKeyword,
+            },
+        };
+
+        ShaderPass m_2DPass = new ShaderPass () {
+            // Definition
+            referenceName = "SHADERPASS_2D",
+            lightMode = "Universal2D",
+            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBR2DPass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+
+            // Port mask
+            vertexPorts = new List<int> ()
+            {
+                PBRMasterNode.PositionSlotId,
+                PBRMasterNode.VertNormalSlotId,
+                PBRMasterNode.VertTangentSlotId
+            },
+            pixelPorts = new List<int> ()
+            {
+                PBRMasterNode.AlbedoSlotId,
+                PBRMasterNode.AlphaSlotId,
+                PBRMasterNode.AlphaThresholdSlotId
+            },
+
+            // Pass setup
+            includes = new List<string> ()
+            {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+            },
+            pragmas = new List<string> ()
+            {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+                "multi_compile_instancing",
+            },
+        };
+        #endregion
+
+        #region Keywords
+        static KeywordDescriptor s_LightmapKeyword = new KeywordDescriptor () {
+            displayName = "Lightmap",
+            referenceName = "LIGHTMAP_ON",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_DirectionalLightmapCombinedKeyword = new KeywordDescriptor () {
+            displayName = "Directional Lightmap Combined",
+            referenceName = "DIRLIGHTMAP_COMBINED",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_SampleGIKeyword = new KeywordDescriptor () {
+            displayName = "Sample GI",
+            referenceName = "_SAMPLE_GI",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.ShaderFeature,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_MainLightShadowsKeyword = new KeywordDescriptor () {
+            displayName = "Main Light Shadows",
+            referenceName = "_MAIN_LIGHT_SHADOWS",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_MainLightShadowsCascadeKeyword = new KeywordDescriptor () {
+            displayName = "Main Light Shadows Cascade",
+            referenceName = "_MAIN_LIGHT_SHADOWS_CASCADE",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_AdditionalLightsKeyword = new KeywordDescriptor () {
+            displayName = "Additional Lights",
+            referenceName = "_ADDITIONAL",
+            type = KeywordType.Enum,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+            entries = new KeywordEntry[]
+            {
+                new KeywordEntry() { displayName = "Vertex", referenceName = "LIGHTS_VERTEX" },
+                new KeywordEntry() { displayName = "Fragment", referenceName = "LIGHTS" },
+                new KeywordEntry() { displayName = "Off", referenceName = "OFF" },
             }
         };
 
-        Pass m_ForwardPassSpecular = new Pass()
-        {
-            Name = "LightweightForward",
-            PixelShaderSlots = new List<int>()
-            {
-                ToonMasterNode.AlbedoSlotId,
-                ToonMasterNode.NormalSlotId,
-                ToonMasterNode.EmissionSlotId,
-                ToonMasterNode.SpecularSlotId,
-                ToonMasterNode.SmoothnessSlotId,
-                ToonMasterNode.OcclusionSlotId,
-                ToonMasterNode.AlphaSlotId,
-                ToonMasterNode.AlphaThresholdSlotId,
-                ToonMasterNode.ShadeSlotId,
-                ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId,
-                ToonMasterNode.ToonyLightingSlotId
-            },
-            VertexShaderSlots = new List<int>()
-            {
-                ToonMasterNode.PositionSlotId,
-                ToonMasterNode.OutlineWidthSlotId
-            }
+        static KeywordDescriptor s_AdditionalLightShadowsKeyword = new KeywordDescriptor () {
+            displayName = "Additional Light Shadows",
+            referenceName = "_ADDITIONAL_LIGHT_SHADOWS",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
         };
 
-        Pass m_DepthShadowPass = new Pass()
-        {
-            Name = "",
-            PixelShaderSlots = new List<int>()
-            {
-                ToonMasterNode.AlbedoSlotId,
-                ToonMasterNode.EmissionSlotId,
-                ToonMasterNode.AlphaSlotId,
-                ToonMasterNode.AlphaThresholdSlotId
-            },
-            VertexShaderSlots = new List<int>()
-            {
-                ToonMasterNode.PositionSlotId
-            }
+        static KeywordDescriptor s_ShadowsSoftKeyword = new KeywordDescriptor () {
+            displayName = "Shadows Soft",
+            referenceName = "_SHADOWS_SOFT",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
         };
 
-        public string GetSubshader(IMasterNode masterNode, GenerationMode mode, List<string> sourceAssetDependencyPaths = null)
+        static KeywordDescriptor s_MixedLightingSubtractiveKeyword = new KeywordDescriptor () {
+            displayName = "Mixed Lighting Subtractive",
+            referenceName = "_MIXED_LIGHTING_SUBTRACTIVE",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.MultiCompile,
+            scope = KeywordScope.Global,
+        };
+
+        static KeywordDescriptor s_SmoothnessChannelKeyword = new KeywordDescriptor () {
+            displayName = "Smoothness Channel",
+            referenceName = "_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A",
+            type = KeywordType.Boolean,
+            definition = KeywordDefinition.ShaderFeature,
+            scope = KeywordScope.Global,
+        };
+        #endregion
+
+        public int GetPreviewPassIndex () { return 0; }
+
+        ActiveFields GetActiveFieldsFromMasterNode (PBRMasterNode masterNode, ShaderPass pass)
         {
-            if (sourceAssetDependencyPaths != null)
-            {
-                // LightWeightPBRSubShader.cs
-                sourceAssetDependencyPaths.Add(AssetDatabase.GUIDToAssetPath("16b8a010f96947c4f866705d757bc0a3"));
+            var activeFields = new ActiveFields ();
+            var baseActiveFields = activeFields.baseInstance;
+
+            // Graph Vertex
+            if (masterNode.IsSlotConnected (PBRMasterNode.PositionSlotId) ||
+               masterNode.IsSlotConnected (PBRMasterNode.VertNormalSlotId) ||
+               masterNode.IsSlotConnected (PBRMasterNode.VertTangentSlotId)) {
+                baseActiveFields.Add ("features.graphVertex");
             }
 
-            var templatePath = GetTemplatePath("lightweightToonForwardPass.template");
-            var extraPassesTemplatePath = GetTemplatePath("lightweightToonExtraPasses.template");
-            if (!File.Exists(templatePath) || !File.Exists(extraPassesTemplatePath))
-                return string.Empty;
+            // Graph Pixel (always enabled)
+            baseActiveFields.Add ("features.graphPixel");
 
-            if (sourceAssetDependencyPaths != null)
-            {
-                sourceAssetDependencyPaths.Add(templatePath);
-                sourceAssetDependencyPaths.Add(extraPassesTemplatePath);
-
-                var relativePath = "Packages/com.unity.render-pipelines.lightweight/";
-                var fullPath = Path.GetFullPath(relativePath);
-                var shaderFiles = Directory.GetFiles(Path.Combine(fullPath, "ShaderLibrary")).Select(x => Path.Combine(relativePath, x.Substring(fullPath.Length)));
-                sourceAssetDependencyPaths.AddRange(shaderFiles);
+            if (masterNode.IsSlotConnected (PBRMasterNode.AlphaThresholdSlotId) ||
+                masterNode.GetInputSlots<Vector1MaterialSlot> ().First (x => x.id == PBRMasterNode.AlphaThresholdSlotId).value > 0.0f) {
+                baseActiveFields.Add ("AlphaClip");
             }
 
-            string forwardTemplate = File.ReadAllText(templatePath);
-            string extraTemplate = File.ReadAllText(extraPassesTemplatePath);
+            if (masterNode.model == PBRMasterNode.Model.Specular)
+                baseActiveFields.Add ("SpecularSetup");
 
-            var pbrMasterNode = masterNode as ToonMasterNode;
-            var pass = pbrMasterNode.model == ToonMasterNode.Model.Metallic ? m_ForwardPassMetallic : m_ForwardPassSpecular;
-            var subShader = new ShaderStringBuilder();
-            subShader.AppendLine("SubShader");
-            using (subShader.BlockScope())
-            {
-                var materialTags = ShaderGenerator.BuildMaterialTags(pbrMasterNode.surfaceType);
-                var tagsBuilder = new ShaderStringBuilder(0);
-                materialTags.GetTags(tagsBuilder, LightweightRenderPipeline.k_ShaderTagName);
-                subShader.AppendLines(tagsBuilder.ToString());
-
-                var materialOptions = ShaderGenerator.GetMaterialOptions(pbrMasterNode.surfaceType, pbrMasterNode.alphaMode, pbrMasterNode.twoSided.isOn);
-                subShader.AppendLines(GetShaderPassFromTemplate(
-                        forwardTemplate,
-                        pbrMasterNode,
-                        pass,
-                        mode,
-                        materialOptions));
-
-                subShader.AppendLines(GetShaderPassFromTemplate(
-                        extraTemplate,
-                        pbrMasterNode,
-                        m_DepthShadowPass,
-                        mode,
-                        materialOptions));
+            if (masterNode.IsSlotConnected (PBRMasterNode.NormalSlotId)) {
+                baseActiveFields.Add ("Normal");
             }
-            subShader.Append("CustomEditor \"LiliumEditor.Toon.ToonMasterGUI\"");
 
-            return subShader.ToString();
+            // Keywords for transparent
+            // #pragma shader_feature _SURFACE_TYPE_TRANSPARENT
+            if (masterNode.surfaceType != SurfaceType.Opaque) {
+                // transparent-only defines
+                baseActiveFields.Add ("SurfaceType.Transparent");
+
+                // #pragma shader_feature _ _BLENDMODE_ALPHA _BLENDMODE_ADD _BLENDMODE_PRE_MULTIPLY
+                if (masterNode.alphaMode == AlphaMode.Alpha) {
+                    baseActiveFields.Add ("BlendMode.Alpha");
+                }
+                else if (masterNode.alphaMode == AlphaMode.Additive) {
+                    baseActiveFields.Add ("BlendMode.Add");
+                }
+                else if (masterNode.alphaMode == AlphaMode.Premultiply) {
+                    baseActiveFields.Add ("BlendMode.Premultiply");
+                }
+            }
+
+            return activeFields;
         }
 
-        public bool IsPipelineCompatible(RenderPipelineAsset renderPipelineAsset)
+        bool GenerateShaderPass (PBRMasterNode masterNode, ShaderPass pass, GenerationMode mode, ShaderGenerator result, List<string> sourceAssetDependencyPaths)
         {
-            return renderPipelineAsset is LightweightRenderPipelineAsset;
+            UniversalShaderGraphUtilities.SetRenderState (masterNode.surfaceType, masterNode.alphaMode, masterNode.twoSided.isOn, ref pass);
+
+            // apply master node options to active fields
+            var activeFields = GetActiveFieldsFromMasterNode (masterNode, pass);
+
+            return GenerationUtils.GenerateShaderPass (masterNode, pass, mode, activeFields, result, sourceAssetDependencyPaths,
+                UniversalShaderGraphResources.s_Dependencies, UniversalShaderGraphResources.s_ResourceClassName, UniversalShaderGraphResources.s_AssemblyName);
         }
 
-        static string GetTemplatePath(string templateName)
+        public string GetSubshader (IMasterNode masterNode, GenerationMode mode, List<string> sourceAssetDependencyPaths = null)
         {
-            var basePath = "Assets/Lilium/Toon/Editor/ShaderGraph/";
-            string templatePath = Path.Combine(basePath, templateName);
+            if (sourceAssetDependencyPaths != null) {
+                // UniversalPBRSubShader.cs
+                sourceAssetDependencyPaths.Add (AssetDatabase.GUIDToAssetPath ("ca91dbeb78daa054c9bbe15fef76361c"));
+            }
 
-            if (File.Exists(templatePath))
-                return templatePath;
+            // Master Node data
+            var pbrMasterNode = masterNode as PBRMasterNode;
+            var subShader = new ShaderGenerator ();
 
-            throw new FileNotFoundException(string.Format(@"Cannot find a template with name ""{0}"".", templateName));
+            subShader.AddShaderChunk ("SubShader", true);
+            subShader.AddShaderChunk ("{", true);
+            subShader.Indent ();
+            {
+                var surfaceTags = ShaderGenerator.BuildMaterialTags (pbrMasterNode.surfaceType);
+                var tagsBuilder = new ShaderStringBuilder (0);
+                surfaceTags.GetTags (tagsBuilder, "UniversalPipeline");
+                subShader.AddShaderChunk (tagsBuilder.ToString ());
+
+                GenerateShaderPass (pbrMasterNode, m_ForwardPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (pbrMasterNode, m_ShadowCasterPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (pbrMasterNode, m_DepthOnlyPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (pbrMasterNode, m_LitMetaPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (pbrMasterNode, m_2DPass, mode, subShader, sourceAssetDependencyPaths);
+            }
+            subShader.Deindent ();
+            subShader.AddShaderChunk ("}", true);
+
+            return subShader.GetShaderString (0);
         }
 
-        static string GetShaderPassFromTemplate(string template, ToonMasterNode masterNode, Pass pass, GenerationMode mode, SurfaceMaterialOptions materialOptions)
+        public bool IsPipelineCompatible (RenderPipelineAsset renderPipelineAsset)
         {
-            // ----------------------------------------------------- //
-            //                         SETUP                         //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // String builders
-
-            var shaderProperties = new PropertyCollector();
-            var functionBuilder = new ShaderStringBuilder(1);
-            var functionRegistry = new FunctionRegistry(functionBuilder);
-
-            var defines = new ShaderStringBuilder(1);
-            var graph = new ShaderStringBuilder(0);
-
-            var vertexDescriptionInputStruct = new ShaderStringBuilder(1);
-            var vertexDescriptionStruct = new ShaderStringBuilder(1);
-            var vertexDescriptionFunction = new ShaderStringBuilder(1);
-
-            var surfaceDescriptionInputStruct = new ShaderStringBuilder(1);
-            var surfaceDescriptionStruct = new ShaderStringBuilder(1);
-            var surfaceDescriptionFunction = new ShaderStringBuilder(1);
-
-            var vertexInputStruct = new ShaderStringBuilder(1);
-            var vertexOutputStruct = new ShaderStringBuilder(2);
-
-            var vertexShader = new ShaderStringBuilder(2);
-            var vertexShaderDescriptionInputs = new ShaderStringBuilder(2);
-            var vertexShaderOutputs = new ShaderStringBuilder(2);
-
-            var pixelShader = new ShaderStringBuilder(2);
-            var pixelShaderSurfaceInputs = new ShaderStringBuilder(2);
-            var pixelShaderSurfaceRemap = new ShaderStringBuilder(2);
-
-            // -------------------------------------
-            // Get Slot and Node lists per stage
-
-            var vertexSlots = pass.VertexShaderSlots.Select(masterNode.FindSlot<MaterialSlot>).ToList();
-            var vertexNodes = ListPool<AbstractMaterialNode>.Get();
-            NodeUtils.DepthFirstCollectNodesFromNode(vertexNodes, masterNode, NodeUtils.IncludeSelf.Include, pass.VertexShaderSlots);
-
-            var pixelSlots = pass.PixelShaderSlots.Select(masterNode.FindSlot<MaterialSlot>).ToList();
-            var pixelNodes = ListPool<AbstractMaterialNode>.Get();
-            NodeUtils.DepthFirstCollectNodesFromNode(pixelNodes, masterNode, NodeUtils.IncludeSelf.Include, pass.PixelShaderSlots);
-
-            // -------------------------------------
-            // Get Requirements
-
-            var vertexRequirements = ShaderGraphRequirements.FromNodes(vertexNodes, ShaderStageCapability.Vertex, false);
-            var pixelRequirements = ShaderGraphRequirements.FromNodes(pixelNodes, ShaderStageCapability.Fragment);
-            var graphRequirements = pixelRequirements.Union(vertexRequirements);
-            var surfaceRequirements = ShaderGraphRequirements.FromNodes(pixelNodes, ShaderStageCapability.Fragment, false);
-
-            var modelRequiements = ShaderGraphRequirements.none;
-            modelRequiements.requiresNormal |= k_PixelCoordinateSpace;
-            modelRequiements.requiresTangent |= k_PixelCoordinateSpace;
-            modelRequiements.requiresBitangent |= k_PixelCoordinateSpace;
-            modelRequiements.requiresPosition |= k_PixelCoordinateSpace;
-            modelRequiements.requiresViewDir |= k_PixelCoordinateSpace;
-            modelRequiements.requiresMeshUVs.Add(UVChannel.UV1);
-
-            // ----------------------------------------------------- //
-            //                START SHADER GENERATION                //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // Calculate material options
-
-            var blendingBuilder = new ShaderStringBuilder(1);
-            var cullingBuilder = new ShaderStringBuilder(1);
-            var zTestBuilder = new ShaderStringBuilder(1);
-            var zWriteBuilder = new ShaderStringBuilder(1);
-
-            materialOptions.GetBlend(blendingBuilder);
-            materialOptions.GetCull(cullingBuilder);
-            materialOptions.GetDepthTest(zTestBuilder);
-            materialOptions.GetDepthWrite(zWriteBuilder);
-
-            // -------------------------------------
-            // Generate defines
-
-            if (masterNode.IsSlotConnected(ToonMasterNode.NormalSlotId))
-                defines.AppendLine("#define _NORMALMAP 1");
-
-            if (masterNode.model == ToonMasterNode.Model.Specular)
-                defines.AppendLine("#define _SPECULAR_SETUP 1");
-
-            if (masterNode.IsSlotConnected(ToonMasterNode.AlphaThresholdSlotId))
-                defines.AppendLine("#define _AlphaClip 1");
-
-            if (masterNode.surfaceType == SurfaceType.Transparent && masterNode.alphaMode == AlphaMode.Premultiply)
-                defines.AppendLine("#define _ALPHAPREMULTIPLY_ON 1");
-
-            if (graphRequirements.requiresDepthTexture)
-                defines.AppendLine("#define REQUIRE_DEPTH_TEXTURE");
-
-            if (graphRequirements.requiresCameraOpaqueTexture)
-                defines.AppendLine("#define REQUIRE_OPAQUE_TEXTURE");
-
-            // ----------------------------------------------------- //
-            //                START VERTEX DESCRIPTION               //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // Generate Input structure for Vertex Description function
-            // TODO - Vertex Description Input requirements are needed to exclude intermediate translation spaces
-
-            vertexDescriptionInputStruct.AppendLine("struct VertexDescriptionInputs");
-            using (vertexDescriptionInputStruct.BlockSemicolonScope())
-            {
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(vertexRequirements.requiresNormal, InterpolatorType.Normal, vertexDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(vertexRequirements.requiresTangent, InterpolatorType.Tangent, vertexDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(vertexRequirements.requiresBitangent, InterpolatorType.BiTangent, vertexDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(vertexRequirements.requiresViewDir, InterpolatorType.ViewDirection, vertexDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(vertexRequirements.requiresPosition, InterpolatorType.Position, vertexDescriptionInputStruct);
-
-                if (vertexRequirements.requiresVertexColor)
-                    vertexDescriptionInputStruct.AppendLine("float4 {0};", ShaderGeneratorNames.VertexColor);
-
-                if (vertexRequirements.requiresScreenPosition)
-                    vertexDescriptionInputStruct.AppendLine("float4 {0};", ShaderGeneratorNames.ScreenPosition);
-
-                foreach (var channel in vertexRequirements.requiresMeshUVs.Distinct())
-                    vertexDescriptionInputStruct.AppendLine("half4 {0};", channel.GetUVName());
-            }
-
-            // -------------------------------------
-            // Generate Output structure for Vertex Description function
-
-            GraphUtil.GenerateVertexDescriptionStruct(vertexDescriptionStruct, vertexSlots);
-
-            // -------------------------------------
-            // Generate Vertex Description function
-
-            GraphUtil.GenerateVertexDescriptionFunction(
-                masterNode.owner as GraphData,
-                vertexDescriptionFunction,
-                functionRegistry,
-                shaderProperties,
-                mode,
-                vertexNodes,
-                vertexSlots);
-
-            // ----------------------------------------------------- //
-            //               START SURFACE DESCRIPTION               //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // Generate Input structure for Surface Description function
-            // Surface Description Input requirements are needed to exclude intermediate translation spaces
-
-            surfaceDescriptionInputStruct.AppendLine("struct SurfaceDescriptionInputs");
-            using (surfaceDescriptionInputStruct.BlockSemicolonScope())
-            {
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(surfaceRequirements.requiresNormal, InterpolatorType.Normal, surfaceDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(surfaceRequirements.requiresTangent, InterpolatorType.Tangent, surfaceDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(surfaceRequirements.requiresBitangent, InterpolatorType.BiTangent, surfaceDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(surfaceRequirements.requiresViewDir, InterpolatorType.ViewDirection, surfaceDescriptionInputStruct);
-                ShaderGenerator.GenerateSpaceTranslationSurfaceInputs(surfaceRequirements.requiresPosition, InterpolatorType.Position, surfaceDescriptionInputStruct);
-
-                if (surfaceRequirements.requiresVertexColor)
-                    surfaceDescriptionInputStruct.AppendLine("float4 {0};", ShaderGeneratorNames.VertexColor);
-
-                if (surfaceRequirements.requiresScreenPosition)
-                    surfaceDescriptionInputStruct.AppendLine("float4 {0};", ShaderGeneratorNames.ScreenPosition);
-
-                if (surfaceRequirements.requiresFaceSign)
-                    surfaceDescriptionInputStruct.AppendLine("float {0};", ShaderGeneratorNames.FaceSign);
-
-                foreach (var channel in surfaceRequirements.requiresMeshUVs.Distinct())
-                    surfaceDescriptionInputStruct.AppendLine("half4 {0};", channel.GetUVName());
-            }
-
-            // -------------------------------------
-            // Generate Output structure for Surface Description function
-
-            GraphUtil.GenerateSurfaceDescriptionStruct(surfaceDescriptionStruct, pixelSlots, true);
-
-            // -------------------------------------
-            // Generate Surface Description function
-
-            GraphUtil.GenerateSurfaceDescriptionFunction(
-                pixelNodes,
-                masterNode,
-                masterNode.owner as GraphData,
-                surfaceDescriptionFunction,
-                functionRegistry,
-                shaderProperties,
-                pixelRequirements,
-                mode,
-                "PopulateSurfaceData",
-                "SurfaceDescription",
-                null,
-                pixelSlots);
-
-            // ----------------------------------------------------- //
-            //           GENERATE VERTEX > PIXEL PIPELINE            //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // Generate Input structure for Vertex shader
-
-            GraphUtil.GenerateApplicationVertexInputs(vertexRequirements.Union(pixelRequirements.Union(modelRequiements)), vertexInputStruct);
-
-            // -------------------------------------
-            // Generate standard transformations
-            // This method ensures all required transform data is available in vertex and pixel stages
-
-            ShaderGenerator.GenerateStandardTransforms(
-                3,
-                10,
-                vertexOutputStruct,
-                vertexShader,
-                vertexShaderDescriptionInputs,
-                vertexShaderOutputs,
-                pixelShader,
-                pixelShaderSurfaceInputs,
-                pixelRequirements,
-                surfaceRequirements,
-                modelRequiements,
-                vertexRequirements,
-                CoordinateSpace.World);
-
-            // -------------------------------------
-            // Generate pixel shader surface remap
-
-            foreach (var slot in pixelSlots)
-            {
-                pixelShaderSurfaceRemap.AppendLine("{0} = surf.{0};", slot.shaderOutputName);
-            }
-
-            // -------------------------------------
-            // Extra pixel shader work
-
-            var faceSign = new ShaderStringBuilder();
-
-            if (pixelRequirements.requiresFaceSign)
-                faceSign.AppendLine(", half FaceSign : VFACE");
-
-            // ----------------------------------------------------- //
-            //                      FINALIZE                         //
-            // ----------------------------------------------------- //
-
-            // -------------------------------------
-            // Combine Graph sections
-
-            graph.AppendLine(shaderProperties.GetPropertiesDeclaration(1));
-
-            graph.AppendLine(vertexDescriptionInputStruct.ToString());
-            graph.AppendLine(surfaceDescriptionInputStruct.ToString());
-
-            graph.AppendLine(functionBuilder.ToString());
-
-            graph.AppendLine(vertexDescriptionStruct.ToString());
-            graph.AppendLine(vertexDescriptionFunction.ToString());
-
-            graph.AppendLine(surfaceDescriptionStruct.ToString());
-            graph.AppendLine(surfaceDescriptionFunction.ToString());
-
-            graph.AppendLine(vertexInputStruct.ToString());
-
-            // -------------------------------------
-            // Generate final subshader
-
-            var resultPass = template.Replace("${Tags}", string.Empty);
-            resultPass = resultPass.Replace("${Blending}", blendingBuilder.ToString());
-            resultPass = resultPass.Replace("${Culling}", cullingBuilder.ToString());
-            resultPass = resultPass.Replace("${ZTest}", zTestBuilder.ToString());
-            resultPass = resultPass.Replace("${ZWrite}", zWriteBuilder.ToString());
-            resultPass = resultPass.Replace("${Defines}", defines.ToString());
-
-            resultPass = resultPass.Replace("${Graph}", graph.ToString());
-            resultPass = resultPass.Replace("${VertexOutputStruct}", vertexOutputStruct.ToString());
-
-            resultPass = resultPass.Replace("${VertexShader}", vertexShader.ToString());
-            resultPass = resultPass.Replace("${VertexShaderDescriptionInputs}", vertexShaderDescriptionInputs.ToString());
-            resultPass = resultPass.Replace("${VertexShaderOutputs}", vertexShaderOutputs.ToString());
-
-            resultPass = resultPass.Replace("${FaceSign}", faceSign.ToString());
-            resultPass = resultPass.Replace("${PixelShader}", pixelShader.ToString());
-            resultPass = resultPass.Replace("${PixelShaderSurfaceInputs}", pixelShaderSurfaceInputs.ToString());
-            resultPass = resultPass.Replace("${PixelShaderSurfaceRemap}", pixelShaderSurfaceRemap.ToString());
-
-            return resultPass;
+            return renderPipelineAsset is UniversalRenderPipelineAsset;
         }
+
+        public UniversalPBRSubShader () { }
     }
 }
