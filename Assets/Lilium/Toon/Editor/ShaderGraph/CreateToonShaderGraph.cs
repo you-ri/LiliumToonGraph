@@ -1,5 +1,5 @@
 //
-// based on: com.unity.shadergraph@5.6.1\Editor\AssetCallbacks\CreateShaderGraph.cs
+// based on: com.unity.shadergraph@7.1.2\Editor\AssetCallbacks\CreateShaderGraph.cs
 //
 using System.IO;
 using UnityEditor;

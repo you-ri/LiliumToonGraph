@@ -17,10 +17,8 @@ using UnityEditor;
 namespace LiliumEditor.Toon
 {
     [Serializable]
-    [FormerName ("UnityEditor.Experimental.Rendering.LightweightPipeline.LightWeightPBRSubShader")]
-    [FormerName ("UnityEditor.ShaderGraph.LightWeightPBRSubShader")]
-    [FormerName ("UnityEditor.Rendering.LWRP.LightWeightPBRSubShader")]
-    class UniversalPBRSubShader : IPBRSubShader
+    [FormerName ("LiliumEditor.Toon.LightWeightToonSubShader")]
+    class UniversalToonSubShader : IToonSubShader
     {
         #region Passes
         ShaderPass m_ForwardPass = new ShaderPass {
@@ -28,28 +26,34 @@ namespace LiliumEditor.Toon
             displayName = "Universal Forward",
             referenceName = "SHADERPASS_FORWARD",
             lightMode = "UniversalForward",
-            passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRForwardPass.hlsl",
+            passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonForwardPass.hlsl",
+            //passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRForwardPass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
             useInPreview = true,
 
             // Port mask
             vertexPorts = new List<int> ()
             {
-                PBRMasterNode.PositionSlotId,
-                PBRMasterNode.VertNormalSlotId,
-                PBRMasterNode.VertTangentSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId,
+                ToonMasterNode.OutlineWidthSlotId,
             },
             pixelPorts = new List<int>
             {
-                PBRMasterNode.AlbedoSlotId,
-                PBRMasterNode.NormalSlotId,
-                PBRMasterNode.EmissionSlotId,
-                PBRMasterNode.MetallicSlotId,
-                PBRMasterNode.SpecularSlotId,
-                PBRMasterNode.SmoothnessSlotId,
-                PBRMasterNode.OcclusionSlotId,
-                PBRMasterNode.AlphaSlotId,
-                PBRMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlbedoSlotId,
+                ToonMasterNode.NormalSlotId,
+                ToonMasterNode.EmissionSlotId,
+                ToonMasterNode.MetallicSlotId,
+                ToonMasterNode.SpecularSlotId,
+                ToonMasterNode.SmoothnessSlotId,
+                ToonMasterNode.OcclusionSlotId,
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId,
+                ToonMasterNode.ShadeSlotId,
+                ToonMasterNode.ShadeShiftSlotId,
+                ToonMasterNode.ShadeToonySlotId,
+                ToonMasterNode.ToonyLightingSlotId,
             },
 
             // Required fields
@@ -82,6 +86,7 @@ namespace LiliumEditor.Toon
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl",
+                "Assets/Lilium/Toon/Editor/ShaderGraph/ToonLighting.hlsl",
             },
             pragmas = new List<string> ()
             {
@@ -116,14 +121,14 @@ namespace LiliumEditor.Toon
             // Port mask
             vertexPorts = new List<int> ()
             {
-                PBRMasterNode.PositionSlotId,
-                PBRMasterNode.VertNormalSlotId,
-                PBRMasterNode.VertTangentSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId
             },
             pixelPorts = new List<int> ()
             {
-                PBRMasterNode.AlphaSlotId,
-                PBRMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId
             },
 
             // Render State Overrides
@@ -159,14 +164,14 @@ namespace LiliumEditor.Toon
             // Port mask
             vertexPorts = new List<int> ()
             {
-                PBRMasterNode.PositionSlotId,
-                PBRMasterNode.VertNormalSlotId,
-                PBRMasterNode.VertTangentSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId
             },
             pixelPorts = new List<int> ()
             {
-                PBRMasterNode.AlphaSlotId,
-                PBRMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId
             },
 
             // Required fields
@@ -187,7 +192,7 @@ namespace LiliumEditor.Toon
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
-                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
             },
             pragmas = new List<string> ()
             {
@@ -208,16 +213,16 @@ namespace LiliumEditor.Toon
             // Port mask
             vertexPorts = new List<int> ()
             {
-                PBRMasterNode.PositionSlotId,
-                PBRMasterNode.VertNormalSlotId,
-                PBRMasterNode.VertTangentSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId
             },
             pixelPorts = new List<int> ()
             {
-                PBRMasterNode.AlbedoSlotId,
-                PBRMasterNode.EmissionSlotId,
-                PBRMasterNode.AlphaSlotId,
-                PBRMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlbedoSlotId,
+                ToonMasterNode.EmissionSlotId,
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId
             },
 
             // Required fields
@@ -262,15 +267,15 @@ namespace LiliumEditor.Toon
             // Port mask
             vertexPorts = new List<int> ()
             {
-                PBRMasterNode.PositionSlotId,
-                PBRMasterNode.VertNormalSlotId,
-                PBRMasterNode.VertTangentSlotId
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId
             },
             pixelPorts = new List<int> ()
             {
-                PBRMasterNode.AlbedoSlotId,
-                PBRMasterNode.AlphaSlotId,
-                PBRMasterNode.AlphaThresholdSlotId
+                ToonMasterNode.AlbedoSlotId,
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId
             },
 
             // Pass setup
@@ -382,30 +387,30 @@ namespace LiliumEditor.Toon
 
         public int GetPreviewPassIndex () { return 0; }
 
-        ActiveFields GetActiveFieldsFromMasterNode (PBRMasterNode masterNode, ShaderPass pass)
+        ActiveFields GetActiveFieldsFromMasterNode (ToonMasterNode masterNode, ShaderPass pass)
         {
             var activeFields = new ActiveFields ();
             var baseActiveFields = activeFields.baseInstance;
 
             // Graph Vertex
-            if (masterNode.IsSlotConnected (PBRMasterNode.PositionSlotId) ||
-               masterNode.IsSlotConnected (PBRMasterNode.VertNormalSlotId) ||
-               masterNode.IsSlotConnected (PBRMasterNode.VertTangentSlotId)) {
+            if (masterNode.IsSlotConnected (ToonMasterNode.PositionSlotId) ||
+               masterNode.IsSlotConnected (ToonMasterNode.VertNormalSlotId) ||
+               masterNode.IsSlotConnected (ToonMasterNode.VertTangentSlotId)) {
                 baseActiveFields.Add ("features.graphVertex");
             }
 
             // Graph Pixel (always enabled)
             baseActiveFields.Add ("features.graphPixel");
 
-            if (masterNode.IsSlotConnected (PBRMasterNode.AlphaThresholdSlotId) ||
-                masterNode.GetInputSlots<Vector1MaterialSlot> ().First (x => x.id == PBRMasterNode.AlphaThresholdSlotId).value > 0.0f) {
+            if (masterNode.IsSlotConnected (ToonMasterNode.AlphaThresholdSlotId) ||
+                masterNode.GetInputSlots<Vector1MaterialSlot> ().First (x => x.id == ToonMasterNode.AlphaThresholdSlotId).value > 0.0f) {
                 baseActiveFields.Add ("AlphaClip");
             }
 
-            if (masterNode.model == PBRMasterNode.Model.Specular)
+            if (masterNode.model == ToonMasterNode.Model.Specular)
                 baseActiveFields.Add ("SpecularSetup");
 
-            if (masterNode.IsSlotConnected (PBRMasterNode.NormalSlotId)) {
+            if (masterNode.IsSlotConnected (ToonMasterNode.NormalSlotId)) {
                 baseActiveFields.Add ("Normal");
             }
 
@@ -430,7 +435,7 @@ namespace LiliumEditor.Toon
             return activeFields;
         }
 
-        bool GenerateShaderPass (PBRMasterNode masterNode, ShaderPass pass, GenerationMode mode, ShaderGenerator result, List<string> sourceAssetDependencyPaths)
+        bool GenerateShaderPass (ToonMasterNode masterNode, ShaderPass pass, GenerationMode mode, ShaderGenerator result, List<string> sourceAssetDependencyPaths)
         {
             UniversalShaderGraphUtilities.SetRenderState (masterNode.surfaceType, masterNode.alphaMode, masterNode.twoSided.isOn, ref pass);
 
@@ -445,27 +450,27 @@ namespace LiliumEditor.Toon
         {
             if (sourceAssetDependencyPaths != null) {
                 // UniversalPBRSubShader.cs
-                sourceAssetDependencyPaths.Add (AssetDatabase.GUIDToAssetPath ("ca91dbeb78daa054c9bbe15fef76361c"));
+                sourceAssetDependencyPaths.Add (AssetDatabase.GUIDToAssetPath ("16b8a010f96947c4f866705d757bc0a3"));
             }
 
             // Master Node data
-            var pbrMasterNode = masterNode as PBRMasterNode;
+            var ToonMasterNode = masterNode as ToonMasterNode;
             var subShader = new ShaderGenerator ();
 
             subShader.AddShaderChunk ("SubShader", true);
             subShader.AddShaderChunk ("{", true);
             subShader.Indent ();
             {
-                var surfaceTags = ShaderGenerator.BuildMaterialTags (pbrMasterNode.surfaceType);
+                var surfaceTags = ShaderGenerator.BuildMaterialTags (ToonMasterNode.surfaceType);
                 var tagsBuilder = new ShaderStringBuilder (0);
                 surfaceTags.GetTags (tagsBuilder, "UniversalPipeline");
                 subShader.AddShaderChunk (tagsBuilder.ToString ());
 
-                GenerateShaderPass (pbrMasterNode, m_ForwardPass, mode, subShader, sourceAssetDependencyPaths);
-                GenerateShaderPass (pbrMasterNode, m_ShadowCasterPass, mode, subShader, sourceAssetDependencyPaths);
-                GenerateShaderPass (pbrMasterNode, m_DepthOnlyPass, mode, subShader, sourceAssetDependencyPaths);
-                GenerateShaderPass (pbrMasterNode, m_LitMetaPass, mode, subShader, sourceAssetDependencyPaths);
-                GenerateShaderPass (pbrMasterNode, m_2DPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_ForwardPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_ShadowCasterPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_DepthOnlyPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_LitMetaPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_2DPass, mode, subShader, sourceAssetDependencyPaths);
             }
             subShader.Deindent ();
             subShader.AddShaderChunk ("}", true);
@@ -478,6 +483,6 @@ namespace LiliumEditor.Toon
             return renderPipelineAsset is UniversalRenderPipelineAsset;
         }
 
-        public UniversalPBRSubShader () { }
+        public UniversalToonSubShader () { }
     }
 }
