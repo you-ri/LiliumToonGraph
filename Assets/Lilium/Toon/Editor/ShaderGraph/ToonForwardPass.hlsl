@@ -48,6 +48,8 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         float metallic = surfaceDescription.Metallic;
     #endif
 
+    Light mainLight = GetMainLight(inputData.shadowCoord);
+    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
 
     half4 color = LightweightFragmentToon(
 			inputData,
@@ -63,16 +65,22 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.ShadeShift,
 			surfaceDescription.ShadeToony);
 
+    half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation;
+    half giLighinting = inputData.bakedGI;
+    half3 sssColor = lerp3(half3(0, 0, 0), (surfaceDescription.Shade - surfaceDescription.Albedo) * giLighinting, half3(0, 0, 0), (lighing + 1) * surfaceDescription.Occlusion);
     half4 pbrColor = UniversalFragmentPBR(
 			inputData,
-			surfaceDescription.Albedo,
+			surfaceDescription.Albedo / (1 - specular),
 			metallic,
 			specular,
 			surfaceDescription.Smoothness,
 			surfaceDescription.Occlusion,
-			surfaceDescription.Emission,
+			surfaceDescription.Emission + sssColor,
 			surfaceDescription.Alpha); 
 
+    color = lerp(pbrColor, color, surfaceDescription.ToonyLighting);
+
     color.rgb = MixFog(color.rgb, inputData.fogCoord); 
+
     return color;
 }
