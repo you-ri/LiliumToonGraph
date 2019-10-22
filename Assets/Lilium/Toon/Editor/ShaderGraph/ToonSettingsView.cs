@@ -1,3 +1,6 @@
+//
+// based on: Packages\com.unity.shadergraph@7.1.2\Editor\Drawing\Views\PBRSettingsView.cs
+//
 using System;
 using System.Collections;
 using System.Collections.Generic;

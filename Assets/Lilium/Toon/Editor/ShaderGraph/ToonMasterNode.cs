@@ -1,3 +1,6 @@
+//
+// based on: com.unity.shadergraph@7.1.2\Editor\Data\MasterNodes\PBRMasterNode.cs
+//
 using System;
 using System.Linq;
 using System.Collections.Generic;

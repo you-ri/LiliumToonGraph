@@ -1,4 +1,7 @@
-﻿void BuildInputData(Varyings input, float3 normal, out InputData inputData)
+﻿//
+// based on: com.unity.render-pipelines.universal@7.1.2\Editor\ShaderGraph\Includes\PBRForwardPass.hlsl
+//
+void BuildInputData(Varyings input, float3 normal, out InputData inputData)
 {
     inputData.positionWS = input.positionWS;
 #ifdef _NORMALMAP

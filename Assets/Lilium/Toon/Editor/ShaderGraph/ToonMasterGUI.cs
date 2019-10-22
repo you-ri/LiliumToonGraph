@@ -1,7 +1,6 @@
 ﻿//
 // based on: com.unity.shadergraph@7.1.2\Editor\PBRMasterGUI.cs
 //
-
 using System;
 using UnityEngine;
 using UnityEditor;

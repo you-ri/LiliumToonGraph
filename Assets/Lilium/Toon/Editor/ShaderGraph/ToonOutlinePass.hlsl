@@ -1,4 +1,7 @@
-﻿void BuildInputData(Varyings input, float3 normal, out InputData inputData)
+﻿//
+// based on: com.unity.render-pipelines.universal@7.1.2\Editor\ShaderGraph\Includes\PBRForwardPass.hlsl
+//
+void BuildInputData(Varyings input, float3 normal, out InputData inputData)
 {
     inputData.positionWS = input.positionWS;
 #ifdef _NORMALMAP
@@ -18,6 +21,7 @@
 PackedVaryings vert(Attributes input)
 {
     Varyings output = (Varyings)0;
+    output = BuildVaryings(input);
 
 #if defined(FEATURES_GRAPH_VERTEX)
     // Evaluate Vertex Graph
@@ -25,11 +29,9 @@ PackedVaryings vert(Attributes input)
     VertexDescription vertexDescription = VertexDescriptionFunction(vertexDescriptionInputs);
 
     // Assign modified vertex attributes
-    float outlineWidth = vertexDescription.OutlineWidth;
-#endif
-
-    output = BuildVaryings(input);
     output.positionCS = TransformOutlineToHClipScreenSpace(input.positionOS.xyz, input.normalOS.xyz, vertexDescription.OutlineWidth);
+#else
+#endif
 
     PackedVaryings packedOutput = (PackedVaryings)0;
     packedOutput = PackVaryings(output);
