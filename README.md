@@ -2,7 +2,7 @@
 
 トゥーンシェーダーでもシェーダーグラフを使いたい！
 
-+ URP対応トゥーンシェーダーです。
++ UniversalRP対応トゥーンシェーダーです。旧LWRP対応版は[こちら](https://github.com/you-ri/LiliumToonGraph/tree/lwrp)。
 + 表現の実験中。
 + ShaderGraphパッケージ及びUniversalRPパッケージ内のInternalクラスを利用します。前方互換性はほとんどないと思われます。
 + PBRマスターノードを改造する形で開発しました。まだ無駄なコードが残っています。
