@@ -1,8 +1,7 @@
-﻿using System;
+﻿//
+// based on: com.unity.shadergraph@7.1.2\Editor\PBRMasterGUI.cs
 //
-// based on: com.unity.shadergraph@5.6.1\Editor\Data\MasterNodes\PBRMasterGUI.cs
-//
-
+using System;
 using UnityEngine;
 using UnityEditor;
 

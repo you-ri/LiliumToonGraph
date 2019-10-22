@@ -1,5 +1,5 @@
 //
-// based on: com.unity.shadergraph@5.6.1\Editor\Data\MasterNodes\IPBRSubShader.cs
+// based on: com.unity.shadergraph@7.1.2\Editor\Data\MasterNodes\IPBRShader.cs
 //
 using System;
 using UnityEditor.ShaderGraph;

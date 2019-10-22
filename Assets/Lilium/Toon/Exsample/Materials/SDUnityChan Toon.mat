@@ -136,7 +136,7 @@ Material:
     m_Colors:
     - Color_76D10967: {r: 1, g: 1, b: 1, a: 1}
     - Color_AEA6BBA8: {r: 0, g: 0, b: 0, a: 0}
-    - Color_E8797B55: {r: 0.8113208, g: 0.80626917, b: 0.79983985, a: 1}
+    - Color_E8797B55: {r: 0.7407885, g: 0.8745696, b: 0.8773585, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

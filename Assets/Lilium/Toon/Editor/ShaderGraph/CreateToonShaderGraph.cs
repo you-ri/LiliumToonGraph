@@ -1,5 +1,5 @@
 //
-// based on: com.unity.shadergraph@5.6.1\Editor\AssetCallbacks\CreatePBRShaderGraph.cs
+// based on: com.unity.shadergraph@7.1.2\Editor\AssetCallbacks\CreateShaderGraph.cs
 //
 using System.IO;
 using UnityEditor;
@@ -8,22 +8,12 @@ using UnityEditor.ShaderGraph;
 
 namespace LiliumEditor.Toon
 {
-    class CreateToonShaderGraph : EndNameEditAction
+    static class CreateShaderGraph
     {
-        [MenuItem("Assets/Create/Shader/Toon Graph", false, 208)]
-        public static void CreateMaterialGraph()
+        [MenuItem ("Assets/Create/Shader/Toon Graph", false, 208)]
+        public static void CreateUnlitMasterMaterialGraph ()
         {
-            ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, CreateInstance<CreateToonShaderGraph> (),
-                string.Format("New Shader Graph.{0}", ShaderGraphImporter.Extension), null, null);
-        }
-
-        public override void Action(int instanceId, string pathName, string resourceFile)
-        {
-            var graph = new GraphData();
-            graph.AddNode(new ToonMasterNode());
-            graph.path = "Shader Graphs";
-            File.WriteAllText(pathName, EditorJsonUtility.ToJson(graph));
-            AssetDatabase.Refresh();
+            GraphUtil.CreateNewGraph (new ToonMasterNode ());
         }
     }
 }

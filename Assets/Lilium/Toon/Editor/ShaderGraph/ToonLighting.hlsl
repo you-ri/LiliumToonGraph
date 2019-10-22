@@ -2,16 +2,15 @@
 // referenced: com.unity.render-pipelines.lightweight@5.6.1\ShaderLibrary\Lighting.hlsl
 // referenced: MToon Copyright (c) 2018 Masataka SUMI https://github.com/Santarh/MToon
 //
-#ifndef LIGHTWEIGHT_TOONLIGHTING_INCLUDED
-#define LIGHTWEIGHT_TOONLIGHTING_INCLUDED
+#ifndef UNIVERSAL_TOONLIGHTING_INCLUDED
+#define UNIVERSAL_TOONLIGHTING_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
-#include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Core.hlsl"
-#include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Shadows.hlsl"
-#include "Packages/com.unity.render-pipelines.lightweight/ShaderLibrary/Lighting.hlsl"
-
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 inline half3 lerp3(half3 one, half3 two, half3 three, float value)
 {
@@ -180,7 +179,7 @@ half3 EnvironmentToon(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(1) + 1;     // 最大限に粗い反射環境マップを割り当てる
+    half mip = PerceptualRoughnessToMipmapLevel(1);     // 最大限に粗い反射環境マップを割り当てる
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
 #if !defined(UNITY_USE_NATIVE_HDR)
