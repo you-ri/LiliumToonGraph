@@ -2,13 +2,16 @@
 
 トゥーンシェーダーでもシェーダーグラフを使いたい！
 
+![](https://github.com/you-ri/LiliumToonGraph/blob/master/Docs/screenshot.png?raw=true)
+
 + UniversalRP対応トゥーンシェーダーです。旧LWRP対応版は[こちら](https://github.com/you-ri/LiliumToonGraph/tree/lwrp)。
-+ 表現の実験中。
++ 表現の実験中。PBRと親和性の高いトゥーンシェーダーを目指しています。
+![](https://i.imgur.com/uvc6CwX.gif)
 + ShaderGraphパッケージ及びUniversalRPパッケージ内のInternalクラスを利用します。前方互換性はほとんどないと思われます。
 + PBRマスターノードを改造する形で開発しました。まだ無駄なコードが残っています。
 + カスタムマスターノードのサンプルにどうぞ。ソースファイルの　`Toon` を `PBR` に変換してパッケージ内を検索すると元になったソースファイルが見つかります。Wikiの方にも書いています。 https://github.com/you-ri/LiliumToonGraph/wiki
 
-![](https://github.com/you-ri/LiliumToonGraph/blob/master/Docs/screenshot.png?raw=true)
+
 
 
 ## System requirements
