@@ -114,7 +114,7 @@ namespace LiliumEditor.Toon
             lightMode = "",
             passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonOutlinePass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
-            useInPreview = true,
+            useInPreview = false,
 
             // Port mask
             vertexPorts = new List<int> ()

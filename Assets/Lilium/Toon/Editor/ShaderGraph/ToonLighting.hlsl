@@ -282,11 +282,11 @@ float3 SampleOminidirectionalLightmap(float2 lightmapUV)
     float3 gi = float3(0, 0, 0);
 
     gi += SampleLightmap(lightmapUV, half3(1, 0, 0));
-    gi += SampleLightmap(lightmapUV, half3(-1, 0, 0));	
+    gi += SampleLightmap(lightmapUV, half3(-1, 0, 0));
     gi += SampleLightmap(lightmapUV, half3(0, 1, 0));
-    gi += SampleLightmap(lightmapUV, half3(0, -1, 0));	
+    gi += SampleLightmap(lightmapUV, half3(0, -1, 0));
     gi += SampleLightmap(lightmapUV, half3(0, 0, 1));
-    gi += SampleLightmap(lightmapUV, half3(0, 0, -1));	
+    gi += SampleLightmap(lightmapUV, half3(0, 0, -1));
     return gi / 6;
 }
 
@@ -295,11 +295,11 @@ float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
     float3 gi = float3(0, 0, 0);
 
     gi += SampleSHPixel(vertexSH, half3(1, 0, 0));
-    gi += SampleSHPixel(vertexSH, half3(-1, 0, 0));	
+    gi += SampleSHPixel(vertexSH, half3(-1, 0, 0));
     gi += SampleSHPixel(vertexSH, half3(0, 1, 0));
-    gi += SampleSHPixel(vertexSH, half3(0, -1, 0));	
+    gi += SampleSHPixel(vertexSH, half3(0, -1, 0));
     gi += SampleSHPixel(vertexSH, half3(0, 0, 1));
-    gi += SampleSHPixel(vertexSH, half3(0, 0, -1));	
+    gi += SampleSHPixel(vertexSH, half3(0, 0, -1));
     return gi / 6;
 }
 
