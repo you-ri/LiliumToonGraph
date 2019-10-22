@@ -27,7 +27,6 @@ namespace LiliumEditor.Toon
             referenceName = "SHADERPASS_FORWARD",
             lightMode = "UniversalForward",
             passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonForwardPass.hlsl",
-            //passInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRForwardPass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
             useInPreview = true,
 
@@ -37,7 +36,6 @@ namespace LiliumEditor.Toon
                 ToonMasterNode.PositionSlotId,
                 ToonMasterNode.VertNormalSlotId,
                 ToonMasterNode.VertTangentSlotId,
-                ToonMasterNode.OutlineWidthSlotId,
             },
             pixelPorts = new List<int>
             {
@@ -107,6 +105,98 @@ namespace LiliumEditor.Toon
                 s_ShadowsSoftKeyword,
                 s_MixedLightingSubtractiveKeyword,
             },
+        };
+
+        ShaderPass m_OutlinePass = new ShaderPass {
+            // Definition
+            displayName = "Universal Outline",
+            referenceName = "SHADERPASS_FORWARD",
+            lightMode = "",
+            passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonOutlinePass.hlsl",
+            varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
+            useInPreview = true,
+
+            // Port mask
+            vertexPorts = new List<int> ()
+             {
+                ToonMasterNode.PositionSlotId,
+                ToonMasterNode.VertNormalSlotId,
+                ToonMasterNode.VertTangentSlotId,
+                ToonMasterNode.OutlineWidthSlotId,
+            },
+            pixelPorts = new List<int>
+             {
+                ToonMasterNode.AlbedoSlotId,
+                ToonMasterNode.NormalSlotId,
+                ToonMasterNode.EmissionSlotId,
+                ToonMasterNode.MetallicSlotId,
+                ToonMasterNode.SpecularSlotId,
+                ToonMasterNode.SmoothnessSlotId,
+                ToonMasterNode.OcclusionSlotId,
+                ToonMasterNode.AlphaSlotId,
+                ToonMasterNode.AlphaThresholdSlotId,
+                ToonMasterNode.ShadeSlotId,
+                ToonMasterNode.ShadeShiftSlotId,
+                ToonMasterNode.ShadeToonySlotId,
+                ToonMasterNode.ToonyLightingSlotId,
+            },
+
+            CullOverride = "Cull Front",
+            ZTestOverride = "ZTest Less",
+
+            // Required fields
+            requiredAttributes = new List<string> ()
+             {
+                "Attributes.uv1", //needed for meta vertex position
+                "Attributes.OutlineWidth",
+            },
+
+            // Required fields
+            requiredVaryings = new List<string> ()
+             {
+                "Varyings.positionWS",
+                "Varyings.positionCS",
+                "Varyings.normalWS",
+                "Varyings.tangentWS", //needed for vertex lighting
+                "Varyings.bitangentWS",
+                "Varyings.viewDirectionWS",
+                "Varyings.lightmapUV",
+                "Varyings.sh",
+                "Varyings.fogFactorAndVertexLight", //fog and vertex lighting, vert input is dependency
+                "Varyings.shadowCoord", //shadow coord, vert input is dependency
+            },
+
+            // Pass setup
+            includes = new List<string> ()
+             {
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl",
+                "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl",
+                "Assets/Lilium/Toon/Editor/ShaderGraph/ToonLighting.hlsl",
+            },
+            pragmas = new List<string> ()
+             {
+                "prefer_hlslcc gles",
+                "exclude_renderers d3d11_9x",
+                "target 2.0",
+                "multi_compile_fog",
+                "multi_compile_instancing",
+            },
+            keywords = new KeywordDescriptor[]
+             {
+                s_LightmapKeyword,
+                s_DirectionalLightmapCombinedKeyword,
+                s_MainLightShadowsKeyword,
+                s_MainLightShadowsCascadeKeyword,
+                s_AdditionalLightsKeyword,
+                s_AdditionalLightShadowsKeyword,
+                s_ShadowsSoftKeyword,
+                s_MixedLightingSubtractiveKeyword,
+             },
         };
 
         ShaderPass m_DepthOnlyPass = new ShaderPass () {
@@ -395,7 +485,9 @@ namespace LiliumEditor.Toon
             // Graph Vertex
             if (masterNode.IsSlotConnected (ToonMasterNode.PositionSlotId) ||
                masterNode.IsSlotConnected (ToonMasterNode.VertNormalSlotId) ||
-               masterNode.IsSlotConnected (ToonMasterNode.VertTangentSlotId)) {
+               masterNode.IsSlotConnected (ToonMasterNode.VertTangentSlotId) ||
+               masterNode.IsSlotConnected (ToonMasterNode.OutlineWidthSlotId)
+               ) {
                 baseActiveFields.Add ("features.graphVertex");
             }
 
@@ -467,6 +559,7 @@ namespace LiliumEditor.Toon
                 subShader.AddShaderChunk (tagsBuilder.ToString ());
 
                 GenerateShaderPass (ToonMasterNode, m_ForwardPass, mode, subShader, sourceAssetDependencyPaths);
+                GenerateShaderPass (ToonMasterNode, m_OutlinePass, mode, subShader, sourceAssetDependencyPaths);
                 GenerateShaderPass (ToonMasterNode, m_ShadowCasterPass, mode, subShader, sourceAssetDependencyPaths);
                 GenerateShaderPass (ToonMasterNode, m_DepthOnlyPass, mode, subShader, sourceAssetDependencyPaths);
                 GenerateShaderPass (ToonMasterNode, m_LitMetaPass, mode, subShader, sourceAssetDependencyPaths);
