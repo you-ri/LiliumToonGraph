@@ -68,7 +68,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.ShadeShift,
 			surfaceDescription.ShadeToony);
 
-    half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation;
+    half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation * mainLight.distanceAttenuation;
     half giLighinting = inputData.bakedGI;
     half3 sssColor = lerp3(half3(0, 0, 0), (surfaceDescription.Shade - surfaceDescription.Albedo) * giLighinting, half3(0, 0, 0), (lighing + 1) * surfaceDescription.Occlusion);
     half4 pbrColor = UniversalFragmentPBR(

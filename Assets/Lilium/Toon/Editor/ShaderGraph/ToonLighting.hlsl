@@ -235,7 +235,7 @@ half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 dif
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half shadow = mainLight.shadowAttenuation;
+    half shadow = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
     half3 attenuatedLightColor = mainLight.color * mainLight.distanceAttenuation;
     half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
     half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
