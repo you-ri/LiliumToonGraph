@@ -52,11 +52,12 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
     #endif
 
     Light mainLight = GetMainLight(inputData.shadowCoord);
+
+    // 均一なGI情報を取得
     inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
 
-    half4 color = LightweightFragmentToon(
+    half4 color = UniversalFragmentToon(
 			inputData,
-			inputData.bakedGI,
 			surfaceDescription.Albedo,
 			surfaceDescription.Shade,
 			metallic,

@@ -66,9 +66,8 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
     float shadeToony = 0;
     float occlusion = 0.5;
 
-    half4 color = LightweightFragmentToon(
+    half4 color = UniversalFragmentToon(
 			inputData,
-			inputData.bakedGI,
 			surfaceDescription.Albedo,
 			surfaceDescription.Shade,
 			metallic,

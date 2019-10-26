@@ -12,6 +12,8 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+
+
 inline half3 lerp3(half3 one, half3 two, half3 three, float value)
 {
     half3 v = lerp(two, three, max(value - 1, 0));
@@ -50,65 +52,91 @@ inline float3 TransformViewToProjection(float3 v) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
-{
-    //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
-    half _OutlineScaledMaxDistance = 10;
-
-
-    float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
-    float aspect = abs(nearUpperRight.y / nearUpperRight.x);
-    float4 vertex = TransformObjectToHClip(position);
-    float3 viewNormal = mul((float3x3)UNITY_MATRIX_IT_MV, normal.xyz);
-    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
-    float2 projectedNormal = normalize(clipNormal.xy);
-    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
-    projectedNormal.x *= aspect;
-    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
-
-    // 少し奥方向に移動しないとアーティファクトが発生することがある
-    //vertex.z += -0.00002 / vertex.w;
-    return vertex;
-}
-
-float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outlineWidth)
-{
-    float3 worldNormalLength = length(mul((float3x3)transpose(unity_WorldToObject), normal));
-    float3 outlineOffset = 0.01 * outlineWidth * worldNormalLength * normal;
-    return TransformObjectToHClip(vertex + outlineOffset);
-}
-
-
+//                         Toon BRDF Functions                                    //
 ///////////////////////////////////////////////////////////////////////////////
-half3 LightingToonyBased(half3 lightColor, half3 lightDir, half lightAttenuation,  half3 normal, half viewDir, half shadeShift, half shadeToony)
+struct ToonBRDFData
 {
-    half lightIntensity = dot(normal, lightDir);
-    shadeShift = (1 - shadeShift) * 2 - 1;
-    lightIntensity = smoothstep(shadeShift, shadeShift + (1.0 - shadeToony), lightIntensity); // shade & tooned
-    return lightIntensity * lightColor * lightAttenuation;
+    half3 diffuse;
+    half3 specular;
+    half perceptualRoughness;
+    half roughness;
+    half roughness2;
+    half grazingTerm;
+
+    // We save some light invariant BRDF terms so we don't have to recompute
+    // them in the light loop. Take a look at DirectBRDF function for detailed explaination.
+    half normalizationTerm; // roughness * 4.0 + 2.0
+    half roughness2MinusOne; // roughness² - 1.0
+
+    // toony extend
+    half3 shade;  // 影色
+    half3 base; // 基本色
+
+    half shadeShift;
+    half shadeToony;
+};
+
+inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half shadeShift, half shadeToony, half3 gi, out ToonBRDFData outBRDFData)
+{
+#ifdef _SPECULAR_SETUP
+    half reflectivity = ReflectivitySpecular(specular);
+    half oneMinusReflectivity = 1.0 - reflectivity;
+
+    outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
+    outBRDFData.specular = specular;
+#else
+
+    half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
+    half reflectivity = 1.0 - oneMinusReflectivity;
+
+    outBRDFData.diffuse = albedo * oneMinusReflectivity;
+    outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
+#endif
+
+    outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
+    outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
+    outBRDFData.roughness = max(PerceptualRoughnessToRoughness(outBRDFData.perceptualRoughness), HALF_MIN);
+    outBRDFData.roughness2 = outBRDFData.roughness * outBRDFData.roughness;
+
+    outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
+    outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
+
+    outBRDFData.base = albedo * (half3(1, 1, 1) - (shade * gi));
+    outBRDFData.shade = shade;
+    outBRDFData.shadeShift = (1 - shadeShift);
+    outBRDFData.shadeToony = shadeToony;
+
+#ifdef _ALPHAPREMULTIPLY_ON
+    outBRDFData.diffuse *= alpha;
+    alpha = alpha * oneMinusReflectivity + reflectivity;
+#endif
 }
 
-half3 LightingToonyBased(Light light, half3 normalWS, half3 viewDirectionWS, half shadeShift, half shadeToony)
+// トーン階調で減衰した値を取り出す
+inline half ToonyValue(ToonBRDFData brdfData, half value)
 {
-    return LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS, shadeShift, shadeToony);
+    //value = value * 2.0 - 1.0; // from [0, 1] to [-1, +1]
+    value = smoothstep(brdfData.shadeShift, brdfData.shadeShift + (1.0 - brdfData.shadeToony), value); // shade & tooned
+    return value;
+}
+
+// トーン階調で減衰した値を取り出す
+inline float ToonyValue(ToonBRDFData brdfData, float value)
+{
+    //value = value * 2.0 - 1.0; // from [0, 1] to [-1, +1]
+    value = smoothstep(brdfData.shadeShift, brdfData.shadeShift + (1.0 - brdfData.shadeToony), value); // shade & tooned
+    return value;
 }
 
 
-half3 ToonyIntensity(half3 lightDir, half3 normal, half shadeShift, half shadeToony)
-{
-    half lightIntensity = dot(normal, lightDir);
-    shadeShift = (1 - shadeShift) * 2 - 1;
-    lightIntensity = smoothstep(shadeShift, shadeShift + (1.0 - shadeToony), lightIntensity); // shade & tooned
-    return lightIntensity;
-}
 
-
-half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3 viewDir, half3 specular, half smoothness, half shadeToony)
+half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
-    half NdotH = dot(SafeNormalize(viewDir + lightDir), normal);
-    half modifier = lerpToony(NdotH, smoothness, shadeToony);
-    return lightColor * specular * modifier;
+    // アンビエントは影色と掛け合わせる
+    half3 c = indirectDiffuse * brdfData.shade;
+    float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
+    c += surfaceReduction * indirectSpecular  * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
+    return c;
 }
 
 
@@ -120,12 +148,12 @@ half3 LightingToonSpecular(half3 lightColor, half3 lightDir, half3 normal, half3
 // * NDF [Modified] GGX
 // * Modified Kelemen and Szirmay-​Kalos for Visibility term
 // * Fresnel approximated with 1/LdotH
-half3 DirectToonBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
 {
 #ifndef _SPECULARHIGHLIGHTS_OFF
-    half3 halfDir = SafeNormalize(lightDirectionWS + viewDirectionWS);
+    float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(viewDirectionWS));
 
-    half NoH = saturate(dot(normalWS, halfDir));
+    float NoH = saturate(dot(normalWS, halfDir));
     half LoH = saturate(dot(lightDirectionWS, halfDir));
 
     // GGX Distribution multiplied by combined approximation of Visibility and Fresnel
@@ -138,43 +166,27 @@ half3 DirectToonBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, 
     // Final BRDFspec = roughness² / ( NoH² * (roughness² - 1) + 1 )² * (LoH² * (roughness + 0.5) * 4.0)
     // We further optimize a few light invariant terms
     // brdfData.normalizationTerm = (roughness + 0.5) * 4.0 rewritten as roughness * 4.0 + 2.0 to a fit a MAD.
-    half d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001h;
+    float d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001f;
 
     half LoH2 = LoH * LoH;
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
-
-    // on mobiles (where half actually means something) denominator have risk of overflow
+    // On platforms where half actually means something, the denominator has a risk of overflow
     // clamp below was added specifically to "fix" that, but dx compiler (we convert bytecode to metal/gles)
     // sees that specularTerm have only non-negative terms, so it skips max(0,..) in clamp (leaving only min(100,...))
-#if defined (SHADER_API_MOBILE)
+#if defined (SHADER_API_MOBILE) || defined (SHADER_API_SWITCH)
     specularTerm = specularTerm - HALF_MIN;
     specularTerm = clamp(specularTerm, 0.0, 100.0); // Prevent FP16 overflow on mobiles
 #endif
 
-    NoH = 1;
-    LoH2 = 1;
-
-    half maxd = NoH * NoH * brdfData.roughness2MinusOne + 1.00001h;
-    half maxSpecularTerm = brdfData.roughness2 / ((maxd * maxd) * max(0.1h, LoH2) * brdfData.normalizationTerm);
-    specularTerm = smoothstep(0.1, 0.15, specularTerm / maxSpecularTerm) * maxSpecularTerm;
-
-    half3 color = specularTerm * brdfData.specular;// +brdfData.diffuse;
+    half3 color = specularTerm * brdfData.specular + brdfData.base;
     return color;
 #else
-    return half3(0, 0, 0);
+    return brdfData.diffuse;
 #endif
 }
 
 
-half3 EnvironmentToon(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
-{
-    half3 c = indirectDiffuse * brdfData.diffuse;
-    float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
-
-    c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
-    return c;
-}
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
@@ -195,74 +207,61 @@ half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughn
 }
 
 
-
-half3 GlobalIlluminationToon(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
 
-    //half3 indirectDiffuse = bakedGI * occlusion;
-    half3 indirectDiffuse = half3(0, 0, 0);// bakedGI * occlusion;
+    half3 indirectDiffuse = bakedGI * occlusion;
     half3 indirectSpecular = GlossyEnvironmentReflectionToon(reflectVector, brdfData.perceptualRoughness, occlusion);
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }
 
 
-
-
-half3 LightingToon(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+half3 LightingToonyBased(ToonBRDFData brdfData, Light light, InputData inputData, half3 normalWS, half3 viewDirectionWS)
 {
+    half lightAttenuation = light.distanceAttenuation * light.shadowAttenuation;
+    half3 lightDirectionWS = light.direction;
+
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = lightColor * (lightAttenuation * NdotL);
+    half3 radiance = light.color * ToonyValue(brdfData, (lightAttenuation * NdotL));
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
 }
 
-half3 LightingToon(BRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
-{
-    return LightingToon(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
-}
 
 
 
-
-half4 LightweightFragmentToon(InputData inputData, half3 lightBakedGI, half3 diffuse, half3 shade,
+///////////////////////////////////////////////////////////////////////////////
+//                      Fragment Functions                                   //
+//       Used by ShaderGraph and others builtin renderers                    //
+///////////////////////////////////////////////////////////////////////////////
+half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony)
 {
-    BRDFData brdfData;
-    InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData);
+    BRDFData brdfData2;
+    InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData2);
+
+    ToonBRDFData brdfData;
+    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, shadeShift, shadeToony, inputData.bakedGI, brdfData);
 
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half shadow = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
-    half3 attenuatedLightColor = mainLight.color * mainLight.distanceAttenuation;
-    half lighing = ToonyIntensity(mainLight.direction, inputData.normalWS, shadeShift, shadeToony) * shadow;
-    half3 lightColor = (lightBakedGI + attenuatedLightColor) * diffuse;
-    half3 shade1stColor = inputData.bakedGI * shade;
-    half3 shade2ndColor = half3(0, 0, 0);
-
-    half3 color = half3(0,0,0);
-    color += lerp3(shade2ndColor, shade1stColor, lightColor, (lighing + 1) * occlusion ) ;
-    
-    color += GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) * specular;
-    color += LightingToon(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
-    //color += LightingToonSpecular(attenuatedLightColor, mainLight.direction, inputData.normalWS, inputData.viewDirectionWS, specular, smoothness, shadeToony);// *shadow * occlusion;
+    half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    color += LightingToonyBased(brdfData, mainLight, inputData, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
-
-        half3 diffuseColor = lerp3(shade2ndColor, shade1stColor, attenuatedLightColor, (lighing + 1) * occlusion) ;
-        color += LightingToonyBased(light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, inputData.normalWS, inputData.viewDirectionWS, shadeShift, shadeToony) * diffuse * occlusion;
-
-        half3 attenuatedLightColor = light.color * light.distanceAttenuation;
-        half shadow = light.shadowAttenuation;
-        color += LightingToon(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
-        //color += LightingToonSpecular(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, specular, smoothness, shadeToony);// *shadow * occlusion;
+        color += LightingToonyBased(brdfData, light, inputData, inputData.normalWS, inputData.viewDirectionWS);
     }
+#endif
+
+#ifdef _ADDITIONAL_LIGHTS_VERTEX
+    color += inputData.vertexLighting * brdfData.diffuse;
 #endif
 
     color += emission;
@@ -303,5 +302,34 @@ float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
     return gi / 6;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
+{
+    //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
+    half _OutlineScaledMaxDistance = 10;
+
+
+    float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
+    float aspect = abs(nearUpperRight.y / nearUpperRight.x);
+    float4 vertex = TransformObjectToHClip(position);
+    float3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
+    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
+    float2 projectedNormal = normalize(clipNormal.xy);
+    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
+    projectedNormal.x *= aspect;
+    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
+
+    // 少し奥方向に移動しないとアーティファクトが発生することがある
+    //vertex.z += -0.00002 / vertex.w;
+    return vertex;
+}
+
+float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outlineWidth)
+{
+    float3 worldNormalLength = length(mul((float3x3) transpose(unity_WorldToObject), normal));
+    float3 outlineOffset = 0.01 * outlineWidth * worldNormalLength * normal;
+    return TransformObjectToHClip(vertex + outlineOffset);
+}
 
 #endif
