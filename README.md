@@ -16,7 +16,7 @@
 
 ## System requirements
 
-+ Unity 2019.3.0b7
++ Unity 2019.3.0b8
 
 ## How to use
 
