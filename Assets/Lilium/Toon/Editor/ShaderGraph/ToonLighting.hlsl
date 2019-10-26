@@ -168,8 +168,12 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     // brdfData.normalizationTerm = (roughness + 0.5) * 4.0 rewritten as roughness * 4.0 + 2.0 to a fit a MAD.
     float d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001f;
 
+    d = ToonyValue(brdfData, d);
+
+
     half LoH2 = LoH * LoH;
-    half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
+    half specularTerm = brdfData.roughness2 / (d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm;
+    //half specularTerm = brdfData.roughness2 / ToonyValue(brdfData, (d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
     // On platforms where half actually means something, the denominator has a risk of overflow
     // clamp below was added specifically to "fix" that, but dx compiler (we convert bytecode to metal/gles)

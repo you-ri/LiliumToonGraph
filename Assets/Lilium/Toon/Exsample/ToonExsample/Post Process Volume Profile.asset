@@ -62,7 +62,7 @@ MonoBehaviour:
   active: 1
   m_AdvancedMode: 0
   mode:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 2
 --- !u!114 &-5653892241226312766
 MonoBehaviour:
