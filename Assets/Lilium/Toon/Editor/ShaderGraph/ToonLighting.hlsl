@@ -171,8 +171,11 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     half LoH2 = LoH * LoH;
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
+    float maxD = brdfData.roughness2MinusOne + 1.00001f;
+    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * brdfData.normalizationTerm);
+
     // Toony specular
-    specularTerm = ToonyValue(brdfData, specularTerm);
+    specularTerm = ToonyValue(brdfData, specularTerm / maxSpecularTerm) * maxSpecularTerm;
 
     // On platforms where half actually means something, the denominator has a risk of overflow
     // clamp below was added specifically to "fix" that, but dx compiler (we convert bytecode to metal/gles)
