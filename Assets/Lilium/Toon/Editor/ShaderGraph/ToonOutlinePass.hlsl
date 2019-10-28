@@ -63,7 +63,12 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         float metallic = surfaceDescription.Metallic;
     #endif
 
-    float occlusion = 0.5;
+
+    // 均一なGI情報を取得
+    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
+
+    float occlusion = surfaceDescription.Occlusion * 0.5f;
+    surfaceDescription.Smoothness = 0;
 
     half4 color = UniversalFragmentToon(
 			inputData,
@@ -78,16 +83,6 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			1,
 			surfaceDescription.ShadeToony,
             surfaceDescription.ToonyLighting);
-
-    half4 pbrColor = UniversalFragmentPBR(
-			inputData,
-			surfaceDescription.Albedo,
-			metallic,
-			specular,
-			surfaceDescription.Smoothness,
-			occlusion,
-			surfaceDescription.Emission,
-			surfaceDescription.Alpha); 
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord); 
     return color;

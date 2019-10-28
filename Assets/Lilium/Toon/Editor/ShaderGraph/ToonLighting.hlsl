@@ -102,18 +102,52 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
+    // Toony Paramaters
     half giLighing = giColor;
-    outBRDFData.base = outBRDFData.diffuse * (half3(1, 1, 1) - (shade * giColor)); // shade から base への差分色
-    outBRDFData.shade = shade;
+    outBRDFData.base = albedo * (half3(1, 1, 1) - (shade * giColor)) * oneMinusReflectivity; // shade から base への色差分
+    outBRDFData.shade = shade * oneMinusReflectivity;
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeShift = (1 - shadeShift);
     outBRDFData.shadeToony = shadeToony;
+
 
 #ifdef _ALPHAPREMULTIPLY_ON
     outBRDFData.diffuse *= alpha;
     alpha = alpha * oneMinusReflectivity + reflectivity;
 #endif
 }
+/*
+inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half smoothness, half alpha, out BRDFData outBRDFData)
+{
+#ifdef _SPECULAR_SETUP
+    half reflectivity = ReflectivitySpecular(specular);
+    half oneMinusReflectivity = 1.0 - reflectivity;
+
+    outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
+    outBRDFData.specular = specular;
+#else
+
+    half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
+    half reflectivity = 1.0 - oneMinusReflectivity;
+
+    outBRDFData.diffuse = albedo * oneMinusReflectivity;
+    outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
+#endif
+
+    outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
+    outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
+    outBRDFData.roughness = max(PerceptualRoughnessToRoughness(outBRDFData.perceptualRoughness), HALF_MIN);
+    outBRDFData.roughness2 = outBRDFData.roughness * outBRDFData.roughness;
+
+    outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
+    outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
+
+#ifdef _ALPHAPREMULTIPLY_ON
+    outBRDFData.diffuse *= alpha;
+    alpha = alpha * oneMinusReflectivity + reflectivity;
+#endif
+}
+*/
 
 // トーン階調で減衰した値を取り出す
 inline half ToonyValue(ToonBRDFData brdfData, half value)
@@ -137,7 +171,7 @@ half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indire
     // アンビエントは影色と掛け合わせる
     half3 c = indirectDiffuse * brdfData.shade;
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
-    c += surfaceReduction * indirectSpecular  * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
+    c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
     return c;
 }
 /*
@@ -219,7 +253,7 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(1);     // 最大限に粗い反射環境マップを割り当てる
+    half mip = PerceptualRoughnessToMipmapLevel(1); // 最大限に粗い反射環境マップを割り当てる
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
 #if !defined(UNITY_USE_NATIVE_HDR)
@@ -233,12 +267,33 @@ half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughn
 
     return _GlossyEnvironmentColor.rgb * occlusion;
 }
+/*
+half3 GlossyEnvironmentReflection(half3 reflectVector, half perceptualRoughness, half occlusion)
+{
+#if !defined(_ENVIRONMENTREFLECTIONS_OFF)
+    half mip = PerceptualRoughnessToMipmapLevel(perceptualRoughness);
+    half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
+#if !defined(UNITY_USE_NATIVE_HDR)
+    half3 irradiance = DecodeHDREnvironment(encodedIrradiance, unity_SpecCube0_HDR);
+#else
+    half3 irradiance = encodedIrradiance.rbg;
+#endif
+
+    return irradiance * occlusion;
+#endif // GLOSSY_REFLECTIONS
+
+    return _GlossyEnvironmentColor.rgb * occlusion;
+}
+*/
 
 half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
+    
+    // toony fresnel
+    fresnelTerm = ToonyValue(brdfData, fresnelTerm);
 
     half3 indirectDiffuse = bakedGI * occlusion;
     half3 indirectSpecular = GlossyEnvironmentReflectionToon(reflectVector, brdfData.perceptualRoughness, occlusion);
@@ -295,10 +350,7 @@ half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
 {
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, brdfData);
-
-    //BRDFData brdfData2;
-    //InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData2);
-
+    
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
@@ -315,7 +367,7 @@ half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
 #endif
 
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
-    color += inputData.vertexLighting * brdfData.diffuse;
+    color += inputData.vertexLighting * brdfData.base;
 #endif
 
     color += emission;
