@@ -63,7 +63,6 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         float metallic = surfaceDescription.Metallic;
     #endif
 
-    float shadeToony = 0;
     float occlusion = 0.5;
 
     half4 color = UniversalFragmentToon(
@@ -76,8 +75,9 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.Smoothness,
 			surfaceDescription.Emission,
 			surfaceDescription.Alpha,
-			surfaceDescription.ShadeShift,
-			shadeToony);
+			1,
+			surfaceDescription.ShadeToony,
+            surfaceDescription.ToonyLighting);
 
     half4 pbrColor = UniversalFragmentPBR(
 			inputData,

@@ -71,12 +71,13 @@ struct ToonBRDFData
     // toony extend
     half3 shade;  // 影色
     half3 base; // 基本色
+    half occlusion;
 
     half shadeShift;
     half shadeToony;
 };
 
-inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half shadeShift, half shadeToony, half3 gi, out ToonBRDFData outBRDFData)
+inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, half shadeShift, half shadeToony, half3 giColor, out ToonBRDFData outBRDFData)
 {
 #ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
@@ -89,7 +90,7 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
     half reflectivity = 1.0 - oneMinusReflectivity;
 
-    outBRDFData.diffuse = albedo * oneMinusReflectivity;
+    outBRDFData.diffuse = albedo * oneMinusReflectivity; 
     outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
 #endif
 
@@ -101,8 +102,10 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
-    outBRDFData.base = albedo * (half3(1, 1, 1) - (shade * gi));
+    half giLighing = giColor;
+    outBRDFData.base = outBRDFData.diffuse * (half3(1, 1, 1) - (shade * giColor)); // shade から base への差分色
     outBRDFData.shade = shade;
+    outBRDFData.occlusion = occlusion;
     outBRDFData.shadeShift = (1 - shadeShift);
     outBRDFData.shadeToony = shadeToony;
 
@@ -129,7 +132,6 @@ inline float ToonyValue(ToonBRDFData brdfData, float value)
 }
 
 
-
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
     // アンビエントは影色と掛け合わせる
@@ -138,8 +140,15 @@ half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indire
     c += surfaceReduction * indirectSpecular  * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
     return c;
 }
-
-
+/*
+half3 EnvironmentBRDF(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
+{
+    half3 c = indirectDiffuse * brdfData.diffuse;
+    float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
+    c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
+    return c;
+}
+*/
 
 
 // Based on Minimalist CookTorrance BRDF
@@ -156,30 +165,16 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     float NoH = saturate(dot(normalWS, halfDir));
     half LoH = saturate(dot(lightDirectionWS, halfDir));
 
-    // GGX Distribution multiplied by combined approximation of Visibility and Fresnel
-    // BRDFspec = (D * V * F) / 4.0
-    // D = roughness² / ( NoH² * (roughness² - 1) + 1 )²
-    // V * F = 1.0 / ( LoH² * (roughness + 0.5) )
-    // See "Optimizing PBR for Mobile" from Siggraph 2015 moving mobile graphics course
-    // https://community.arm.com/events/1155
-
-    // Final BRDFspec = roughness² / ( NoH² * (roughness² - 1) + 1 )² * (LoH² * (roughness + 0.5) * 4.0)
-    // We further optimize a few light invariant terms
-    // brdfData.normalizationTerm = (roughness + 0.5) * 4.0 rewritten as roughness * 4.0 + 2.0 to a fit a MAD.
     float d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001f;
 
     half LoH2 = LoH * LoH;
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
+    // Toony specular
     float maxD = brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * brdfData.normalizationTerm);
-
-    // Toony specular
     specularTerm = ToonyValue(brdfData, specularTerm / maxSpecularTerm) * maxSpecularTerm;
 
-    // On platforms where half actually means something, the denominator has a risk of overflow
-    // clamp below was added specifically to "fix" that, but dx compiler (we convert bytecode to metal/gles)
-    // sees that specularTerm have only non-negative terms, so it skips max(0,..) in clamp (leaving only min(100,...))
 #if defined (SHADER_API_MOBILE) || defined (SHADER_API_SWITCH)
     specularTerm = specularTerm - HALF_MIN;
     specularTerm = clamp(specularTerm, 0.0, 100.0); // Prevent FP16 overflow on mobiles
@@ -188,11 +183,37 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     half3 color = specularTerm * brdfData.specular + brdfData.base;
     return color;
 #else
-    return brdfData.diffuse;
+    return brdfData.base;
 #endif
 
 }
 
+/*
+half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+{
+#ifndef _SPECULARHIGHLIGHTS_OFF
+    float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(viewDirectionWS));
+
+    float NoH = saturate(dot(normalWS, halfDir));
+    half LoH = saturate(dot(lightDirectionWS, halfDir));
+
+    float d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001f;
+
+    half LoH2 = LoH * LoH;
+    half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
+
+#if defined (SHADER_API_MOBILE) || defined (SHADER_API_SWITCH)
+    specularTerm = specularTerm - HALF_MIN;
+    specularTerm = clamp(specularTerm, 0.0, 100.0); // Prevent FP16 overflow on mobiles
+#endif
+
+    half3 color = specularTerm * brdfData.specular + brdfData.diffuse;
+    return color;
+#else
+    return brdfData.diffuse;
+#endif
+}
+*/
 
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
@@ -224,18 +245,44 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }
-
-
-half3 LightingToonyBased(ToonBRDFData brdfData, Light light, InputData inputData, half3 normalWS, half3 viewDirectionWS)
+/*
+half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
-    half lightAttenuation = light.distanceAttenuation * light.shadowAttenuation;
-    half3 lightDirectionWS = light.direction;
+    half3 reflectVector = reflect(-viewDirectionWS, normalWS);
+    half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
 
+    half3 indirectDiffuse = bakedGI * occlusion;
+    half3 indirectSpecular = GlossyEnvironmentReflection(reflectVector, brdfData.perceptualRoughness, occlusion);
+
+    return EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+}
+*/
+
+half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+{
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = light.color * ToonyValue(brdfData, (lightAttenuation * NdotL));
+    half3 radiance = lightColor * ToonyValue(brdfData, (lightAttenuation * NdotL));
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
 }
 
+half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
+{
+    return LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
+}
+
+/*
+half3 LightingPhysicallyBased(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+{
+    half NdotL = saturate(dot(normalWS, lightDirectionWS));
+    half3 radiance = lightColor * (lightAttenuation * NdotL);
+    return DirectBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
+
+
+half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
+{
+    return LightingPhysicallyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
+}
+*/
 
 
 
@@ -244,26 +291,26 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, InputData inputData
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
-    half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony)
+    half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony, half toonyLighing)
 {
-    BRDFData brdfData2;
-    InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData2);
-
     ToonBRDFData brdfData;
-    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, shadeShift, shadeToony, inputData.bakedGI, brdfData);
+    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, brdfData);
+
+    //BRDFData brdfData2;
+    //InitializeBRDFData(diffuse, metallic, specular, smoothness, alpha, brdfData2);
 
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    color += LightingToonyBased(brdfData, mainLight, inputData, inputData.normalWS, inputData.viewDirectionWS);
+    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
-        color += LightingToonyBased(brdfData, light, inputData, inputData.normalWS, inputData.viewDirectionWS);
+        color += LightingToonyBased(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
     }
 #endif
 
@@ -275,8 +322,11 @@ half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
     return half4(color, alpha);
 }
 
-// GIの全天からの平均値を算出
-// TODO: 高速化
+///////////////////////////////////////////////////////////////////////////////
+
+
+// GI全天球から均一な値を算出
+// TODO: 現状は６方向の平均値をしている。擬似的。
 #ifdef LIGHTMAP_ON
 #define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOminidirectionalLightmap(lmName)
 #else

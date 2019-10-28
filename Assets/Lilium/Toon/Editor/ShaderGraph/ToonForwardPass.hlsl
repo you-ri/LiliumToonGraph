@@ -51,8 +51,6 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         float metallic = surfaceDescription.Metallic;
     #endif
 
-    Light mainLight = GetMainLight(inputData.shadowCoord);
-
     // 均一なGI情報を取得
     inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
 
@@ -67,11 +65,15 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.Emission,
 			surfaceDescription.Alpha,
 			surfaceDescription.ShadeShift,
-			surfaceDescription.ShadeToony);
+			surfaceDescription.ShadeToony,
+            surfaceDescription.ToonyLighting);
 
+    // PBR カラー計算
+    // TODO: UniversalFragmentToonに統合。
+    Light mainLight = GetMainLight(inputData.shadowCoord);
     half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation * mainLight.distanceAttenuation;
-    half giLighinting = inputData.bakedGI;
-    half3 sssColor = lerp3(half3(0, 0, 0), (surfaceDescription.Shade - surfaceDescription.Albedo) * giLighinting, half3(0, 0, 0), (lighing + 1) * surfaceDescription.Occlusion);
+    half3 giLighinting = inputData.bakedGI;
+    half3 sssEmmisionColor = ((surfaceDescription.Shade - surfaceDescription.Albedo) * giLighinting * surfaceDescription.Occlusion) * (1 - lighing);
     half4 pbrColor = UniversalFragmentPBR(
 			inputData,
 			surfaceDescription.Albedo / (1 - specular),
@@ -79,12 +81,10 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			specular,
 			surfaceDescription.Smoothness,
 			surfaceDescription.Occlusion,
-			surfaceDescription.Emission + sssColor,
+			surfaceDescription.Emission + sssEmmisionColor,
 			surfaceDescription.Alpha); 
 
     color = lerp(pbrColor, color, surfaceDescription.ToonyLighting);
-
     color.rgb = MixFog(color.rgb, inputData.fogCoord); 
-
     return color;
 }
