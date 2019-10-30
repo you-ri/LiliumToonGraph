@@ -107,8 +107,8 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     outBRDFData.base = albedo * (half3(1, 1, 1) - (shade * giColor)) * oneMinusReflectivity; // shade から base への色差分
     outBRDFData.shade = shade * oneMinusReflectivity;
     outBRDFData.occlusion = occlusion;
-    outBRDFData.shadeShift = (1 - shadeShift);
-    outBRDFData.shadeToony = shadeToony;
+    outBRDFData.shadeToony = (1 - shadeToony);
+    outBRDFData.shadeShift = (1 - shadeShift) - (outBRDFData.shadeToony / 2);
 
 
 #ifdef _ALPHAPREMULTIPLY_ON
@@ -149,20 +149,21 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 }
 */
 
-// トーン階調で減衰した値を取り出す
-inline half ToonyValue(ToonBRDFData brdfData, half value)
+// トーン調に変換した値を取り出す
+inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
-    //value = value * 2.0 - 1.0; // from [0, 1] to [-1, +1]
-    value = smoothstep(brdfData.shadeShift, brdfData.shadeShift + (1.0 - brdfData.shadeToony), value); // shade & tooned
-    return value;
+    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
 }
 
-// トーン階調で減衰した値を取り出す
-inline float ToonyValue(ToonBRDFData brdfData, float value)
+inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 {
-    //value = value * 2.0 - 1.0; // from [0, 1] to [-1, +1]
-    value = smoothstep(brdfData.shadeShift, brdfData.shadeShift + (1.0 - brdfData.shadeToony), value); // shade & tooned
-    return value;
+    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
+}
+
+// トーン調に変換した値を取り出す（影色用）
+inline half ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
+{
+    return smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
 }
 
 
@@ -206,8 +207,8 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
 
     // Toony specular
     float maxD = brdfData.roughness2MinusOne + 1.00001f;
-    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * brdfData.normalizationTerm);
-    specularTerm = ToonyValue(brdfData, specularTerm / maxSpecularTerm) * maxSpecularTerm;
+    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
+    specularTerm = ToonyValue(brdfData, specularTerm, maxSpecularTerm);
 
 #if defined (SHADER_API_MOBILE) || defined (SHADER_API_SWITCH)
     specularTerm = specularTerm - HALF_MIN;
@@ -291,7 +292,7 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
 {
     half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half fresnelTerm = Pow4(1.0 - saturate(dot(normalWS, viewDirectionWS)));
-    
+
     // toony fresnel
     fresnelTerm = ToonyValue(brdfData, fresnelTerm);
 
@@ -316,7 +317,7 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = lightColor * ToonyValue(brdfData, (lightAttenuation * NdotL));
+    half3 radiance = lightColor * ToonyShadeValue(brdfData, (lightAttenuation * NdotL));
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
 }
 
@@ -417,7 +418,6 @@ float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float 
 {
     //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
     half _OutlineScaledMaxDistance = 10;
-
 
     float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
     float aspect = abs(nearUpperRight.y / nearUpperRight.x);
