@@ -108,7 +108,7 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     outBRDFData.shade = shade * oneMinusReflectivity;
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = (1 - shadeShift) - (outBRDFData.shadeToony / 2);
+    outBRDFData.shadeShift = (1 - shadeShift);//  -(outBRDFData.shadeToony / 2);
 
 
 #ifdef _ALPHAPREMULTIPLY_ON
@@ -317,7 +317,7 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = lightColor * ToonyShadeValue(brdfData, (lightAttenuation * NdotL));
+    half3 radiance = lightColor * lightAttenuation * ToonyShadeValue(brdfData, (NdotL));
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
 }
 
