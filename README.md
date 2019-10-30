@@ -31,4 +31,6 @@ Assets/Lilium/Toon/Exsample/ToonExsample.unity
 
 MIT
 
-"Assets/UnityChan", "Assets/UnityHDRI", "Assets/DanishStatues" and "Packages" Folders License below to their licenses.
+"Assets/UnityChan", "Assets/DanishStatues" and "Packages" Folders License below to their licenses.
+
+© Unity Technologies Japan/UCL
