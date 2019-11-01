@@ -13,22 +13,6 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
-
-inline half3 lerp3(half3 one, half3 two, half3 three, float value)
-{
-    half3 v = lerp(two, three, max(value - 1, 0));
-    v = lerp(one, v, min(value, 1));
-    return v;
-}
-
-inline half lerpToony(half value, half shift, half toony)
-{
-    value = value * 2.0 - 1.0; // from [0, 1] to [-1, +1]
-    value = smoothstep(shift, shift + (1.0 - toony), value); // shade & tooned
-    return value;
-}
-
-
 inline half3 rgb2hsv(half3 c)
 {
     half4 K = half4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -47,7 +31,8 @@ inline half3 hsv2rgb(half3 c)
     return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-inline float3 TransformViewToProjection(float3 v) {
+inline float3 TransformViewToProjection(float3 v) 
+{
     return mul((float3x3)UNITY_MATRIX_P, v);
 }
 
@@ -153,11 +138,13 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
     return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
+//    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
 inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 {
     return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
+//    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
 // トーン調に変換した値を取り出す（影色用）
@@ -206,7 +193,7 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
     // Toony specular
-    float maxD = brdfData.roughness2MinusOne + 1.00001f;
+    float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
     specularTerm = ToonyValue(brdfData, specularTerm, maxSpecularTerm);
 
