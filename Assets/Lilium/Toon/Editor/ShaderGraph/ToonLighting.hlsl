@@ -14,6 +14,13 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+SamplerState sampler_LinearClamp
+{
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = Clamp; // of Mirror of Clamp of Border
+    AddressV = Clamp; // of Mirror of Clamp of Border
+};
+
 
 inline half3 rgb2hsv(half3 c)
 {
@@ -130,10 +137,16 @@ struct ToonBRDFData
 
     half shadeShift;
     half shadeToony;
+#ifdef SHADEMODEL_RAMP
+    TEXTURE2D( shadeRamp);
+    #endif
 };
 
 
-inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, half shadeShift, half shadeToony, half3 giColor, out ToonBRDFData outBRDFData)
+inline void InitializeToonBRDFData(
+    half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half shadeShift, half shadeToony, half3 giColor, Texture2D shadeRamp, 
+    out ToonBRDFData outBRDFData)
 {
 #ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
@@ -165,6 +178,9 @@ inline void InitializeToonBRDFData(half3 albedo, half3 shade, half metallic, hal
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = (1 - shadeShift); //  -(outBRDFData.shadeToony / 2);
+#ifdef SHADEMODEL_RAMP
+    outBRDFData.shadeRamp = shadeRamp;
+#endif
 
 
 #ifdef _ALPHAPREMULTIPLY_ON
@@ -220,10 +236,15 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 }
 
 // トーン調に変換した値を取り出す（影色用）
-inline half ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
+inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
+#ifdef SHADEMODEL_RAMP
+    return SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(1 - ((value + 1) / 2), brdfData.shadeToony), 0);
+#else
     return smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
+#endif
 }
+
 
 
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
@@ -386,7 +407,6 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     return LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
 }
 
-
 /*
 half3 LightingPhysicallyBased(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
@@ -402,18 +422,17 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 */
 
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 //                      Fragment Functions                                   //
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
-    half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, half shadeShift, half shadeToony, half toonyLighing)
+half4 UniversalFragmentToon(
+    InputData inputData, half3 diffuse, half3 shade,
+    half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
+    half shadeShift, half shadeToony, Texture2D shadeRamp, half toonyLighing)
 {
     ToonBRDFData brdfData;
-    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, brdfData);
+    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, shadeRamp, brdfData);
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
@@ -437,11 +456,11 @@ half4 UniversalFragmentToon(InputData inputData, half3 diffuse, half3 shade,
     return half4(color, alpha);
 }
 
-
+// カスタムファンクション
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
     half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony,
+    half ShadeShift, half ShadeToony, TEXTURE2D( ShadeRamp),
     out half3 Color)
 {
     InputData inputData;
@@ -460,40 +479,22 @@ void ToonLight_half(
     inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
 #endif
 //    inputData.shadowCoord = GetShadowCoord(GetVertexPositionInputs(ObjectPosition));
+    Color = UniversalFragmentToon(inputData, Diffuse, Shade, Metalic, 0, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, ShadeRamp, 1).rgb;
 
-    Color = UniversalFragmentToon(inputData, Diffuse, Shade, Metalic, 0, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, 1).rgb;
 }
-/*
-void BuildInputData(Varyings input, float3 normal, out InputData inputData)
-{
-    inputData.positionWS = input.positionWS;
-#ifdef _NORMALMAP
-    inputData.normalWS = TransformTangentToWorld(normal,
-        half3x3(input.tangentWS.xyz, input.bitangentWS.xyz, input.normalWS.xyz));
-#else
-    inputData.normalWS = input.normalWS;
-#endif
-    inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = SafeNormalize(input.viewDirectionWS);
-    inputData.shadowCoord = input.shadowCoord;
-    inputData.fogCoord = input.fogFactorAndVertexLight.x;
-    inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
-    inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.sh, inputData.normalWS);
-}
-*/
 
 
 #else
-
 
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
     half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony,
+    half ShadeShift, half ShadeToony, Texture2D ShadeRamp,
     out half3 Color)
 {
     Color = Diffuse;
 }
+
 
 
 #endif

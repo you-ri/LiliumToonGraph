@@ -63,9 +63,10 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         float metallic = surfaceDescription.Metallic;
     #endif
 
-
     // 均一なGI情報を取得
     inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
+
+    TEXTURE2D(shadeRamp);
 
     float occlusion = surfaceDescription.Occlusion * 0.5f;
     surfaceDescription.Smoothness = 0;
@@ -82,6 +83,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.Alpha,
 			1,
 			surfaceDescription.ShadeToony,
+            shadeRamp,
             surfaceDescription.ToonyLighting);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord); 

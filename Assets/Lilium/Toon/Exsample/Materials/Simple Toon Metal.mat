@@ -33,6 +33,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - Texture2D_11035104:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - Texture2D_39CB185:
         m_Texture: {fileID: 2800000, guid: 8bf23f4195e4b4641b06286d898b5705, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -65,8 +69,16 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _CustomFunction_A062B59F_ShadeRamp_17:
+        m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LiliumToonLightingSmoothstepRamp_45CD7D82_Texture2DED058F03_4268568337:
+        m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -98,6 +110,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - BOOLEAN_5FF062BF: 0
+    - BOOLEAN_9B700AD3: 0
+    - BOOLEAN_B3D4D13: 0
+    - ENUM_BB805A98: 0
+    - SHADEMODEL: 0
     - Vector1_309B4A83: 1
     - Vector1_49E9B1A1: 1
     - Vector1_4BAB6E0C: 0.6

@@ -54,6 +54,8 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
     // 均一なGI情報を取得
     inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
 
+    TEXTURE2D(shadeRamp);
+
     half4 color = UniversalFragmentToon(
 			inputData,
 			surfaceDescription.Albedo,
@@ -66,6 +68,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 			surfaceDescription.Alpha,
 			surfaceDescription.ShadeShift,
 			surfaceDescription.ShadeToony,
+            shadeRamp,
             surfaceDescription.ToonyLighting);
 
     // PBR カラー計算
