@@ -1,6 +1,40 @@
 ﻿//
 // based on: com.unity.render-pipelines.universal@7.1.2\Editor\ShaderGraph\Includes\PBRForwardPass.hlsl
+// referenced: MToon Copyright (c) 2018 Masataka SUMI https://github.com/Santarh/MToon
 //
+inline float3 TransformViewToProjection(float3 v)
+{
+    return mul((float3x3) UNITY_MATRIX_P, v);
+}
+
+float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
+{
+    //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
+    half _OutlineScaledMaxDistance = 10;
+
+    float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
+    float aspect = abs(nearUpperRight.y / nearUpperRight.x);
+    float4 vertex = TransformObjectToHClip(position);
+    float3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
+    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
+    float2 projectedNormal = normalize(clipNormal.xy);
+    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
+    projectedNormal.x *= aspect;
+    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
+
+    // 少し奥方向に移動しないとアーティファクトが発生することがある
+    //vertex.z += -0.00002 / vertex.w;
+    return vertex;
+}
+
+float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outlineWidth)
+{
+    float3 worldNormalLength = length(mul((float3x3) transpose(unity_WorldToObject), normal));
+    float3 outlineOffset = 0.01 * outlineWidth * worldNormalLength * normal;
+    return TransformObjectToHClip(vertex + outlineOffset);
+}
+
+
 void BuildInputData(Varyings input, float3 normal, out InputData inputData)
 {
     inputData.positionWS = input.positionWS;
@@ -52,40 +86,5 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         clip(surfaceDescription.Alpha - surfaceDescription.AlphaClipThreshold);
     #endif
 
-    InputData inputData;
-    BuildInputData(unpacked, surfaceDescription.Normal, inputData);
-
-    #ifdef _SPECULAR_SETUP
-        float3 specular = surfaceDescription.Specular;
-        float metallic = 1;
-    #else   
-        float3 specular = 0;
-        float metallic = surfaceDescription.Metallic;
-    #endif
-
-    // 均一なGI情報を取得
-    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
-
-    TEXTURE2D(shadeRamp);
-
-    float occlusion = surfaceDescription.Occlusion * 0.5f;
-    surfaceDescription.Smoothness = 0;
-
-    half4 color = UniversalFragmentToon(
-			inputData,
-			surfaceDescription.Albedo,
-			surfaceDescription.Shade,
-			metallic,
-			specular,
-			occlusion,
-			surfaceDescription.Smoothness,
-			surfaceDescription.Emission,
-			surfaceDescription.Alpha,
-			1,
-			surfaceDescription.ShadeToony,
-            shadeRamp,
-            surfaceDescription.ToonyLighting);
-
-    color.rgb = MixFog(color.rgb, inputData.fogCoord); 
-    return color;
+    return half4(surfaceDescription.EdgeColor, surfaceDescription.Alpha);
 }

@@ -40,54 +40,6 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         clip(surfaceDescription.Alpha - surfaceDescription.AlphaClipThreshold);
     #endif
 
-    InputData inputData;
-    BuildInputData(unpacked, surfaceDescription.Normal, inputData);
 
-    #ifdef _SPECULAR_SETUP
-        float3 specular = surfaceDescription.Specular;
-        float metallic = 1;
-    #else   
-        float3 specular = 0;
-        float metallic = surfaceDescription.Metallic;
-    #endif
-
-    // 均一なGI情報を取得
-    inputData.bakedGI = SAMPLE_OMNIDIRECTIONAL_GI(inputData.lightmapUV, unpacked.sh);
-
-    TEXTURE2D(shadeRamp);
-
-    half4 color = UniversalFragmentToon(
-			inputData,
-			surfaceDescription.Albedo,
-			surfaceDescription.Shade,
-			metallic,
-			specular,
-			surfaceDescription.Occlusion,
-			surfaceDescription.Smoothness,
-			surfaceDescription.Emission,
-			surfaceDescription.Alpha,
-			surfaceDescription.ShadeShift,
-			surfaceDescription.ShadeToony,
-            shadeRamp,
-            surfaceDescription.ToonyLighting);
-
-    // PBR カラー計算
-    // TODO: UniversalFragmentToonに統合。
-    Light mainLight = GetMainLight(inputData.shadowCoord);
-    half lighing = dot(inputData.normalWS, mainLight.direction) * mainLight.shadowAttenuation * mainLight.distanceAttenuation;
-    half3 giLighinting = inputData.bakedGI;
-    half3 sssEmmisionColor = ((surfaceDescription.Shade - surfaceDescription.Albedo) * giLighinting * surfaceDescription.Occlusion) * (1 - lighing);
-    half4 pbrColor = UniversalFragmentPBR(
-			inputData,
-			surfaceDescription.Albedo / (1 - specular),
-			metallic,
-			specular,
-			surfaceDescription.Smoothness,
-			surfaceDescription.Occlusion,
-			surfaceDescription.Emission + sssEmmisionColor,
-			surfaceDescription.Alpha); 
-
-    color = lerp(pbrColor, color, surfaceDescription.ToonyLighting);
-    color.rgb = MixFog(color.rgb, inputData.fogCoord); 
-    return color;
+    return half4(surfaceDescription.Albedo, surfaceDescription.Alpha);
 }

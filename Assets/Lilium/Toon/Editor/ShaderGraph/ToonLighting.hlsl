@@ -1,6 +1,5 @@
 //
 // referenced: com.unity.render-pipelines.lightweight@5.6.1\ShaderLibrary\Lighting.hlsl
-// referenced: MToon Copyright (c) 2018 Masataka SUMI https://github.com/Santarh/MToon
 //
 #ifndef UNIVERSAL_TOONLIGHTING2_INCLUDED
 #define UNIVERSAL_TOONLIGHTING2_INCLUDED
@@ -20,7 +19,6 @@ SamplerState sampler_LinearClamp
     AddressV = Clamp; // of Mirror of Clamp of Border
 };
 
-
 inline half3 rgb2hsv(half3 c)
 {
     half4 K = half4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -37,11 +35,6 @@ inline half3 hsv2rgb(half3 c)
     half4 K = half4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     half3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-inline float3 TransformViewToProjection(float3 v)
-{
-    return mul((float3x3) UNITY_MATRIX_P, v);
 }
 
 
@@ -80,35 +73,6 @@ float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
     gi += SampleSHPixel(vertexSH, half3(0, 0, 1));
     gi += SampleSHPixel(vertexSH, half3(0, 0, -1));
     return gi / 6;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
-{
-    //float outlineTex = tex2Dlod(_OutlineWidthTexture, float4(TRANSFORM_TEX(v.texcoord, _MainTex), 0, 0)).r;
-    half _OutlineScaledMaxDistance = 10;
-
-    float4 nearUpperRight = mul(unity_CameraInvProjection, float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
-    float aspect = abs(nearUpperRight.y / nearUpperRight.x);
-    float4 vertex = TransformObjectToHClip(position);
-    float3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
-    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
-    float2 projectedNormal = normalize(clipNormal.xy);
-    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance);
-    projectedNormal.x *= aspect;
-    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
-
-    // 少し奥方向に移動しないとアーティファクトが発生することがある
-    //vertex.z += -0.00002 / vertex.w;
-    return vertex;
-}
-
-float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outlineWidth)
-{
-    float3 worldNormalLength = length(mul((float3x3) transpose(unity_WorldToObject), normal));
-    float3 outlineOffset = 0.01 * outlineWidth * worldNormalLength * normal;
-    return TransformObjectToHClip(vertex + outlineOffset);
 }
 
 

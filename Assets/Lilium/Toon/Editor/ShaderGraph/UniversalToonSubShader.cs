@@ -40,17 +40,9 @@ namespace LiliumEditor.Toon
             pixelPorts = new List<int>
             {
                 ToonMasterNode.AlbedoSlotId,
-                ToonMasterNode.NormalSlotId,
                 ToonMasterNode.EmissionSlotId,
-                ToonMasterNode.MetallicSlotId,
-                ToonMasterNode.SpecularSlotId,
-                ToonMasterNode.SmoothnessSlotId,
-                ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
                 ToonMasterNode.AlphaThresholdSlotId,
-                ToonMasterNode.ShadeSlotId,
-                ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId,
                 ToonMasterNode.ToonyLightingSlotId,
             },
 
@@ -83,8 +75,7 @@ namespace LiliumEditor.Toon
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
-                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl",
-                "Assets/Lilium/Toon/Editor/ShaderGraph/ToonLighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
             },
             pragmas = new List<string> ()
             {
@@ -114,7 +105,7 @@ namespace LiliumEditor.Toon
             lightMode = "",
             passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonOutlinePass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
-            useInPreview = false,
+            useInPreview = true,
 
             // Port mask
             vertexPorts = new List<int> ()
@@ -126,18 +117,9 @@ namespace LiliumEditor.Toon
             },
             pixelPorts = new List<int>
              {
-                ToonMasterNode.AlbedoSlotId,
-                ToonMasterNode.NormalSlotId,
-                ToonMasterNode.EmissionSlotId,
-                ToonMasterNode.MetallicSlotId,
-                ToonMasterNode.SpecularSlotId,
-                ToonMasterNode.SmoothnessSlotId,
-                ToonMasterNode.OcclusionSlotId,
                 ToonMasterNode.AlphaSlotId,
                 ToonMasterNode.AlphaThresholdSlotId,
                 ToonMasterNode.ShadeSlotId,
-                ToonMasterNode.ShadeShiftSlotId,
-                ToonMasterNode.ShadeToonySlotId,
                 ToonMasterNode.ToonyLightingSlotId,
             },
 
@@ -175,8 +157,7 @@ namespace LiliumEditor.Toon
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl",
                 "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl",
-                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl",
-                "Assets/Lilium/Toon/Editor/ShaderGraph/ToonLighting.hlsl",
+                "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
             },
             pragmas = new List<string> ()
              {
@@ -501,10 +482,6 @@ namespace LiliumEditor.Toon
 
             if (masterNode.model == ToonMasterNode.Model.Specular)
                 baseActiveFields.Add ("SpecularSetup");
-
-            if (masterNode.IsSlotConnected (ToonMasterNode.NormalSlotId)) {
-                baseActiveFields.Add ("Normal");
-            }
 
             // Keywords for transparent
             // #pragma shader_feature _SURFACE_TYPE_TRANSPARENT
