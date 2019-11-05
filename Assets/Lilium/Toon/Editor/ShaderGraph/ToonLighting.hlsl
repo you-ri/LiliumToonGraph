@@ -5,14 +5,13 @@
 #ifndef UNIVERSAL_TOONLIGHTING2_INCLUDED
 #define UNIVERSAL_TOONLIGHTING2_INCLUDED
 
-#if !SHADERGRAPH_PREVIEW
-
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
 
 SamplerState sampler_LinearClamp
 {
@@ -44,6 +43,8 @@ inline float3 TransformViewToProjection(float3 v)
 {
     return mul((float3x3) UNITY_MATRIX_P, v);
 }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +115,6 @@ float4 TransformOutlineToHClipWorldSpace(float3 vertex, float3 normal, half outl
 ///////////////////////////////////////////////////////////////////////////////
 //                         Toon BRDF Functions                                    //
 ///////////////////////////////////////////////////////////////////////////////
-#define kDieletricSpec half4(0.04, 0.04, 0.04, 1.0 - 0.04) // standard dielectric reflectivity coef at incident angle (= 4%)
 
 struct ToonBRDFData
 {
@@ -139,7 +139,7 @@ struct ToonBRDFData
     half shadeToony;
 #ifdef SHADEMODEL_RAMP
     TEXTURE2D( shadeRamp);
-    #endif
+#endif
 };
 
 
@@ -455,50 +455,6 @@ half4 UniversalFragmentToon(
     color += emission;
     return half4(color, alpha);
 }
-
-// カスタムファンクション
-void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
-    half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony, TEXTURE2D( ShadeRamp),
-    out half3 Color)
-{
-    InputData inputData;
-    inputData.positionWS = WorldPosition;
-    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz));
-    inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = SafeNormalize(WorldView);
-    inputData.fogCoord = 0;
-    inputData.vertexLighting = 0;
-    inputData.bakedGI = BakedGI;
-
-#if SHADOWS_SCREEN
-   half4 clipPos = TransformWorldToHClip(WorldPosition);
-   inputData.shadowCoord = ComputeScreenPos(clipPos);
-#else
-    inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
-#endif
-//    inputData.shadowCoord = GetShadowCoord(GetVertexPositionInputs(ObjectPosition));
-    Color = UniversalFragmentToon(inputData, Diffuse, Shade, Metalic, 0, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, ShadeRamp, 1).rgb;
-
-}
-
-
-#else
-
-void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
-    half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony, Texture2D ShadeRamp,
-    out half3 Color)
-{
-    Color = Diffuse;
-}
-
-
-
-#endif
-
 
 
 
