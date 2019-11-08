@@ -121,6 +121,10 @@ inline void InitializeToonBRDFData(
 
     outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
+
+    // Toony Paramaters
+    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular) * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
+    outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
 
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
@@ -128,6 +132,10 @@ inline void InitializeToonBRDFData(
 
     outBRDFData.diffuse = albedo * oneMinusReflectivity;
     outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
+
+    // Toony Paramaters
+    outBRDFData.base = albedo * oneMinusReflectivity * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
+    outBRDFData.shade = shade * oneMinusReflectivity;
 #endif
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
@@ -139,8 +147,6 @@ inline void InitializeToonBRDFData(
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
     // Toony Paramaters
-    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular) * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
-    outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = (1 - shadeShift);
