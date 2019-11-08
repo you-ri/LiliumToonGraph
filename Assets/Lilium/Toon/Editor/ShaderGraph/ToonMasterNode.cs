@@ -26,7 +26,7 @@ namespace LiliumEditor.Toon
         public const string NormalName = "Vertex Normal";
         public const string TangentName = "Vertex Tangent";
 
-        public const string ShadeSlotName = "EdgeColor";
+        public const string ShadeSlotName = "OutlineColor";
         public const string ShadeShiftSlotName = "ShadeShift";
         public const string OutlineWidthSlotName = "OutlineWidth";
         public const string ToonyLightingSlotName = "ToonyLighting";

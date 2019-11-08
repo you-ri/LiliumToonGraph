@@ -4,6 +4,9 @@
 #ifndef UNIVERSAL_TOONLIGHTING2_INCLUDED
 #define UNIVERSAL_TOONLIGHTING2_INCLUDED
 
+
+#define _SPECULAR_SETUP
+
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
@@ -136,12 +139,11 @@ inline void InitializeToonBRDFData(
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
     // Toony Paramaters
-    half giLighing = giColor;
-    outBRDFData.base = albedo * (half3(1, 1, 1) - (shade * giColor)) * oneMinusReflectivity; // shade から base への色差分
-    outBRDFData.shade = shade * oneMinusReflectivity;
+    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular) * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
+    outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = (1 - shadeShift); //  -(outBRDFData.shadeToony / 2);
+    outBRDFData.shadeShift = (1 - shadeShift);
 #ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
 #endif

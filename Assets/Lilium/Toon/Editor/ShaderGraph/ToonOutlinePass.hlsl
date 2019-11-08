@@ -86,5 +86,5 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
         clip(surfaceDescription.Alpha - surfaceDescription.AlphaClipThreshold);
     #endif
 
-    return half4(surfaceDescription.EdgeColor, surfaceDescription.Alpha);
+    return half4(surfaceDescription.OutlineColor, surfaceDescription.Alpha);
 }

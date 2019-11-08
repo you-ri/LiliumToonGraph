@@ -7,15 +7,13 @@
 
 #if !SHADERGRAPH_PREVIEW
 
-#define SHADEMODEL_RAMP
-
 #include "ToonLighting.hlsl"
 
 // カスタムファンクション
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
-    half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony, TEXTURE2D( ShadeRamp),
+    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
+    half ShadeShift, half ShadeToony,
     out half3 Color)
 {
     InputData inputData;
@@ -33,17 +31,17 @@ void ToonLight_half(
 #else
     inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
 #endif
-//    inputData.shadowCoord = GetShadowCoord(GetVertexPositionInputs(ObjectPosition));
-    Color = UniversalFragmentToon(inputData, Diffuse, Shade, Metalic, 0, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, ShadeRamp, 1).rgb;
-
+    TEXTURE2D(shadeRamp);
+    Color = UniversalFragmentToon(inputData, Diffuse, Shade, 1, Specular, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, shadeRamp, 1).rgb;
 }
+
 
 #else
 
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
-    half3 Diffuse, half3 Shade, half3 Normal, half Metalic, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony, Texture2D ShadeRamp,
+    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
+    half ShadeShift, half ShadeToony,
     out half3 Color)
 {
     Color = Diffuse;
