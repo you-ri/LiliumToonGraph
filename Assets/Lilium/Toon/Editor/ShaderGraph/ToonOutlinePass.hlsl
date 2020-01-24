@@ -63,7 +63,7 @@ PackedVaryings vert(Attributes input)
     VertexDescription vertexDescription = VertexDescriptionFunction(vertexDescriptionInputs);
 
     // Assign modified vertex attributes
-    output.positionCS = TransformOutlineToHClipScreenSpace(input.positionOS.xyz, input.normalOS.xyz, vertexDescription.OutlineWidth);
+    output.positionCS = TransformOutlineToHClipScreenSpace(vertexDescription.VertexPosition, vertexDescription.VertexNormal, vertexDescription.OutlineWidth);
 #else
 #endif
 

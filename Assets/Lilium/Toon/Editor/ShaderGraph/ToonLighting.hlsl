@@ -123,7 +123,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.specular = specular;
 
     // Toony Paramaters
-    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular) * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
+    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);// * (half3(1, 1, 1) - (shade * giColor)); // shade から base への色差分
     outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
 
