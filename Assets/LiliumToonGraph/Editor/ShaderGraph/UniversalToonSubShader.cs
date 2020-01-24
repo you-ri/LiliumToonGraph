@@ -26,7 +26,7 @@ namespace LiliumEditor.Toon
             displayName = "Universal Forward",
             referenceName = "SHADERPASS_FORWARD",
             lightMode = "UniversalForward",
-            passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonForwardPass.hlsl",
+            passInclude = "Assets/LiliumToonGraph/Editor/ShaderGraph/ToonForwardPass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
             useInPreview = true,
 
@@ -103,7 +103,7 @@ namespace LiliumEditor.Toon
             displayName = "Universal Outline",
             referenceName = "SHADERPASS_FORWARD",
             lightMode = "",
-            passInclude = "Assets/Lilium/Toon/Editor/ShaderGraph/ToonOutlinePass.hlsl",
+            passInclude = "Assets/LiliumToonGraph/Editor/ShaderGraph/ToonOutlinePass.hlsl",
             varyingsInclude = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/Varyings.hlsl",
             useInPreview = true,
 
