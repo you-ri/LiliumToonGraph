@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Simple Toon Metal
+  m_Name: Simple Metal Toon
   m_Shader: {fileID: -6465566751694194690, guid: dc7783e5d7dc4d44fb703af7e336b90b,
     type: 3}
   m_ShaderKeywords: 
