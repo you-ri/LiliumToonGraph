@@ -2,14 +2,15 @@
 // referenced: com.unity.render-pipelines.lightweight@5.6.1\ShaderLibrary\Lighting.hlsl
 // referenced: MToon Copyright (c) 2018 Masataka SUMI https://github.com/Santarh/MToon
 //
-#ifndef UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
-#define UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
+#ifndef UNIVERSAL_TOONLIGHTING_TEXTURERAMP_INCLUDED
+#define UNIVERSAL_TOONLIGHTING_TEXTURERAMP_INCLUDED
 
 #if !SHADERGRAPH_PREVIEW
 
 #define SHADEMODEL_RAMP
 
 #include "ToonLighting.hlsl"
+
 
 // カスタムファンクション
 void ToonLight_half(

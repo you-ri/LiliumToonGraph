@@ -7,11 +7,6 @@
 
 #define _SPECULAR_SETUP
 
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
@@ -104,6 +99,7 @@ struct ToonBRDFData
 
     half shadeShift;
     half shadeToony;
+    half toonyLighting;
 #ifdef SHADEMODEL_RAMP
     TEXTURE2D( shadeRamp);
 #endif
@@ -150,6 +146,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = (1 - shadeShift);
+    outBRDFData.toonyLighting = 1;
 #ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
 #endif
@@ -197,13 +194,13 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 // トーン調に変換した値を取り出す
 inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
-    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
+    return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 //    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
 inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 {
-    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue;
+    return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 //    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
@@ -211,9 +208,9 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
 #ifdef SHADEMODEL_RAMP
-    return SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(1 - ((value + 1) / 2), brdfData.shadeToony), 0);
+    return lerp(value, SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(1 - ((value + 1) / 2), brdfData.shadeToony), 0), brdfData.toonyLighting);
 #else
-    return smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
+    return lerp(value, smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue, brdfData.toonyLighting);
 #endif
 }
 
@@ -302,11 +299,13 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 }
 */
 
+float _ToonyLighting = 0;
+
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(1); // 最大限に粗い反射環境マップを割り当てる
+    half mip = PerceptualRoughnessToMipmapLevel(lerp(perceptualRoughness, 1, _ToonyLighting)); // 最大限に粗い反射環境マップを割り当てる
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
 #if !defined(UNITY_USE_NATIVE_HDR)
@@ -405,6 +404,8 @@ half4 UniversalFragmentToon(
 {
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, shadeRamp, brdfData);
+    brdfData.toonyLighting = toonyLighing;
+    _ToonyLighting = toonyLighing;
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
@@ -412,6 +413,7 @@ half4 UniversalFragmentToon(
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
+    
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
