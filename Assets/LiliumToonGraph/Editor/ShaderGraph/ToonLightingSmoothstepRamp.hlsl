@@ -13,7 +13,7 @@
 
 // カスタムファンクション
 void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
+    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
     half ShadeShift, half ShadeToony, half ToonyLighting,
     out half3 Color)
@@ -125,7 +125,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 #else
 
 void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView, half3 BakedGI,
+    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
     half ShadeShift, half ShadeToony, half ToonyLighting,
     out half3 Color)
