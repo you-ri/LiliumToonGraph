@@ -10,6 +10,9 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
+float _ToonyLighting = 0;
+
+
 SamplerState sampler_LinearClamp
 {
     Filter = MIN_MAG_MIP_LINEAR;
@@ -36,42 +39,6 @@ inline half3 hsv2rgb(half3 c)
 }
 
 
-
-///////////////////////////////////////////////////////////////////////////////
-
-// GI全天球から均一な値を算出
-// TODO: 現状は６方向の平均値をしている。擬似的。
-#ifdef LIGHTMAP_ON
-#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOminidirectionalLightmap(lmName)
-#else
-#define SAMPLE_OMNIDIRECTIONAL_GI(lmName, shName) SampleOmnidirectionalSHPixel(shName)
-#endif
-
-float3 SampleOminidirectionalLightmap(float2 lightmapUV)
-{
-    float3 gi = float3(0, 0, 0);
-
-    gi += SampleLightmap(lightmapUV, half3(1, 0, 0));
-    gi += SampleLightmap(lightmapUV, half3(-1, 0, 0));
-    gi += SampleLightmap(lightmapUV, half3(0, 1, 0));
-    gi += SampleLightmap(lightmapUV, half3(0, -1, 0));
-    gi += SampleLightmap(lightmapUV, half3(0, 0, 1));
-    gi += SampleLightmap(lightmapUV, half3(0, 0, -1));
-    return gi / 6;
-}
-
-float3 SampleOmnidirectionalSHPixel(half3 vertexSH)
-{
-    float3 gi = float3(0, 0, 0);
-
-    gi += SampleSHPixel(vertexSH, half3(1, 0, 0));
-    gi += SampleSHPixel(vertexSH, half3(-1, 0, 0));
-    gi += SampleSHPixel(vertexSH, half3(0, 1, 0));
-    gi += SampleSHPixel(vertexSH, half3(0, -1, 0));
-    gi += SampleSHPixel(vertexSH, half3(0, 0, 1));
-    gi += SampleSHPixel(vertexSH, half3(0, 0, -1));
-    return gi / 6;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -108,7 +75,7 @@ struct ToonBRDFData
 
 inline void InitializeToonBRDFData(
     half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
-    half shadeShift, half shadeToony, half3 giColor, Texture2D shadeRamp, 
+    half shadeShift, half shadeToony, float toonyLighting, Texture2D shadeRamp, 
     out ToonBRDFData outBRDFData)
 {
 #ifdef _SPECULAR_SETUP
@@ -146,7 +113,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.occlusion = occlusion;
     outBRDFData.shadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = (1 - shadeShift);
-    outBRDFData.toonyLighting = 1;
+    outBRDFData.toonyLighting = toonyLighting;
 #ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
 #endif
@@ -299,8 +266,6 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 }
 */
 
-float _ToonyLighting = 0;
-
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
@@ -403,9 +368,8 @@ half4 UniversalFragmentToon(
     half shadeShift, half shadeToony, Texture2D shadeRamp, half toonyLighing)
 {
     ToonBRDFData brdfData;
-    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, inputData.bakedGI, shadeRamp, brdfData);
-    brdfData.toonyLighting = toonyLighing;
-    _ToonyLighting = toonyLighing;
+    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, brdfData);
+    _ToonyLighting = toonyLighing; //TODO:
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));

@@ -6,7 +6,6 @@
 #define UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
 
 
-
 #if !SHADERGRAPH_PREVIEW
 
 #include "ToonLighting.hlsl"
@@ -14,9 +13,9 @@
 // カスタムファンクション
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
-    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
+    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadeShift, half ShadeToony, half ToonyLighting,
-    out half3 Color)
+    out half4 Color)
 {
     InputData inputData;
     inputData.positionWS = WorldPosition;
@@ -35,16 +34,16 @@ void ToonLight_half(
     float2 lightmapUV;
     float3 vertexSH;
     float3 normalWSBakedGI = lerp(inputData.normalWS, float3(0, 0, 0), ToonyLighting);
-    
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     inputData.bakedGI = SAMPLE_GI(lightmapUV, vertexSH, normalWSBakedGI);
-
+     
+    //TODO: 値を設定する
     inputData.fogCoord = 0;
     inputData.vertexLighting = 0;
     
 #if SHADOWS_SCREEN
-   half4 clipPos = TransformWorldToHClip(WorldPosition);
-   inputData.shadowCoord = ComputeScreenPos(clipPos);
+    half4 clipPos = TransformWorldToHClip(WorldPosition);
+    inputData.shadowCoord = ComputeScreenPos(clipPos);
 #else
     inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
 #endif
@@ -58,10 +57,9 @@ void ToonLight_half(
 #endif
     //TODO: shadeRampを必要としないUniversalFragmentToonを作成する。
     TEXTURE2D(shadeRamp);
-    
- 
-    Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, shadeRamp, ToonyLighting).rgb;
-    //Color = UniversalFragmentPBR(inputData, Diffuse, metallic, specular, Smoothness, Occlusion, Emmision, 1).rgb;
+
+    Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, shadeRamp, ToonyLighting);
+    //Color = UniversalFragmentPBR(inputData, Diffuse, metallic, specular, Smoothness, Occlusion, Emmision, Alpha);
 }
 
 /*
@@ -126,11 +124,11 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
-    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
+    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadeShift, half ShadeToony, half ToonyLighting,
-    out half3 Color)
+    out half4 Color)
 {
-    Color = Diffuse;
+    Color = float4( Diffuse, Alpha);
 }
 
 #endif
