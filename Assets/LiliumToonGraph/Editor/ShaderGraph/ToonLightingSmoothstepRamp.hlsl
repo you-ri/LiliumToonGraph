@@ -34,11 +34,11 @@ void ToonLight_half(
     float2 lightmapUV;
     float3 vertexSH;
     float3 normalWSBakedGI = lerp(inputData.normalWS, float3(0, 0, 0), ToonyLighting);
+
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     inputData.bakedGI = SAMPLE_GI(lightmapUV, vertexSH, normalWSBakedGI);
      
     //TODO: ílÇê›íËÇ∑ÇÈ
-    inputData.fogCoord = 0;
     inputData.vertexLighting = 0;
     
 #if SHADOWS_SCREEN
@@ -59,6 +59,7 @@ void ToonLight_half(
     TEXTURE2D(shadeRamp);
 
     Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, shadeRamp, ToonyLighting);
+    //Color.rgb = MixFog(Color.rgb, inputData.fogCoord);
     //Color = UniversalFragmentPBR(inputData, Diffuse, metallic, specular, Smoothness, Occlusion, Emmision, Alpha);
 }
 

@@ -87,7 +87,7 @@ inline void InitializeToonBRDFData(
 
     // Toony Paramaters
     outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
-    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);//    -(outBRDFData.shade); // shade から base への色差分
+    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
 
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
@@ -97,7 +97,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
 
     // Toony Paramaters
-    outBRDFData.base = albedo * oneMinusReflectivity * (half3(1, 1, 1);// - (shade * giColor)); // shade から base への色差分
+    outBRDFData.base = albedo * oneMinusReflectivity * (half3(1, 1, 1);
     outBRDFData.shade = shade * oneMinusReflectivity;
 #endif
 
@@ -158,20 +158,18 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 */
 
 
-// トーン調に変換した値を取り出す
+// Convert toony value (specular use)
 inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
     return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
-//    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
 inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
 {
     return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
-//    return smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value);
 }
 
-// トーン調に変換した値を取り出す（影色用）
+// Convert toony value (shade use)
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
 #ifdef SHADEMODEL_RAMP
@@ -265,6 +263,7 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 #endif
 }
 */
+
 
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
@@ -394,6 +393,37 @@ half4 UniversalFragmentToon(
     return half4(color, alpha);
 }
 
+/*
+
+half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, half3 specular,
+    half smoothness, half occlusion, half3 emission, half alpha)
+{
+    BRDFData brdfData;
+    InitializeBRDFData(albedo, metallic, specular, smoothness, alpha, brdfData);
+
+    Light mainLight = GetMainLight(inputData.shadowCoord);
+    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
+
+    half3 color = GlobalIllumination(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    color += LightingPhysicallyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+
+#ifdef _ADDITIONAL_LIGHTS
+    uint pixelLightCount = GetAdditionalLightsCount();
+    for (uint lightIndex = 0u; lightIndex < pixelLightCount; ++lightIndex)
+    {
+        Light light = GetAdditionalLight(lightIndex, inputData.positionWS);
+        color += LightingPhysicallyBased(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
+    }
+#endif
+
+#ifdef _ADDITIONAL_LIGHTS_VERTEX
+    color += inputData.vertexLighting * brdfData.diffuse;
+#endif
+
+    color += emission;
+    return half4(color, alpha);
+}
+*/
 
 
 #endif
