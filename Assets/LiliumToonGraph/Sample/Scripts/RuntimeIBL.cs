@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class RuntimeIBL : MonoBehaviour
 {
+    public float duration = 2;
+
     [SerializeField] 
     private Material[] cubemaps;
 
@@ -19,7 +21,7 @@ public class RuntimeIBL : MonoBehaviour
 
         for (int i = 0; ; i++) {
             UpdateEnvironment (cubemaps[i % cubemaps.Length]);
-            yield return new WaitForSeconds (2);
+            yield return new WaitForSeconds (duration);
         }
     }
 

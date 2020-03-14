@@ -10,7 +10,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
-float _ToonyLighting = 0;
+float __ToonyLighting = 0;
 
 
 SamplerState sampler_LinearClamp
@@ -269,7 +269,7 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(lerp(perceptualRoughness, 1, _ToonyLighting)); // 最大限に粗い反射環境マップを割り当てる
+    half mip = PerceptualRoughnessToMipmapLevel(lerp(perceptualRoughness, 1, __ToonyLighting)); // 最大限に粗い反射環境マップを割り当てる
     half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
 
 #if !defined(UNITY_USE_NATIVE_HDR)
@@ -368,7 +368,7 @@ half4 UniversalFragmentToon(
 {
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, brdfData);
-    _ToonyLighting = toonyLighing; //TODO:
+    __ToonyLighting = toonyLighing; //TODO:
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
