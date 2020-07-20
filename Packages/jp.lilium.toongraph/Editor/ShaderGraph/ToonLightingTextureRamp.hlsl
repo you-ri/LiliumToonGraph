@@ -12,11 +12,10 @@
 #include "ToonLighting.hlsl"
 
 
-// カスタムファンクション
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision,
-    half ShadeShift, half ShadeToony, TEXTURE2D( ShadeRamp), half ToonyLighting,
+    half ShadeShift, half ShadeToony, TEXTURE2D(ShadeRamp), half ToonyLighting,
     out half3 Color)
 {
     InputData inputData;
@@ -55,10 +54,10 @@ void ToonLight_half(
     float metallic = 1;
 #else   
     float3 specular = 0;
-    float metallic = Metallic;
+    float metallic = Specular.r;
 #endif
 
-    Color = UniversalFragmentToon(inputData, Diffuse, Shade, 1, Specular, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, ShadeRamp, ToonyLighting).rgb;
+    Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, 1, ShadeShift, ShadeToony, ShadeRamp, ToonyLighting).rgb;
 }
 
 #else

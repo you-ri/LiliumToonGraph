@@ -10,7 +10,7 @@
 
 #include "ToonLighting.hlsl"
 
-// ƒJƒXƒ^ƒ€ƒtƒ@ƒ“ƒNƒVƒ‡ƒ“
+
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
@@ -20,7 +20,7 @@ void ToonLight_half(
     InputData inputData;
     inputData.positionWS = WorldPosition;
 
-    //TODO: _NORMALMAP ƒfƒBƒŒƒNƒeƒBƒu‚ª–³Œø
+    //TODO: _NORMALMAP ãƒ‡ã‚£ãƒ¬ã‚¯ãƒ†ã‚£ãƒ–ãŒç„¡åŠ¹
 #if defined(_NORMALMAP) || 1
     inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz));
 #else
@@ -29,7 +29,7 @@ void ToonLight_half(
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
     inputData.viewDirectionWS = SafeNormalize(WorldView);
 
-    //TODO: lightmapUV‚ğæ“¾‚·‚é•û–@‚ğŒ©‚Â‚¯o‚µ‚Ä‰ğŒˆ‚·‚éB
+    //TODO: lightmapUVã‚’å–å¾—ã™ã‚‹æ–¹æ³•ã‚’è¦‹ã¤ã‘å‡ºã—ã¦è§£æ±ºã™ã‚‹ã€‚
     //OUTPUT_LIGHTMAP_UV(lightmapUV, unity_LightmapST, lightmapUV);
     float2 lightmapUV;
     float3 vertexSH;
@@ -38,7 +38,7 @@ void ToonLight_half(
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     inputData.bakedGI = SAMPLE_GI(lightmapUV, vertexSH, normalWSBakedGI);
      
-    //TODO: ’l‚ğİ’è‚·‚é
+    //TODO: å€¤ã‚’è¨­å®šã™ã‚‹
     inputData.vertexLighting = 0;
     
 #if SHADOWS_SCREEN
@@ -55,7 +55,6 @@ void ToonLight_half(
     float3 specular = 0;
     float metallic = Metallic;
 #endif
-    //TODO: shadeRamp‚ğ•K—v‚Æ‚µ‚È‚¢UniversalFragmentToon‚ğì¬‚·‚éB
     TEXTURE2D(shadeRamp);
 
     Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, shadeRamp, ToonyLighting);
