@@ -92,11 +92,11 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 
 {
 #ifdef SHADEMODEL_RAMP
     //half toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
-    half toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), 0), 0) * maxValue;
+    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.shadeToony), 0) * maxValue;
 #else
-    half toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
+    half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
 #endif
-    return lerp(value, toonedValue, brdfData.toonyLighting);
+    return lerp((half3)value, toonedValue, brdfData.toonyLighting);
 }
 
 

@@ -53,7 +53,7 @@ void ToonLight_half(
     float metallic = 1;
 #else   
     float3 specular = 0;
-    float metallic = Metallic;
+    float metallic = Specular.r;
 #endif
     TEXTURE2D(shadeRamp);
 
