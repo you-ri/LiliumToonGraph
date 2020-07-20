@@ -33,6 +33,7 @@ The __General__ settings control the core part of the pipeline rendered frame.
 | __Opaque Downsampling__ | Set the sampling mode on the opaque texture to one of the following:<br/>__None__:  Produces a copy of the opaque pass in the same resolution as the camera.<br/>__2x Bilinear__: Produces a half-resolution image with bilinear filtering.<br/>__4x Box__: Produces a quarter-resolution image with box filtering. This produces a softly blurred copy.<br/>__4x Bilinear__: Produces a quarter-resolution image with bi-linear filtering. |
 | __Terrain Holes__       | If you disable this option, the URP removes all Terrain hole Shader variants when you build for the Unity Player, which decreases build time. |
 
+
 ### Quality                                                                                                                                                                                                                                         
 These settings control the quality level of the URP. This is where you can make performance better on lower-end hardware or make graphics look better on  higher-end hardware. 
 
@@ -79,7 +80,7 @@ These settings affect how shadows look and behave. They also impact performance,
 
 ### Post-processing
 
-This section allows you to fine-tune global settings for URP's integrated post-processing solution.
+This section allows you to fine-tune global post-processing settings.
 
 | Property         | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.AnimatedValues;
+using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -196,6 +197,7 @@ namespace UnityEditor.Rendering.Universal
 
         public new void OnEnable()
         {
+            base.OnEnable();
             m_UniversalRenderPipeline = GraphicsSettings.renderPipelineAsset as UniversalRenderPipelineAsset;
 
             m_CommonCameraSettingsFoldout = new SavedBool($"{target.GetType()}.CommonCameraSettingsFoldout", false);
@@ -334,8 +336,8 @@ namespace UnityEditor.Rendering.Universal
 
         void AddCameraToCameraList(Rect rect, ReorderableList list)
         {
-            Camera[] allCameras = new Camera[Camera.allCamerasCount];
-            Camera.GetAllCameras(allCameras);
+            StageHandle stageHandle = StageUtility.GetStageHandle(camera.gameObject);
+            var allCameras = stageHandle.FindComponentsOfType<Camera>();
             foreach (var camera in allCameras)
             {
                 var component = camera.gameObject.GetComponent<UniversalAdditionalCameraData>();
@@ -398,8 +400,9 @@ namespace UnityEditor.Rendering.Universal
             m_AdditionalCameraDataCameras = m_AdditionalCameraDataSO.FindProperty("m_Cameras");
         }
 
-        public void OnDisable()
+        public new void OnDisable()
         {
+            base.OnDisable();
             m_ShowBGColorAnim.valueChanged.RemoveListener(Repaint);
             m_ShowOrthoAnim.valueChanged.RemoveListener(Repaint);
             m_ShowTargetEyeAnim.valueChanged.RemoveListener(Repaint);
@@ -492,14 +495,6 @@ namespace UnityEditor.Rendering.Universal
 //                return;
 //            }
 //#endif
-
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-            if (m_UniversalRenderPipeline.postProcessingFeatureSet == PostProcessingFeatureSet.PostProcessingV2)
-            {
-                EditorGUILayout.HelpBox("Camera Stacking is not supported with Post-processing V2. Only Base camera will render.", MessageType.Warning);
-                return;
-            }
-#endif
 
             if (m_StackSettingsFoldout.value)
             {
@@ -837,7 +832,7 @@ namespace UnityEditor.Rendering.Universal
 
             hasChanged |= DrawToggle(m_AdditionalCameraDataRenderPostProcessing, ref selectedRenderPostProcessing, Styles.renderPostProcessing);
 
-            if (UniversalRenderPipeline.asset?.postProcessingFeatureSet != PostProcessingFeatureSet.PostProcessingV2)
+            // Draw Final Post-processing
             {
                 hasChanged |= DrawIntPopup(m_AdditionalCameraDataAntialiasing, ref selectedAntialiasing, Styles.antialiasing, Styles.antialiasingOptions, Styles.antialiasingValues);
 
