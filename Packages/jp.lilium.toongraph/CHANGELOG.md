@@ -6,4 +6,5 @@
 - UniveralRP v8.1.0
 - Change property reference name.
 - Change specular color calculation.
-- Change metalic workflow base.
+- Change metalic setup workflow default.
+- Add support for using ramp textures.
