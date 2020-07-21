@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine.Scripting.APIUpdating;
 
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-using UnityEngine.Rendering.PostProcessing;
-#endif
-
 namespace UnityEngine.Rendering.Universal
 {
     /// <summary>
@@ -62,17 +58,6 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-        static readonly int m_PostProcessingTemporaryTargetId = Shader.PropertyToID("_TemporaryColorTexture");
-        static PostProcessRenderContext m_PostProcessRenderContext;
-
-        [Obsolete("The use of the Post-processing Stack V2 is deprecated in the Universal Render Pipeline. Use the builtin post-processing effects instead.")]
-        public static PostProcessRenderContext postProcessRenderContext
-        {
-            get => m_PostProcessRenderContext ?? (m_PostProcessRenderContext = new PostProcessRenderContext());
-        }
-#endif
-
         internal static bool useStructuredBuffer
         {
             // There are some performance issues with StructuredBuffers in some platforms.
@@ -89,7 +74,6 @@ namespace UnityEngine.Rendering.Universal
                 //    (deviceType == GraphicsDeviceType.Metal || deviceType == GraphicsDeviceType.Vulkan ||
                 //     deviceType == GraphicsDeviceType.PlayStation4 || deviceType == GraphicsDeviceType.XboxOne);
             }
-            
         }
 
         static Material s_ErrorMaterial;
@@ -106,73 +90,38 @@ namespace UnityEngine.Rendering.Universal
                     {
                         s_ErrorMaterial = new Material(Shader.Find("Hidden/Universal Render Pipeline/FallbackError"));
                     }
-                    catch{ }
+                    catch { }
                 }
 
                 return s_ErrorMaterial;
             }
         }
 
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-#pragma warning disable 0618 // Obsolete
-        internal static void RenderPostProcessingCompat(CommandBuffer cmd, ref CameraData cameraData, RenderTextureDescriptor sourceDescriptor,
-                                                        RenderTargetIdentifier source, RenderTargetIdentifier destination, bool opaqueOnly, bool flip)
+        /// <summary>
+        /// Set view and projection matrices.
+        /// This function will set <c>UNITY_MATRIX_V</c>, <c>UNITY_MATRIX_P</c>, <c>UNITY_MATRIX_VP</c> to given view and projection matrices.
+        /// If <c>setInverseMatrices</c> is set to true this function will also set <c>UNITY_MATRIX_I_V</c> and <c>UNITY_MATRIX_I_VP</c>.
+        /// </summary>
+        /// <param name="cmd">CommandBuffer to submit data to GPU.</param>
+        /// <param name="viewMatrix">View matrix to be set.</param>
+        /// <param name="projectionMatrix">Projection matrix to be set.</param>
+        /// <param name="setInverseMatrices">Set this to true if you also need to set inverse camera matrices.</param>
+        public static void SetViewAndProjectionMatrices(CommandBuffer cmd, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, bool setInverseMatrices)
         {
-            var layer = cameraData.postProcessLayer;
-            int effectsCount;
+            Matrix4x4 viewAndProjectionMatrix = projectionMatrix * viewMatrix;
+            cmd.SetGlobalMatrix(ShaderPropertyId.viewMatrix, viewMatrix);
+            cmd.SetGlobalMatrix(ShaderPropertyId.projectionMatrix, projectionMatrix);
+            cmd.SetGlobalMatrix(ShaderPropertyId.viewAndProjectionMatrix, viewAndProjectionMatrix);
 
-            if (opaqueOnly)
+            if (setInverseMatrices)
             {
-                effectsCount = layer.sortedBundles[PostProcessEvent.BeforeTransparent].Count;
-            }
-            else
-            {
-                effectsCount = layer.sortedBundles[PostProcessEvent.BeforeStack].Count +
-                               layer.sortedBundles[PostProcessEvent.AfterStack].Count;
-            }
-
-            var camera = cameraData.camera;
-            var postProcessRenderContext = RenderingUtils.postProcessRenderContext;
-            postProcessRenderContext.Reset();
-            postProcessRenderContext.camera = camera;
-            postProcessRenderContext.source = source;
-            postProcessRenderContext.sourceFormat = sourceDescriptor.colorFormat;
-            postProcessRenderContext.destination = destination;
-            postProcessRenderContext.command = cmd;
-            postProcessRenderContext.flip = flip;
-
-            // If there's only one effect in the stack and soure is same as dest we	
-            // create an intermediate blit rendertarget to handle it.	
-            // Otherwise, PostProcessing system will create the intermediate blit targets itself.	
-            if (effectsCount == 1 && source == destination)
-            {
-                var rtId = new RenderTargetIdentifier(m_PostProcessingTemporaryTargetId);
-                var descriptor = sourceDescriptor;
-                descriptor.msaaSamples = 1;
-                descriptor.depthBufferBits = 0;
-
-                postProcessRenderContext.destination = rtId;
-                cmd.GetTemporaryRT(m_PostProcessingTemporaryTargetId, descriptor, FilterMode.Point);
-
-                if (opaqueOnly)
-                    cameraData.postProcessLayer.RenderOpaqueOnly(postProcessRenderContext);
-                else
-                    cameraData.postProcessLayer.Render(postProcessRenderContext);
-
-                cmd.Blit(rtId, destination);
-                cmd.ReleaseTemporaryRT(m_PostProcessingTemporaryTargetId);
-            }
-            else if (opaqueOnly)
-            {
-                cameraData.postProcessLayer.RenderOpaqueOnly(postProcessRenderContext);
-            }
-            else
-            {
-                cameraData.postProcessLayer.Render(postProcessRenderContext);
+                Matrix4x4 inverseMatrix = Matrix4x4.Inverse(viewMatrix);
+                // Note: inverse projection is currently undefined
+                Matrix4x4 inverseViewProjection = Matrix4x4.Inverse(viewAndProjectionMatrix);
+                cmd.SetGlobalMatrix(ShaderPropertyId.inverseViewMatrix, inverseMatrix);
+                cmd.SetGlobalMatrix(ShaderPropertyId.inverseViewAndProjectionMatrix, inverseViewProjection);
             }
         }
-#pragma warning restore 0618
-#endif
 
         // This is used to render materials that contain built-in shader passes not compatible with URP. 
         // It will render those legacy passes with error/pink shader.
@@ -184,7 +133,7 @@ namespace UnityEngine.Rendering.Universal
             // Proper fix is to add a fence on asset import.
             if (errorMaterial == null)
                 return;
-
+            
             SortingSettings sortingSettings = new SortingSettings(camera) { criteria = sortFlags };
             DrawingSettings errorSettings = new DrawingSettings(m_LegacyShaderPassNames[0], sortingSettings)
             {
