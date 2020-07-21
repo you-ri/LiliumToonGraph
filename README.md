@@ -5,7 +5,7 @@
 ![](https://github.com/you-ri/LiliumToonGraph/blob/master/Docs/screenshot.png?raw=true)
 
 + UniversalRP対応トゥーンシェーダーです。
-+ UniversalRPのPBRライティングモデルを参考にカスタムファンクション上でトゥーンライティングモデルを実装してます。
++ UniversalRPのPBRライティングモデルを参考にカスタムファンクションノードでトゥーンライティングモデルを実装してます。
 + アウトラインはToonマスターノードで実装しています。これはPBRマスターノードを改造する形で開発しました。
 + 表現の実験中。PBRと親和性の高いトゥーンシェーダーを目指しています。
 ![](https://i.imgur.com/uvc6CwX.gif)
@@ -24,12 +24,15 @@
 ## How to use
 
 ### Exsample Scene
-Assets/LiliumToonGraph/Sample/ToonSample.unity
+Assets/Samples/ToonSample.unity
 
 ### Toon shader graph
 1. Right click in the project window.
-2. Select `Create > Shader > Toon Graph`
+2. Select `Create > Shader > Toon Graph` or `Create > Shader > Unlit Graph`
+3. Create node `Sub Graphs > ToonLighting (SmoothstepRamp)` or `Sub Graphs > ToonLighing (TextureRamp)`
+4. Connecting nodes.
 
+See `Packages/Lilium ToonGraph/Contents/ShaderGraph/Toon (PBR Like Input)`
 
 ## Reference
 
