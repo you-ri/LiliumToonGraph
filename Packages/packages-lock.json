@@ -112,7 +112,7 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.unity.render-pipelines.universal": "7.2.1"
+        "com.unity.render-pipelines.universal": "8.1.0"
       }
     },
     "com.unity.modules.ai": {
