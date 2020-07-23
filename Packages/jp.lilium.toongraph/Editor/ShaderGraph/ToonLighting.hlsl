@@ -191,7 +191,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
-    half3 c = indirectDiffuse * brdfData.shade; // アンビエントは影色と掛け合わせる
+    half3 c = indirectDiffuse * brdfData.base;
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
     return c;
@@ -381,7 +381,17 @@ half4 UniversalFragmentToon(
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half3 shadeIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.shade;
+    half3 baseIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.base;
+
+    // TODO: 最適化
+    half NdotL = saturate(dot(inputData.normalWS, mainLight.direction));
+    half3 directLightIntensity = mainLight.distanceAttenuation * mainLight.shadowAttenuation * ToonyShadeValue(brdfData, (NdotL));
+
+    // メインライトの強さに応じて影色の影響度合いを変化させる
+    color = lerp(color, color - baseIndirectDiffuse + shadeIndirectDiffuse, 1 - saturate( FastLinearToSRGB(directLightIntensity)));
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+
 
     
 #ifdef _ADDITIONAL_LIGHTS

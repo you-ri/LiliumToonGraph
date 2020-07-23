@@ -9,7 +9,6 @@
 + アウトラインはToonマスターノードで実装しています。これはPBRマスターノードを改造する形で開発しました。
 + 表現の実験中。PBRと親和性の高いトゥーンシェーダーを目指しています。
 ![](https://i.imgur.com/uvc6CwX.gif)
-+ カスタムマスターノードのサンプルにどうぞ。ソースファイルの`Toon`を`PBR`に変換してパッケージ内を検索すると元になったソースファイルが見つかります。Wikiの方にも書いています。 https://github.com/you-ri/LiliumToonGraph/wiki
 + URP8.1.0
 
 アウトライン機能に[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)を使わない理由はアウトラインの色をライティングで変化させたいからです。RenderFeatureでこれらの機能が実装できれば、マスターノードを改造しなくてよくなるのだけど。。。
