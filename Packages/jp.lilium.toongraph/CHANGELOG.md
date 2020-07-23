@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.0-preview.2] - 2020 - 07 - 23
+
+- Add support for color shade.
+
+
 ## [0.2.0-preview.1] - 2020 - 07 - 22
 
 - Unity2020.1.0b16
