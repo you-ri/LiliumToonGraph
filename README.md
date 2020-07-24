@@ -9,7 +9,6 @@
 + アウトラインはToonマスターノードで実装しています。これはPBRマスターノードを改造する形で開発しました。
 + 表現の実験中。PBRと親和性の高いトゥーンシェーダーを目指しています。
 ![](https://i.imgur.com/uvc6CwX.gif)
-+ URP8.1.0
 
 アウトライン機能に[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)を使わない理由はアウトラインの色をライティングで変化させたいからです。RenderFeatureでこれらの機能が実装できれば、マスターノードを改造しなくてよくなるのだけど。。。
 
@@ -17,8 +16,9 @@
 
 旧URPマスターノードでトゥーンライティングモデルを実装しているバージョンは[こちら](https://github.com/you-ri/LiliumToonGraph/tree/urp-master-node-toon)
 
-## System requirements
-+ Unity 2020.1.0b16f or later
+## Dependenceis
++ Unity2020.1.0f1 or later
++ UiversalRP v8.2.0
 
 ## How to use
 
@@ -29,7 +29,7 @@ Assets/Samples/ToonSample.unity
 1. Right click in the project window.
 2. Select `Create > Shader > Toon Graph` or `Create > Shader > Unlit Graph`
 3. Create node `Sub Graphs > ToonLighting (SmoothstepRamp)` or `Sub Graphs > ToonLighing (TextureRamp)`
-4. Connecting nodes.
+4. Connect nodes.
 
 See `Packages/Lilium ToonGraph/Contents/ShaderGraph/Toon (PBR Like Input)`
 

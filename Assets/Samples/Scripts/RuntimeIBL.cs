@@ -6,7 +6,7 @@ public class RuntimeIBL : MonoBehaviour
     public float duration = 2;
 
     [SerializeField] 
-    private Material[] cubemaps;
+    private Material[] cubemaps = null;
 
     private ReflectionProbe _reflectionProbe;
 
@@ -22,6 +22,13 @@ public class RuntimeIBL : MonoBehaviour
         for (int i = 0; ; i++) {
             UpdateEnvironment (cubemaps[i % cubemaps.Length]);
             yield return new WaitForSeconds (duration);
+        }
+    }
+
+    void OnDestroy() 
+    {
+        if (_reflectionProbe != null) {
+            Destroy(_reflectionProbe);
         }
     }
 
