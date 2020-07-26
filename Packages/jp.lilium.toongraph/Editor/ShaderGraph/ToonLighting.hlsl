@@ -74,24 +74,26 @@ struct ToonBRDFData
 };
 
 // Convert toony value (specular use)
-inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1)
+inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1, half threshold = 0.5)
 {
-    return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+    return lerp(value, smoothstep((threshold/maxValue) - brdfData.shadeToony/2, (threshold/maxValue) + brdfData.shadeToony/2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
-inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1)
+inline half3 ToonyValue(ToonBRDFData brdfData, half3 value, half3 maxValue = 1, half threshold = 0.5f)
 {
-    return lerp(value, smoothstep(0.5 - brdfData.shadeToony / 2, 0.5 + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+    return lerp(value, smoothstep((threshold/maxValue) - brdfData.shadeToony / 2, (threshold/maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
 
-
+inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, half threshold = 0.5h)
+{
+    return lerp(value, smoothstep((threshold/maxValue) - brdfData.shadeToony / 2, (threshold/maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+}
 
 // Convert toony value (shade use)
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
 #ifdef SHADEMODEL_RAMP
-    //half toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
     half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.shadeToony), 0) * maxValue;
 #else
     half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
@@ -213,7 +215,7 @@ half3 EnvironmentBRDF(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 // * NDF [Modified] GGX
 // * Modified Kelemen and Szirmay-​Kalos for Visibility term
 // * Fresnel approximated with 1/LdotH
-half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half3 radiance)
 {
 #ifndef _SPECULARHIGHLIGHTS_OFF
     float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(viewDirectionWS));
@@ -226,20 +228,22 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     half LoH2 = LoH * LoH;
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
-    // Toony specular
-    float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
-    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
-    specularTerm = ToonyValue(brdfData, specularTerm, maxSpecularTerm);
-
 #if defined (SHADER_API_MOBILE) || defined (SHADER_API_SWITCH)
     specularTerm = specularTerm - HALF_MIN;
     specularTerm = clamp(specularTerm, 0.0, 100.0); // Prevent FP16 overflow on mobiles
 #endif
 
-    half3 color = specularTerm * brdfData.specular + brdfData.base;
+    // Toony specular with radiance
+    float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
+    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
+    half3 specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiance, maxSpecularTerm*radiance);
+    //half3 specularTermWithRadiance = specularTerm * radiance;
+
+    half3 color = (specularTermWithRadiance * brdfData.specular) + (brdfData.base * radiance);
+
     return color;
 #else
-    return brdfData.base;
+    return brdfData.base * radiance;
 #endif
 
 }
@@ -340,8 +344,8 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
-    half3 radiance = lightColor * lightAttenuation * ToonyShadeValue(brdfData, (NdotL));
-    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS) * radiance;
+    half3 radiance = lightColor * (lightAttenuation * ToonyShadeValue(brdfData, NdotL));
+    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance);
 }
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
