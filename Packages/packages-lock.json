@@ -107,6 +107,13 @@
         "com.unity.modules.ui": "1.0.0"
       }
     },
+    "jp.keijiro.danish-statues": {
+      "version": "0.0.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://registry.npmjs.com"
+    },
     "jp.lilium.toongraph": {
       "version": "file:jp.lilium.toongraph",
       "depth": 0,
