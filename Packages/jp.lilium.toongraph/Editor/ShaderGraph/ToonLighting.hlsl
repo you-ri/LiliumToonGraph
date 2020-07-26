@@ -237,10 +237,8 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
     half3 specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiance, maxSpecularTerm*radiance);
-    //half3 specularTermWithRadiance = specularTerm * radiance;
 
     half3 color = (specularTermWithRadiance * brdfData.specular) + (brdfData.base * radiance);
-
     return color;
 #else
     return brdfData.base * radiance;
@@ -274,7 +272,6 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 #endif
 }
 */
-
 
 
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion, half3 viewDirectionWS)
