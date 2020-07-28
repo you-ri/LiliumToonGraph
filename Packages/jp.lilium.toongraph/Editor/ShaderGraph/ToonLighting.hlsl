@@ -234,11 +234,13 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
 #endif
 
     // Toony specular with radiance
+    // TODO: 最適化
     float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
-    half3 specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiance, maxSpecularTerm*radiance);
+    half radianceIntensity = length(radiance);
+    half specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radianceIntensity, maxSpecularTerm*radianceIntensity, 4); //TODO: 閾値を4に決め打ちしているが調整する方法が必要
 
-    half3 color = (specularTermWithRadiance * brdfData.specular) + (brdfData.base * radiance);
+    half3 color = (specularTermWithRadiance * SafeNormalize(radiance) * brdfData.specular) + (brdfData.base * radiance);
     return color;
 #else
     return brdfData.base * radiance;
@@ -277,8 +279,8 @@ half3 DirectBDRF(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half
 half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughness, half occlusion, half3 viewDirectionWS)
 {
 #if !defined(_ENVIRONMENTREFLECTIONS_OFF)
-    half mip = PerceptualRoughnessToMipmapLevel(lerp(perceptualRoughness, 1, __ToonyLighting)); // 最大限に粗い反射環境マップを割り当てる
-    half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, reflectVector, mip);
+    half mip = PerceptualRoughnessToMipmapLevel(lerp(perceptualRoughness, 1, __ToonyLighting)); // トゥーンの場合最大限に粗い反射環境マップを割り当てる
+    half4 encodedIrradiance = SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, lerp(reflectVector, viewDirectionWS, __ToonyLighting), mip); // トゥーンの場合サンプリング方向を固定する
 
 #if !defined(UNITY_USE_NATIVE_HDR)
     half3 irradiance = DecodeHDREnvironment(encodedIrradiance, unity_SpecCube0_HDR);

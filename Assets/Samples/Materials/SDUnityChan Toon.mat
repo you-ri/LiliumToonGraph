@@ -146,7 +146,7 @@ Material:
     - _ReceiveShadows: 1
     - _ShadeToony: 0.878
     - _ShdeToony: 1
-    - _Smoothness: 0.2
+    - _Smoothness: 0.203
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -164,7 +164,7 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _ShadeColor: {r: 1, g: 1, b: 1, a: 1}
-    - _ShadeEnvironmentalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+    - _ShadeEnvironmentalColor: {r: 0.754717, g: 0.754717, b: 0.754717, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
