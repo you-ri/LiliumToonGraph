@@ -16,6 +16,7 @@ In the URP, you can configure settings for:
 - [__Shadows__](#shadows)
 - [__Post-processing__](#post-processing)
 - [__Advanced__](#advanced)
+- [__Adaptive Performance__](#adaptive-performance)
 
 
 
@@ -33,6 +34,7 @@ The __General__ settings control the core part of the pipeline rendered frame.
 | __Opaque Downsampling__ | Set the sampling mode on the opaque texture to one of the following:<br/>__None__:  Produces a copy of the opaque pass in the same resolution as the camera.<br/>__2x Bilinear__: Produces a half-resolution image with bilinear filtering.<br/>__4x Box__: Produces a quarter-resolution image with box filtering. This produces a softly blurred copy.<br/>__4x Bilinear__: Produces a quarter-resolution image with bi-linear filtering. |
 | __Terrain Holes__       | If you disable this option, the URP removes all Terrain hole Shader variants when you build for the Unity Player, which decreases build time. |
 
+
 ### Quality                                                                                                                                                                                                                                         
 These settings control the quality level of the URP. This is where you can make performance better on lower-end hardware or make graphics look better on  higher-end hardware. 
 
@@ -47,9 +49,10 @@ These settings control the quality level of the URP. This is where you can make 
 
 
 ### Lighting
+
 These settings affect the lights in your Scene. 
 
-If you disable some of these settings, the relevant [keywords](shader-stripping-keywords.md) are [stripped from the Shader variables](shading-model.md#shaderStripping). If there are certain settings that you know for certain you won’t use in your game or app, you can disable them to improve performance and reduce build time.
+If you disable some of these settings, the relevant [keywords](shader-stripping.md) are [stripped from the Shader variables](shading-model.md#shaderStripping). If there are settings that you know for certain you won’t use in your game or app, you can disable them to improve performance and reduce build time.
 
 | Property              | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
@@ -79,7 +82,7 @@ These settings affect how shadows look and behave. They also impact performance,
 
 ### Post-processing
 
-This section allows you to fine-tune global settings for URP's integrated post-processing solution.
+This section allows you to fine-tune global post-processing settings.
 
 | Property         | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
@@ -99,3 +102,13 @@ This section allows you to fine-tune less commonly changed settings, which impac
 | __Mixed Lighting__         | Enable [Mixed Lighting](https://docs.unity3d.com/Manual/LightMode-Mixed.html), to tell the pipeline to include mixed lighting shader variants in the build. |
 | __Debug Level__            | Set the level of debug information that the render pipeline generates. The values are:<br />**Disabled**:  Debugging is disabled. This is the default.<br  />**Profiling**: Makes the render pipeline provide detailed information tags, which you can see in the FrameDebugger. |
 | __Shader Variant Log Level__ | Set the level of information about Shader Stripping and Shader Variants you want to display when Unity finishes a build. Values are:<br /> **Disabled**: Unity doesn’t log anything.<br />**Only Universal**: Unity logs information for all of the [URP Shaders](shaders-in-universalrp.md).<br />**All**: Unity logs information for all Shaders in your build.<br /> You can see the information in Console panel when your build has finished. |
+
+
+
+### Adaptive Performance
+
+This section appears if Adaptive Performance package is installed. It allows to change settings how Adaptive performance and render pipeline interact.
+
+| __Property__            | __Description__                                              |
+| ----------------------- | ------------------------------------------------------------ |
+| __Use adaptive performance__  | Allows Adaptive Performance to adjust rendering quality during runtime. |

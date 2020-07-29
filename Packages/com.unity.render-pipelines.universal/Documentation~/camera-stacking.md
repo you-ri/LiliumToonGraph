@@ -1,15 +1,13 @@
 # Camera Stacking
 In the Universal Render Pipeline (URP), you use Camera Stacking to layer the output of multiple Cameras and create a single combined output. Camera Stacking allows you to create effects such as a 3D model in a 2D UI, or the cockpit of a vehicle.
 
-__Important note:__ In this version of URP, Camera Stacking is not supported when using the 2D Renderer or when using the VR Multi Pass mode. Support for these will be added in upcoming versions of URP.
-
 ![Camera Stacking in URP](Images/camera-stacking-example.png)
 
 A Camera Stack consists of a [Base Camera](camera-types-and-render-type.md#base-camera) and one or more [Overlay Cameras](camera-types-and-render-type.md#overlay-camera). A Camera Stack overrides the output of the Base Camera with the combined output of all the Cameras in the Camera Stack. As such, anything that you can do with the output of a Base Camera, you can do with the output of a Camera Stack. For example, you can render a Camera Stack to a given render target, apply post-process effects, and so on.
 
  URP performs several optimizations within a Camera, including rendering order optimizations to reduce overdraw. However, when you use a Camera Stack, you effectively define the order in which those Cameras are rendered. You must therefore be careful not to order the Cameras in a way that causes excessive overdraw. For more information on overdraw in URP, see [Advanced information](cameras-advanced.md).
 
-<a name=”adding-a-camera-to-a-camera-stack”></a>
+<a name="adding-a-camera-to-a-camera-stack"></a>
 ## Adding a Camera to a Camera Stack
 
 ![Adding a Camera to a Camera Stack](Images/camera-stack-add-camera.png)

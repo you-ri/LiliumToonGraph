@@ -1,12 +1,11 @@
-using System;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using UnityEditor.AssetImporters;
+using UnityEngine.Rendering.Universal;
 
 namespace UnityEditor.Rendering.Universal
 {
-    [Obsolete("SketchupMaterialDescriptionPreprocessor is deprecated, consider creating a new AsserPostProcessor rather than overriding it.")]
-    public class SketchupMaterialDescriptionPreprocessor : AssetPostprocessor
+    class SketchupMaterialDescriptionPreprocessor : AssetPostprocessor
     {
         static readonly uint k_Version = 1;
         static readonly int k_Order = 2;
@@ -27,7 +26,8 @@ namespace UnityEditor.Rendering.Universal
             if (lowerCasePath != ".skp")
                 return;
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            string path = AssetDatabase.GUIDToAssetPath(ShaderUtils.GetShaderGUID(ShaderPathID.Lit));
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(path);
             if (shader == null)
                 return;
             material.shader = shader;

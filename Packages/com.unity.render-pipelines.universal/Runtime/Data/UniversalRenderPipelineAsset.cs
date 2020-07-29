@@ -4,7 +4,10 @@ using UnityEngine.Scripting.APIUpdating;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
 using System.IO;
+using UnityEditorInternal;
 #endif
+using System.ComponentModel;
+using System.Linq;
 
 namespace UnityEngine.Rendering.LWRP
 {
@@ -92,49 +95,16 @@ namespace UnityEngine.Rendering.Universal
         _2DRenderer,
     }
 
-    /// <summary>
-    /// The available color grading modes to use for the Project.
-    /// </summary>
     public enum ColorGradingMode
     {
-        /// <summary>
-        /// This mode follows a more classic workflow. Unity applies a limited range of color
-        /// grading after tonemapping.
-        /// </summary>
         LowDynamicRange,
-
-        /// <summary>
-        /// This mode works best for high precision grading similar to movie production workflow.
-        /// Unity applies color grading before tonemapping.
-        /// </summary>
         HighDynamicRange
-    }
-
-    /// <summary>
-    /// The available post-processing solutions to use for the project. To future proof your
-    /// application, use <see cref="Integrated"/> instead of the comparability mode. Only use
-    /// compatibility mode if your project still uses the Post-processing V2 package, but be aware
-    /// that Unity plans to deprecate Post-processing V2 support for the Universal Render Pipeline
-    /// in the near future.
-    /// </summary>
-    public enum PostProcessingFeatureSet
-    {
-        /// <summary>
-        /// The integrated post-processing stack.
-        /// </summary>
-        Integrated,
-
-        /// <summary>
-        /// The post-processing stack v2. This option only works if the package is installed in the
-        /// project. Be aware that Unity plans to deprecate Post-processing V2 support for the
-        /// Universal Render Pipeline in the near future.
-        /// </summary>
-        PostProcessingV2
     }
 
     public class UniversalRenderPipelineAsset : RenderPipelineAsset, ISerializationCallbackReceiver
     {
         Shader m_DefaultShader;
+        ScriptableRenderer[] m_Renderers = new ScriptableRenderer[1];
 
         // Default values set when a new UniversalRenderPipeline asset is created
         [SerializeField] int k_AssetVersion = 5;
@@ -142,12 +112,12 @@ namespace UnityEngine.Rendering.Universal
 
         // Deprecated settings for upgrading sakes
         [SerializeField] RendererType m_RendererType = RendererType.ForwardRenderer;
+        [EditorBrowsable(EditorBrowsableState.Never)]
         [SerializeField] internal ScriptableRendererData m_RendererData = null;
 
         // Renderer settings
         [SerializeField] internal ScriptableRendererData[] m_RendererDataList = new ScriptableRendererData[1];
-        internal ScriptableRenderer[] m_Renderers = new ScriptableRenderer[1];
-        [SerializeField] int m_DefaultRendererIndex = 0;
+        [SerializeField] internal int m_DefaultRendererIndex = 0;
 
         // General settings
         [SerializeField] bool m_RequireDepthTexture = false;
@@ -187,10 +157,10 @@ namespace UnityEngine.Rendering.Universal
         [SerializeField] bool m_MixedLightingSupported = true;
         [SerializeField] PipelineDebugLevel m_DebugLevel = PipelineDebugLevel.Disabled;
 
+        // Adaptive performance settings
+        [SerializeField] bool m_UseAdaptivePerformance = true;
+
         // Post-processing settings
-#pragma warning disable 414 // 'field' is assigned but never used
-        [SerializeField] PostProcessingFeatureSet m_PostProcessingFeatureSet = PostProcessingFeatureSet.Integrated;
-#pragma warning restore 414
         [SerializeField] ColorGradingMode m_ColorGradingMode = ColorGradingMode.LowDynamicRange;
         [SerializeField] int m_ColorGradingLutSize = 32;
 
@@ -214,6 +184,7 @@ namespace UnityEngine.Rendering.Universal
         internal UniversalRenderPipelineEditorResources m_EditorResourcesAsset;
 
         public static readonly string packagePath = "Packages/com.unity.render-pipelines.universal";
+        public static readonly string editorResourcesGUID = "a3d8d823eedde654bb4c11a1cfaf1abb";
 
         public static UniversalRenderPipelineAsset Create(ScriptableRendererData rendererData = null)
         {
@@ -223,10 +194,10 @@ namespace UnityEngine.Rendering.Universal
                 instance.m_RendererDataList[0] = rendererData;
             else
                 instance.m_RendererDataList[0] = CreateInstance<ForwardRendererData>();
+            
             // Initialize default Renderer
-            instance.m_EditorResourcesAsset = LoadResourceFile<UniversalRenderPipelineEditorResources>();
-            instance.m_Renderers = new ScriptableRenderer[1];
-            instance.m_Renderers[0] = instance.m_RendererDataList[0].InternalCreateRenderer();
+            instance.m_EditorResourcesAsset = instance.editorResources;
+
             return instance;
         }
 
@@ -283,38 +254,16 @@ namespace UnityEngine.Rendering.Universal
             AssetDatabase.CreateAsset(instance, string.Format("Assets/{0}.asset", typeof(UniversalRenderPipelineEditorResources).Name));
         }
 
-        static T LoadResourceFile<T>() where T : ScriptableObject
-        {
-            T resourceAsset = null;
-            var guids = AssetDatabase.FindAssets(typeof(T).Name + " t:scriptableobject", new[] { "Assets" });
-            foreach (string guid in guids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                resourceAsset = AssetDatabase.LoadAssetAtPath<T>(path);
-                if (resourceAsset != null)
-                    break;
-            }
-
-            // There's currently an issue that prevents FindAssets from find resources withing the package folder.
-            if (resourceAsset == null)
-            {
-                string path = packagePath + "/Runtime/Data/" + typeof(T).Name + ".asset";
-                resourceAsset = AssetDatabase.LoadAssetAtPath<T>(path);
-            }
-
-            // Validate the resource file
-            ResourceReloader.TryReloadAllNullIn(resourceAsset, packagePath);
-
-            return resourceAsset;
-        }
-
         UniversalRenderPipelineEditorResources editorResources
         {
             get
             {
-                if (m_EditorResourcesAsset == null)
-                    m_EditorResourcesAsset = LoadResourceFile<UniversalRenderPipelineEditorResources>();
-
+                if (m_EditorResourcesAsset != null && !m_EditorResourcesAsset.Equals(null))
+                    return m_EditorResourcesAsset;
+                
+                string resourcePath = AssetDatabase.GUIDToAssetPath(editorResourcesGUID);
+                var objs = InternalEditorUtility.LoadSerializedFileAndForget(resourcePath);
+                m_EditorResourcesAsset = objs != null && objs.Length > 0 ? objs.First() as UniversalRenderPipelineEditorResources : null;
                 return m_EditorResourcesAsset;
             }
         }
@@ -350,11 +299,42 @@ namespace UnityEngine.Rendering.Universal
                 return null;
             }
 
-            if(m_Renderers == null || m_Renderers.Length < m_RendererDataList.Length)
-                m_Renderers = new ScriptableRenderer[m_RendererDataList.Length];
-
-            m_Renderers[0] = m_RendererDataList[0].InternalCreateRenderer();
+            CreateRenderers();
             return new UniversalRenderPipeline(this);
+        }
+
+        void DestroyRenderers()
+        {
+            foreach (var renderer in m_Renderers)
+                renderer?.Dispose();
+        }
+
+        protected override void OnValidate()
+        {
+            DestroyRenderers();
+
+            // This will call RenderPipelineManager.CleanupRenderPipeline that in turn disposes the render pipeline instance and
+            // assign pipeline asset reference to null
+            base.OnValidate();
+        }
+
+        protected override void OnDisable()
+        {
+            DestroyRenderers();
+
+            // This will call RenderPipelineManager.CleanupRenderPipeline that in turn disposes the render pipeline instance and
+            // assign pipeline asset reference to null
+            base.OnDisable();
+        }
+
+        void CreateRenderers()
+        {
+            m_Renderers = new ScriptableRenderer[m_RendererDataList.Length];
+            for (int i = 0; i < m_RendererDataList.Length; ++i)
+            {
+                if (m_RendererDataList[i] != null)
+                    m_Renderers[i] = m_RendererDataList[i].InternalCreateRenderer();
+            }
         }
 
         Material GetMaterial(DefaultMaterialType materialType)
@@ -387,6 +367,9 @@ namespace UnityEngine.Rendering.Universal
 #endif
         }
 
+        /// <summary>
+        /// Returns the default renderer being used by this pipeline.
+        /// </summary>
         public ScriptableRenderer scriptableRenderer
         {
             get
@@ -406,6 +389,36 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
+        /// <summary>
+        /// Returns a renderer from the current pipeline asset
+        /// </summary>
+        /// <param name="index">Index to the renderer. If invalid index is passed, the default renderer is returned instead.</param>
+        /// <returns></returns>
+        public ScriptableRenderer GetRenderer(int index)
+        {
+            if (index == -1)
+                index = m_DefaultRendererIndex;
+
+            if (index >= m_RendererDataList.Length || index < 0 || m_RendererDataList[index] == null)
+            {
+                Debug.LogWarning(
+                    $"Renderer at index {index.ToString()} is missing, falling back to Default Renderer {m_RendererDataList[m_DefaultRendererIndex].name}",
+                    this);
+                index = m_DefaultRendererIndex;
+            }
+
+            // RendererData list differs from RendererList. Create RendererList.
+            if (m_Renderers == null || m_Renderers.Length < m_RendererDataList.Length)
+                CreateRenderers();
+
+            // This renderer data is outdated or invalid, we recreate the renderer
+            // so we construct all render passes with the updated data
+            if (m_RendererDataList[index].isInvalidated || m_Renderers[index] == null)
+                m_Renderers[index] = m_RendererDataList[index].InternalCreateRenderer();
+
+            return m_Renderers[index];
+        }
+
         internal ScriptableRendererData scriptableRendererData
         {
             get
@@ -415,27 +428,6 @@ namespace UnityEngine.Rendering.Universal
 
                 return m_RendererDataList[m_DefaultRendererIndex];
             }
-        }
-
-        internal ScriptableRenderer GetRenderer(int index)
-        {
-            if (index == -1) index = m_DefaultRendererIndex;
-
-            if (index >= m_RendererDataList.Length || index < 0 || m_RendererDataList[index] == null)
-            {
-                Debug.LogWarning(
-                    $"Renderer at index {index.ToString()} is missing, falling back to Default Renderer {m_RendererDataList[m_DefaultRendererIndex].name}",
-                    this);
-                    index = m_DefaultRendererIndex;
-            }
-
-            if(m_Renderers == null || m_Renderers.Length < m_RendererDataList.Length)
-                m_Renderers = new ScriptableRenderer[m_RendererDataList.Length];
-
-            if ( m_RendererDataList[index].isInvalidated || m_Renderers[index] == null)
-                m_Renderers[index] = m_RendererDataList[index].InternalCreateRenderer();
-
-            return m_Renderers[index];
         }
 
 #if UNITY_EDITOR
@@ -620,47 +612,26 @@ namespace UnityEngine.Rendering.Universal
             set { m_UseSRPBatcher = value; }
         }
 
-        /// <summary>
-        /// The post-processing solution used in the project.
-        /// </summary>
-        public PostProcessingFeatureSet postProcessingFeatureSet
-        {
-            get
-            {
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-                return m_PostProcessingFeatureSet;
-#else
-                return PostProcessingFeatureSet.Integrated;
-#endif
-            }
-            set
-            {
-#if POST_PROCESSING_STACK_2_0_0_OR_NEWER
-                m_PostProcessingFeatureSet = value;
-#else
-                m_PostProcessingFeatureSet = PostProcessingFeatureSet.Integrated;
-#endif
-            }
-        }
-
-        /// <summary>
-        /// The color grading mode used in the project.
-        /// </summary>
         public ColorGradingMode colorGradingMode
         {
             get { return m_ColorGradingMode; }
             set { m_ColorGradingMode = value; }
         }
 
-        /// <summary>
-        /// The color grading LUT size used in the project. Higher sizes provide more precision, but
-        /// have a potential cost of performance and memory use. You cannot mix and match LUT sizes,
-        /// so decide on a size before you start the color grading process.
-        /// </summary>
         public int colorGradingLutSize
         {
             get { return m_ColorGradingLutSize; }
             set { m_ColorGradingLutSize = Mathf.Clamp(value, k_MinLutSize, k_MaxLutSize); }
+        }
+
+       /// <summary>
+       /// Set to true to allow Adaptive performance to modify graphics quality settings during runtime.
+       /// Only applicable when Adaptive performance package is available.
+       /// </summary>
+        public bool useAdaptivePerformance
+        {
+            get { return m_UseAdaptivePerformance; }
+            set { m_UseAdaptivePerformance = value; }
         }
 
         public override Material defaultMaterial
@@ -719,6 +690,12 @@ namespace UnityEngine.Rendering.Universal
                     if (defaultShader != null)
                         return defaultShader;
                 }
+                
+                if (m_DefaultShader == null)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(ShaderUtils.GetShaderGUID(ShaderPathID.Lit));
+                    m_DefaultShader  = AssetDatabase.LoadAssetAtPath<Shader>(path);
+                }
 #endif
 
                 if (m_DefaultShader == null)
@@ -731,42 +708,42 @@ namespace UnityEngine.Rendering.Universal
 #if UNITY_EDITOR
         public override Shader autodeskInteractiveShader
         {
-            get { return editorResources.shaders.autodeskInteractivePS; }
+            get { return editorResources?.shaders.autodeskInteractivePS; }
         }
 
         public override Shader autodeskInteractiveTransparentShader
         {
-            get { return editorResources.shaders.autodeskInteractiveTransparentPS; }
+            get { return editorResources?.shaders.autodeskInteractiveTransparentPS; }
         }
 
         public override Shader autodeskInteractiveMaskedShader
         {
-            get { return editorResources.shaders.autodeskInteractiveMaskedPS; }
+            get { return editorResources?.shaders.autodeskInteractiveMaskedPS; }
         }
 
         public override Shader terrainDetailLitShader
         {
-            get { return editorResources.shaders.terrainDetailLitPS; }
+            get { return editorResources?.shaders.terrainDetailLitPS; }
         }
 
         public override Shader terrainDetailGrassShader
         {
-            get { return editorResources.shaders.terrainDetailGrassPS; }
+            get { return editorResources?.shaders.terrainDetailGrassPS; }
         }
 
         public override Shader terrainDetailGrassBillboardShader
         {
-            get { return editorResources.shaders.terrainDetailGrassBillboardPS; }
+            get { return editorResources?.shaders.terrainDetailGrassBillboardPS; }
         }
 
         public override Shader defaultSpeedTree7Shader
         {
-            get { return editorResources.shaders.defaultSpeedTree7PS; }
+            get { return editorResources?.shaders.defaultSpeedTree7PS; }
         }
 
         public override Shader defaultSpeedTree8Shader
         {
-            get { return editorResources.shaders.defaultSpeedTree8PS; }
+            get { return editorResources?.shaders.defaultSpeedTree8PS; }
         }
 #endif
 
