@@ -18,6 +18,7 @@ void ToonLight_half(
     half ShadeShift, half ShadeToony, TEXTURE2D(ShadeRamp), half ToonyLighting,
     out half4 Color)
 {
+
     InputData inputData;
     inputData.positionWS = WorldPosition;
 
@@ -34,7 +35,8 @@ void ToonLight_half(
     //OUTPUT_LIGHTMAP_UV(lightmapUV, unity_LightmapST, lightmapUV);
     float2 lightmapUV;
     float3 vertexSH;
-    float3 normalWSBakedGI = lerp(inputData.normalWS, float3(0, 0, 0), ToonyLighting);
+    float3 cameraDirectionWS = mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
+    float3 normalWSBakedGI = lerp(inputData.normalWS, cameraDirectionWS, ToonyLighting);        // カメラの向いている方向に法線を統一
 
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     inputData.bakedGI = SAMPLE_GI(lightmapUV, vertexSH, normalWSBakedGI);

@@ -67,8 +67,6 @@ float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float 
     projectedNormal.x *= aspect;
     vertex.xy += 0.01 * outlineWidth * projectedNormal.xy;
 
-    // 少し奥方向に移動しないとアーティファクトが発生することがある
-    //vertex.z += -0.00002 / vertex.w;
     return vertex;
 }
 
