@@ -141,6 +141,7 @@ Material:
     - Vector1_4FDCBCA2: 0.5
     - Vector1_6D6B064A: 0
     - Vector1_758139A: 0.9
+    - Vector1_D3E9BBB8: 1
     - _AlphaClip: 0
     - _Blend: 0
     - _BumpScale: 1
@@ -157,8 +158,8 @@ Material:
     - _OutlineWidth: 0.5
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 1
-    - _Smoothness: 0.5
+    - _ShadeToony: 0.817
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
