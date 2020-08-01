@@ -1,10 +1,8 @@
 ﻿//
 // Reference https://blog.csdn.net/noahzuo/article/details/51162472
 // 
-#ifndef UNIVERSAL_TOONLIGHTING_ANISOTROPIC_INCLUDED
-#define UNIVERSAL_TOONLIGHTING_ANISOTROPIC_INCLUDED
-
-
+#ifndef LILIUM_KAJIYAKAY_ANISOTROPIC_INCLUDED
+#define LILIUM_KAJIYAKAY_ANISOTROPIC_INCLUDED
 
 half3 ShiftTangent(half3 T, half3 N, half shift)
 {
@@ -21,8 +19,7 @@ half StrandSpecular(half3 T, half3 V, half3 L, half exponent)
     return dirAtten * pow(sinTH, exponent);
 }
 
-
-half HairLighting(half3 tangent, half3 normal, half3 lightDirection, half3 viewDirection, 
+half KajiyaKayAnisotropicDirectSpecular(half3 tangent, half3 normal, half3 lightDirection, half3 viewDirection, 
                   half specularIntensity, half secondarySpecularIntensity, half primaryShift, half secondaryShift, half primaryExponent, half secondaryExponent)
 {
     // shift tangents
@@ -37,26 +34,11 @@ half HairLighting(half3 tangent, half3 normal, half3 lightDirection, half3 viewD
     return intensity;
 }
 
-#if !SHADERGRAPH_PREVIEW
-
-void KajiyaKayAnisotropicIntensity_half(
-    half3 Normal, half3 Tangent, half3 WorldView, half Shift, half PrimaryExponent, half SecondaryExponent, 
-    out half3 Color)
+void KajiyaKayAnisotropicDirectSpecular_half(
+    half3 LightDirection, half3 Normal, half3 Tangent, half3 WorldView, half Shift, half PrimaryExponent, half SecondaryExponent, 
+    out half intensity)
 {
-    Light mainLight = GetMainLight();
-
-    Color = (HairLighting (Tangent, Normal, mainLight.direction, WorldView, 1, 1, Shift, Shift, PrimaryExponent, SecondaryExponent) * mainLight.distanceAttenuation * mainLight.shadowAttenuation) * mainLight.color;
+    intensity = KajiyaKayAnisotropicDirectSpecular (Tangent, Normal, LightDirection, WorldView, 1, 1, Shift, Shift, PrimaryExponent, SecondaryExponent);
 }
-
-#else
-
-void KajiyaKayAnisotropicIntensity_half(
-    half3 Normal, half3 Tangent, half3 WorldView, half Shift, half PrimaryExponent, half SecondaryExponent, 
-    out half3 Color)
-{
-    Color = HairLighting (Tangent, Normal, half3(0, 1, -1), WorldView, 1, 1, Shift, Shift, PrimaryExponent, SecondaryExponent);
-}
-
-#endif
 
 #endif

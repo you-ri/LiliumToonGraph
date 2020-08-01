@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Broch
+  m_Name: Hairpin
   m_Shader: {fileID: -6465566751694194690, guid: 78689600cd436f846859a8bc6bcb3ebc,
     type: 3}
   m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
