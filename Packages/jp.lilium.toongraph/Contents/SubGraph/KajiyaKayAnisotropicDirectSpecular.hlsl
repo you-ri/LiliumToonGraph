@@ -38,7 +38,7 @@ void KajiyaKayAnisotropicDirectSpecular_half(
     half3 LightDirection, half3 Normal, half3 Tangent, half3 WorldView, half Shift, half PrimaryExponent, half SecondaryExponent, 
     out half intensity)
 {
-    intensity = KajiyaKayAnisotropicDirectSpecular (Tangent, Normal, LightDirection, WorldView, 1, 1, Shift, Shift, PrimaryExponent, SecondaryExponent);
+    intensity = KajiyaKayAnisotropicDirectSpecular (Tangent, Normal, LightDirection, WorldView, 0.5h, 0.5h, Shift, Shift, PrimaryExponent, SecondaryExponent);
 }
 
 #endif
