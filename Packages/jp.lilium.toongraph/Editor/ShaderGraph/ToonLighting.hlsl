@@ -61,8 +61,8 @@ struct ToonBRDFData
     half roughness2MinusOne; // roughness² - 1.0
 
     // toony extend
-    half3 shade; // 影色
     half3 base; // 基本色
+    half3 shade; // 影色
     half occlusion;
 
     half shadeShift;
@@ -385,18 +385,21 @@ half4 UniversalFragmentToon(
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS);
     half3 shadeIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.shade;
     half3 baseIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.base;
+    half3 indirectColor = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) - baseIndirectDiffuse;
 
     // TODO: 最適化
     half NdotL = saturate(dot(inputData.normalWS, mainLight.direction));
     half3 directLightIntensity = mainLight.distanceAttenuation * mainLight.shadowAttenuation * ToonyShadeValue(brdfData, (NdotL));
 
-    // メインライトの強さに応じて影色の影響度合いを変化させる
-    color = lerp(color, color - baseIndirectDiffuse + shadeIndirectDiffuse, 1 - saturate( FastLinearToSRGB(directLightIntensity)));
-    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    half3 color = indirectColor + baseIndirectDiffuse;
 
+    // メインライトの弱さに応じて１影の度合いを強める
+    half shade1Rate = 1 - saturate(FastLinearToSRGB(directLightIntensity));
+    color = lerp(color, indirectColor + shadeIndirectDiffuse, shade1Rate);
+
+    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
     
 #ifdef _ADDITIONAL_LIGHTS
