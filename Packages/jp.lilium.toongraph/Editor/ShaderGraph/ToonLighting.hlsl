@@ -63,6 +63,7 @@ struct ToonBRDFData
     // toony extend
     half3 base; // 基本色
     half3 shade; // 影色
+    half shadeKeyTime;
     half occlusion;
 
     half shadeShift;
@@ -98,12 +99,12 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 
 #else
     half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony, 1), value / maxValue) * maxValue;
 #endif
-    return lerp((half3)value, toonedValue, brdfData.toonyLighting);
+    return lerp((half3)value * (1 - brdfData.shadeShift), toonedValue, brdfData.toonyLighting);
 }
 
 
 inline void InitializeToonBRDFData(
-    half3 albedo, half3 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half3 albedo, half4 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shadeShift, half shadeToony, float toonyLighting, Texture2D shadeRamp, 
     out ToonBRDFData outBRDFData)
 {
@@ -121,9 +122,10 @@ inline void InitializeToonBRDFData(
     outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
 
+
     // Toon Paramaters
     outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
-    outBRDFData.shade = shade * (half3(1.0h, 1.0h, 1.0h) - specular);
+    outBRDFData.shade = shade.rgb * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
 
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
@@ -134,8 +136,10 @@ inline void InitializeToonBRDFData(
 
     // Toon Paramaters
     outBRDFData.base = albedo * oneMinusReflectivity;
-    outBRDFData.shade = shade * oneMinusReflectivity;
+    outBRDFData.shade = shade.rgb * oneMinusReflectivity;
 #endif
+    outBRDFData.shadeKeyTime = 1.0f / shade.a;
+    //outBRDFData.sss = shade.rgb - albedo;
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
     outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
@@ -146,7 +150,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
     // Toony Paramaters
-    outBRDFData.occlusion = occlusion;
+    outBRDFData.occlusion = occlusion;//ToonyValue(outBRDFData, occlusion)*0.5f + 0.5f;
 #ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
 #endif
@@ -237,8 +241,8 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     // TODO: 最適化
     float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
-    half radianceIntensity = length(radiance);
-    half specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radianceIntensity, maxSpecularTerm*radianceIntensity, 4); //TODO: 閾値を4に決め打ちしているが調整する方法が必要
+    half radiancePower = length(radiance);
+    half specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiancePower, maxSpecularTerm*radiancePower, 4); //TODO: 閾値を4に決め打ちしているが調整する方法が必要
 
     half3 color = (specularTermWithRadiance * SafeNormalize(radiance) * brdfData.specular) + (brdfData.base * radiance);
     return color;
@@ -328,6 +332,11 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }
+
+half GlobalIlluminationToonBright(ToonBRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+{
+    return bakedGI * occlusion;
+}
 /*
 half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
@@ -354,6 +363,13 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     return LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
 }
 
+half LightingToonyBasedBright(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
+{
+    half NdotL = saturate(dot(normalWS, light.direction));
+    return light.color * ((light.distanceAttenuation * light.shadowAttenuation) * ToonyShadeValue(brdfData, NdotL));
+}
+
+
 /*
 half3 LightingPhysicallyBased(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
@@ -374,7 +390,7 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(
-    InputData inputData, half3 diffuse, half3 shade,
+    InputData inputData, half3 diffuse, half4 shade,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
     half shadeShift, half shadeToony, Texture2D shadeRamp, half toonyLighing)
 {
@@ -385,23 +401,29 @@ half4 UniversalFragmentToon(
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 shadeIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.shade;
-    half3 baseIndirectDiffuse = inputData.bakedGI * occlusion * brdfData.base;
-    half3 indirectColor = GlobalIlluminationToon(brdfData, inputData.bakedGI, occlusion, inputData.normalWS, inputData.viewDirectionWS) - baseIndirectDiffuse;
+    // 直接光の影響力を取得
+    half indirectDiffuseBright = GlobalIlluminationToonBright(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
+    half directDiffuseBright = LightingToonyBasedBright(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    half sceneBright = mainLight.color * mainLight.distanceAttenuation;
+#ifdef _ADDITIONAL_LIGHTS
+    int pixelLightCount2 = GetAdditionalLightsCount();
+    for (int i = 0; i < pixelLightCount2; ++i)
+    {
+        Light light = GetAdditionalLight(i, inputData.positionWS);
+        directDiffuseBright += LightingToonyBasedBright(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
+        sceneBright += light.color * light.distanceAttenuation;
+    }
+#endif
 
-    // TODO: 最適化
-    half NdotL = saturate(dot(inputData.normalWS, mainLight.direction));
-    half3 directLightIntensity = mainLight.distanceAttenuation * mainLight.shadowAttenuation * ToonyShadeValue(brdfData, (NdotL));
+    // 直接光の最大輝度に応じて影色の度合いを強める
+    half shadeRate = (sceneBright - directDiffuseBright) * brdfData.shadeKeyTime;
+    //half shadeRate = (FastLinearToSRGB(sceneBright) - FastLinearToSRGB(directDiffuseBright)) * brdfData.shadeKeyTime;
+    //brdfData.base += brdfData.sss * saturate(shadeRate);
+    brdfData.base = lerp(brdfData.base, brdfData.shade, saturate(shadeRate));
 
-    half3 color = indirectColor + baseIndirectDiffuse;
-
-    // メインライトの弱さに応じて１影の度合いを強める
-    half shade1Rate = 1 - saturate(FastLinearToSRGB(directLightIntensity));
-    color = lerp(color, indirectColor + shadeIndirectDiffuse, shade1Rate);
-
+    half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 
-    
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)

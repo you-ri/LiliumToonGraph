@@ -148,7 +148,7 @@ Material:
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 0.878
+    - _ShadeToony: 1
     - _ShdeToony: 1
     - _Smoothness: 0.203
     - _SmoothnessTextureChannel: 0

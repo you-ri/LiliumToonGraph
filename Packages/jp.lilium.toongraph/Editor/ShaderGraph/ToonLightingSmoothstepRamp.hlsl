@@ -13,7 +13,7 @@
 
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
-    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
+    half3 Diffuse, half4 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadeShift, half ShadeToony, half ToonyLighting,
     out half4 Color)
 {
@@ -126,7 +126,7 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
-    half3 Diffuse, half3 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
+    half3 Diffuse, half4 Shade, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadeShift, half ShadeToony, half ToonyLighting,
     out half4 Color)
 {
