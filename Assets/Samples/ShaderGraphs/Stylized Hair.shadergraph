@@ -103,7 +103,14 @@
             "JSONnodeData": "{\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"2028a10b-0eea-4500-9f72-5f45057ba1f2\"\n    },\n    \"m_Name\": \"Toony Lighting\",\n    \"m_DefaultReferenceName\": \"Vector1_CAB8116\",\n    \"m_OverrideReferenceName\": \"\",\n    \"m_GeneratePropertyBlock\": true,\n    \"m_Precision\": 0,\n    \"m_GPUInstanced\": false,\n    \"m_Hidden\": false,\n    \"m_Value\": 0.0,\n    \"m_FloatType\": 1,\n    \"m_RangeValues\": {\n        \"x\": 0.0,\n        \"y\": 1.0\n    }\n}"
         }
     ],
-    "m_SerializedKeywords": [],
+    "m_SerializedKeywords": [
+        {
+            "typeInfo": {
+                "fullName": "UnityEditor.ShaderGraph.ShaderKeyword"
+            },
+            "JSONnodeData": "{\n    \"m_Guid\": {\n        \"m_GuidSerialized\": \"6afedc41-32ac-46de-b81c-7da6a5d23037\"\n    },\n    \"m_Name\": \"Specular Highlights\",\n    \"m_DefaultReferenceName\": \"ENUM_8573295F\",\n    \"m_OverrideReferenceName\": \"_SPECULARHIGHLIGHTS\",\n    \"m_GeneratePropertyBlock\": false,\n    \"m_KeywordType\": 1,\n    \"m_KeywordDefinition\": 0,\n    \"m_KeywordScope\": 0,\n    \"m_Entries\": [\n        {\n            \"id\": 1,\n            \"displayName\": \"On\",\n            \"referenceName\": \"ON\"\n        },\n        {\n            \"id\": 2,\n            \"displayName\": \"Off\",\n            \"referenceName\": \"OFF\"\n        }\n    ],\n    \"m_Value\": 1,\n    \"m_IsEditable\": true,\n    \"m_IsExposable\": true\n}"
+        }
+    ],
     "m_SerializableNodes": [
         {
             "typeInfo": {
