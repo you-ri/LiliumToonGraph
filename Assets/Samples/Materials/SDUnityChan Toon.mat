@@ -150,7 +150,7 @@ Material:
     - _ReceiveShadows: 1
     - _ShadeToony: 1
     - _ShdeToony: 1
-    - _Smoothness: 0.203
+    - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
