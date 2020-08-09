@@ -4,9 +4,6 @@
 #ifndef UNIVERSAL_TOONLIGHTING2_INCLUDED
 #define UNIVERSAL_TOONLIGHTING2_INCLUDED
 
-
-//#define _SPECULAR_SETUP
-
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
@@ -115,13 +112,12 @@ inline void InitializeToonBRDFData(
 
     metallic = specular.r;
 
-#if false
+#if _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
     half oneMinusReflectivity = 1.0 - reflectivity;
 
     outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
-
 
     // Toon Paramaters
     outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
