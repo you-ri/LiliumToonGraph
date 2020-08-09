@@ -10,7 +10,7 @@ Material:
   m_Name: Stylized Hair Toony Purple
   m_Shader: {fileID: -6465566751694194690, guid: aae41a3c442abc849b78ca3e9bf6de56,
     type: 3}
-  m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP
+  m_ShaderKeywords: _ALPHATEST_ON _NORMALMAP _SPECULARHIGHLIGHTS_OFF
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -134,7 +134,7 @@ Material:
     - Vector1_49E9B1A1: 1
     - Vector1_4FDCBCA2: 0.5
     - Vector1_6799C7D0: 0.25
-    - Vector1_741DA5ED: 0
+    - Vector1_741DA5ED: 0.435
     - Vector1_758139A: 1
     - Vector1_767B62E: -0.012
     - Vector1_77B0B5C: 1000
@@ -160,6 +160,7 @@ Material:
     - _OutlineWidthMode: 0
     - _PrimaryShift: 0.96
     - _ReceiveShadowRate: 1
+    - _SPECULARHIGHLIGHTS: 1
     - _ShadeShift: -0.3
     - _ShadeToony: 0.731
     - _ShadingGradeRate: 1

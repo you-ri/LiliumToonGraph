@@ -72,6 +72,11 @@ struct ToonBRDFData
 #endif
 };
 
+inline half average (half3 value)
+{
+    return (value.x + value.y + value.z) * 0.3333333333h;
+}
+
 // Convert toony value (specular use)
 inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1, half threshold = 0.5)
 {
@@ -330,7 +335,7 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
 
 half GlobalIlluminationToonBright(ToonBRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
-    return bakedGI * occlusion;
+    return average(bakedGI * occlusion);
 }
 /*
 half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
@@ -362,7 +367,7 @@ half LightingToonyBasedBright(ToonBRDFData brdfData, Light light, half3 normalWS
 {
     half NdotL = saturate(dot(normalWS, light.direction));
     half lightAttenuation = light.distanceAttenuation * light.shadowAttenuation;
-    return light.color * (lightAttenuation * ToonyShadeValue(brdfData, NdotL));
+    return average(light.color * (lightAttenuation * ToonyShadeValue(brdfData, NdotL)));
 }
 
 
@@ -400,20 +405,21 @@ half4 UniversalFragmentToon(
     // 直接光の影響力を取得
     half indirectDiffuseBright = GlobalIlluminationToonBright(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
     half directDiffuseBright = LightingToonyBasedBright(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
-    half sceneBright = mainLight.color * mainLight.distanceAttenuation;
+    half sceneBright = average(mainLight.color * mainLight.distanceAttenuation);
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount2 = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount2; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
         directDiffuseBright += LightingToonyBasedBright(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
-        sceneBright += light.color * light.distanceAttenuation;
+        sceneBright += average(light.color * light.distanceAttenuation);
     }
 #endif
 
     // 直接光の最大輝度に応じて影色の度合いを大きくする
     half shadeRate = (sceneBright - directDiffuseBright) * brdfData.shadeKeyTime;
-    shadeRate = shadeRate / sceneBright / 2;        // 影色が明るい素材は強い人と影との境界で不自然になる。ここで明るさに応じて影色度合いを小さくする。
+    shadeRate = shadeRate / sceneBright / 2;        // 影色が明るい素材は強い人と影との境界で不自然になる。ここで明るさに応じて影色度合いを小さくする。 
+                                                    // TODO: マジックナンバーをなんとかする。
     //brdfData.base += brdfData.sss * saturate(shadeRate);
     brdfData.base = lerp(brdfData.base, brdfData.shade, saturate(shadeRate));
 
