@@ -45,7 +45,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - Texture2D_D8B2C869:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 779bcc09a6efac74bb5399fc03b56e31, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - Texture2D_DC67E965:
@@ -73,7 +73,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap2:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 8c9f29f6de4f740419e3eaabadfb19a5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
@@ -173,8 +173,8 @@ Material:
     m_Colors:
     - Color_3702BDBA: {r: 0.18867922, g: 0.08256427, b: 0.05072979, a: 1}
     - Color_537E3FFF: {r: 0, g: 0, b: 0, a: 0}
-    - Color_94500C07: {r: 0.81960785, g: 0.4310104, b: 0.12941176, a: 1}
-    - Color_A090F377: {r: 1, g: 0.9056604, b: 0.4292453, a: 1}
+    - Color_94500C07: {r: 0.8113208, g: 0.4917066, b: 0.24110004, a: 1}
+    - Color_A090F377: {r: 1, g: 0.7148798, b: 0.3537736, a: 1}
     - Color_AEA6BBA8: {r: 0, g: 0, b: 0, a: 0}
     - Color_BCE13EC1: {r: 0.990566, g: 0.990566, b: 0.990566, a: 1}
     - Color_C36862AF: {r: 1, g: 1, b: 1, a: 1}

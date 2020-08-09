@@ -60,8 +60,6 @@ void ToonLight_half(
     TEXTURE2D(shadeRamp);
 
     Color = UniversalFragmentToon(inputData, Diffuse, Shade, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, shadeRamp, ToonyLighting);
-    //Color.rgb = MixFog(Color.rgb, inputData.fogCoord);
-    //Color = UniversalFragmentPBR(inputData, Diffuse, metallic, specular, Smoothness, Occlusion, Emmision, Alpha);
 }
 
 /*

@@ -7,6 +7,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
+//TODO: 削除
 float __ToonyLighting = 0;
 
 
@@ -110,8 +111,6 @@ inline void InitializeToonBRDFData(
     outBRDFData.shadeShift = (1 - shadeShift);
     outBRDFData.toonyLighting = toonyLighting;
 
-    metallic = specular.r;
-
 #if _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
     half oneMinusReflectivity = 1.0 - reflectivity;
@@ -123,7 +122,6 @@ inline void InitializeToonBRDFData(
     outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.shade = shade.rgb * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
-
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
     half reflectivity = 1.0 - oneMinusReflectivity;
 
@@ -134,7 +132,8 @@ inline void InitializeToonBRDFData(
     outBRDFData.base = albedo * oneMinusReflectivity;
     outBRDFData.shade = shade.rgb * oneMinusReflectivity;
 #endif
-    outBRDFData.shadeKeyTime = 1.0f / shade.a;
+
+    outBRDFData.shadeKeyTime = 1.0h / FastLinearToSRGB(shade.a);
     //outBRDFData.sss = shade.rgb - albedo;
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
@@ -362,7 +361,8 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
 half LightingToonyBasedBright(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
     half NdotL = saturate(dot(normalWS, light.direction));
-    return light.color * ((light.distanceAttenuation * light.shadowAttenuation) * ToonyShadeValue(brdfData, NdotL));
+    half lightAttenuation = light.distanceAttenuation * light.shadowAttenuation;
+    return light.color * (lightAttenuation * ToonyShadeValue(brdfData, NdotL));
 }
 
 
@@ -392,7 +392,7 @@ half4 UniversalFragmentToon(
 {
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, brdfData);
-    __ToonyLighting = toonyLighing; //TODO:
+    __ToonyLighting = toonyLighing; //TODO: ToonBRDFDataに埋め込む
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
@@ -411,15 +411,14 @@ half4 UniversalFragmentToon(
     }
 #endif
 
-    // 直接光の最大輝度に応じて影色の度合いを強める
+    // 直接光の最大輝度に応じて影色の度合いを大きくする
     half shadeRate = (sceneBright - directDiffuseBright) * brdfData.shadeKeyTime;
-    //half shadeRate = (FastLinearToSRGB(sceneBright) - FastLinearToSRGB(directDiffuseBright)) * brdfData.shadeKeyTime;
+    shadeRate = shadeRate / sceneBright / 2;        // 影色が明るい素材は強い人と影との境界で不自然になる。ここで明るさに応じて影色度合いを小さくする。
     //brdfData.base += brdfData.sss * saturate(shadeRate);
     brdfData.base = lerp(brdfData.base, brdfData.shade, saturate(shadeRate));
 
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
-
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
