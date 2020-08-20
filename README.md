@@ -18,7 +18,7 @@
 
 ## Dependenceis
 + Unity2020.1.0f1 or later
-+ UiversalRP v8.2.0
++ UniversalRP v8.2.0
 
 ## How to use
 
@@ -27,7 +27,7 @@ Assets/Samples/ToonSample.unity
 
 ### Toon shader graph
 1. Right click in the project window.
-2. Select `Create > Shader > Toon Graph` or `Create > Shader > Unlit Graph`
+2. Select `Create > Shader > Toon Graph` or `Create > Shader > Unlit Graph` or `Create > Shader > PBR Graph`
 3. Create node `Sub Graphs > ToonLighting (SmoothstepRamp)` or `Sub Graphs > ToonLighing (TextureRamp)`
 4. Connect nodes.
 
@@ -43,6 +43,6 @@ See `Packages/Lilium ToonGraph/Contents/ShaderGraph/Toon (PBR Like Input)`
 
 MIT
 
-"Assets/UnityChan", "Assets/DanishStatues" and "Packages" Folders License below to their licenses.
+"Assets/UnityChan" and "Packages/com.unity.render-pipelines.universal" Folders License below to their licenses.
 
 © Unity Technologies Japan/UCL
