@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - xxxx-xx-xx
+- Unity2020.1.4
+- 変更：影色計算の変更
+- 変更：ToonLightingノードのShadeスロットを廃止。代わりにSSSを追加。
+- 追加：ToonStylizingサブグラフを追加。
+
 ## [0.2.2-preivew.8] - 2020 - 08 - 09
 
 - Unity2020.1.1
