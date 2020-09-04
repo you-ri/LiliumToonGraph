@@ -60,8 +60,7 @@ struct ToonBRDFData
 
     // toony extend
     half3 base; // 基本色
-    half3 shade; // 影色
-    half shadeKeyTime;
+    half3 sss;
     half occlusion;
 
     half shadeShift;
@@ -125,7 +124,7 @@ inline void InitializeToonBRDFData(
 
     // Toon Paramaters
     outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
-    outBRDFData.shade = shade.rgb * (half3(1.0h, 1.0h, 1.0h) - specular);
+    outBRDFData.sss = shade.rgb;
 #else
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
     half reflectivity = 1.0 - oneMinusReflectivity;
@@ -135,11 +134,8 @@ inline void InitializeToonBRDFData(
 
     // Toon Paramaters
     outBRDFData.base = albedo * oneMinusReflectivity;
-    outBRDFData.shade = shade.rgb * oneMinusReflectivity;
+    outBRDFData.sss = shade.rgb;
 #endif
-
-    outBRDFData.shadeKeyTime = 1.0h / FastLinearToSRGB(shade.a);
-    //outBRDFData.sss = shade.rgb - albedo;
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
     outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
@@ -155,9 +151,8 @@ inline void InitializeToonBRDFData(
     outBRDFData.shadeRamp = shadeRamp;
 #endif
 
-
 #ifdef _ALPHAPREMULTIPLY_ON
-    outBRDFData.diffuse *= alpha;
+    outBRDFData.base *= alpha;
     alpha = alpha * oneMinusReflectivity + reflectivity;
 #endif
 }
@@ -403,28 +398,11 @@ half4 UniversalFragmentToon(
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
     // 直接光の影響力を取得
-    half indirectDiffuseBright = GlobalIlluminationToonBright(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    half directDiffuseBright = LightingToonyBasedBright(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
-    half sceneBright = average(mainLight.color * mainLight.distanceAttenuation);
-#ifdef _ADDITIONAL_LIGHTS
-    int pixelLightCount2 = GetAdditionalLightsCount();
-    for (int i = 0; i < pixelLightCount2; ++i)
-    {
-        Light light = GetAdditionalLight(i, inputData.positionWS);
-        directDiffuseBright += LightingToonyBasedBright(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
-        sceneBright += average(light.color * light.distanceAttenuation);
-    }
-#endif
-
-    // 直接光の最大輝度に応じて影色の度合いを大きくする
-    half shadeRate = (sceneBright - directDiffuseBright) * brdfData.shadeKeyTime;
-    shadeRate = shadeRate / sceneBright / 2;        // 影色が明るい素材は強い人と影との境界で不自然になる。ここで明るさに応じて影色度合いを小さくする。 
-                                                    // TODO: マジックナンバーをなんとかする。
-    //brdfData.base += brdfData.sss * saturate(shadeRate);
-    brdfData.base = lerp(brdfData.base, brdfData.shade, saturate(shadeRate));
+    half3 sssIntensity = inputData.bakedGI;
 
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    color += brdfData.sss * sssIntensity;
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)

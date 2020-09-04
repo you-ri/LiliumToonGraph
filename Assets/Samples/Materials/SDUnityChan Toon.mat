@@ -167,8 +167,8 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 1, g: 1, b: 1, a: 1}
-    - _ShadeEnvironmentalColor: {r: 0.754717, g: 0.754717, b: 0.754717, a: 1}
+    - _ShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _ShadeEnvironmentalColor: {r: 0.6886792, g: 0.6886792, b: 0.6886792, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

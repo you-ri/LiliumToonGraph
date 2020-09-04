@@ -162,11 +162,12 @@ Material:
     m_Colors:
     - Color_76D10967: {r: 1, g: 1, b: 1, a: 1}
     - Color_AEA6BBA8: {r: 0, g: 0, b: 0, a: 0}
+    - Color_D9108BC9: {r: 0.509434, g: 0.509434, b: 0.509434, a: 0}
     - Color_E8797B55: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeEnvironmentalColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+    - _ShadeEnvironmentalColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
