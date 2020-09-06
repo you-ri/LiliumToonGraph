@@ -328,10 +328,6 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 }
 
-half GlobalIlluminationToonBright(ToonBRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
-{
-    return average(bakedGI * occlusion);
-}
 /*
 half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
@@ -345,6 +341,39 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 }
 */
 
+inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5h)
+{
+  return 
+    lerp(
+      value, 
+      smoothstep(
+        threshold - (oneMinusShadeToony/2), 
+        threshold + (oneMinusShadeToony/2), 
+        value),
+      __ToonyLighting);
+}
+
+
+inline half3 LightingSSS(
+    half3 V, half3 N, half3 LightDirection, half3 LightColor, half LightDistanceAtten, 
+    half _Distortion, half _Power, half _Scale,
+    half shadeToony)
+{
+    half3 L = LightDirection;
+
+    half3 H = normalize(L + N * _Distortion);
+    half VdotH = saturate(dot(V, -H));
+    half ToonedVdotH = ToonyValue(VdotH, shadeToony);
+    half intensity =  pow(ToonedVdotH, _Power) * _Scale;
+
+    return LightColor * LightDistanceAtten * (intensity); 
+}
+
+half3 LightingToonySSS(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+{
+    return brdfData.sss * LightingSSS ( viewDirectionWS, normalWS, lightDirectionWS, lightColor, lightAttenuation, 0.4f, 0.2f, 1, 0);
+}
+
 
 half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
@@ -355,14 +384,8 @@ half3 LightingToonyBased(ToonBRDFData brdfData, half3 lightColor, half3 lightDir
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
-    return LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
-}
-
-half LightingToonyBasedBright(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
-{
-    half NdotL = saturate(dot(normalWS, light.direction));
-    half lightAttenuation = light.distanceAttenuation * light.shadowAttenuation;
-    return average(light.color * (lightAttenuation * ToonyShadeValue(brdfData, NdotL)));
+    half3 sss = LightingToonySSS(brdfData, light.color, light.direction, light.distanceAttenuation, normalWS, viewDirectionWS);
+    return LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS) + sss;
 }
 
 
@@ -397,12 +420,11 @@ half4 UniversalFragmentToon(
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    // 直接光の影響力を取得
     half3 sssIntensity = inputData.bakedGI;
-
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
     color += brdfData.sss * sssIntensity;
+
+    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
     for (int i = 0; i < pixelLightCount; ++i)
@@ -416,6 +438,7 @@ half4 UniversalFragmentToon(
     color += inputData.vertexLighting * brdfData.base;
 #endif
     color += emission;
+    //color = brdfData.sss + FastSRGBToLinear(half3(0.5, 0.5, 0.5));
     return half4(color, alpha);
 }
 

@@ -24,8 +24,10 @@ void ToonStylizing_half(half3 Base, half3 Shade, half3 AmibentReference, out hal
     half l = AmibentReference.r;
     half s = FastSRGBToLinear(1 - FastLinearToSRGB(l)); 
 
-    Albedo = (Shade.rgb - Base) / s / (1-(s+l)/s);
-    SSS = Shade.rgb/s - Albedo;
+    Albedo = (Shade - Base) / s / (1-(s+l)/s);
+    SSS = Shade/l - Albedo;
+
+    SSS = (Shade / AmibentReference) - Base;
 }
 
 void ToonStylizing_float(float3 Base, float3 Shade, float3 AmibentReference, out float3 Albedo, out float3 SSS)
@@ -33,8 +35,8 @@ void ToonStylizing_float(float3 Base, float3 Shade, float3 AmibentReference, out
     float l = AmibentReference.r;
     float s = FastSRGBToLinear(1 - FastLinearToSRGB(l)); 
 
-    Albedo = (Shade.rgb - Base) / s / (1-(s+l)/s);
-    SSS = Shade.rgb/s - Albedo;
+    Albedo = (Shade - Base) / s / (1-(s+l)/s);
+    SSS = Shade/s - Albedo;
 } 
 
 #endif
