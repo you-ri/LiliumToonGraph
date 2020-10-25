@@ -355,23 +355,23 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 
 
 inline half3 LightingSSS(
-    half3 V, half3 N, half3 LightDirection, half3 LightColor, half LightDistanceAtten, 
-    half _Distortion, half _Power, half _Scale,
+    half3 V, half3 N, half3 lightDirection, half3 lightColor, half lightDistanceAtten, 
+    half distortion, half power, half scale,
     half shadeToony)
 {
-    half3 L = LightDirection;
+    half3 L = lightDirection;
 
-    half3 H = normalize(L + N * _Distortion);
+    half3 H = normalize(L + N * distortion);
     half VdotH = saturate(dot(V, -H));
     half ToonedVdotH = ToonyValue(VdotH, shadeToony);
-    half intensity =  pow(ToonedVdotH, _Power) * _Scale;
+    half radiance =  pow(ToonedVdotH, power) * scale;
 
-    return LightColor * LightDistanceAtten * (intensity); 
+    return lightColor * lightDistanceAtten * radiance; 
 }
 
 half3 LightingToonySSS(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
-    return brdfData.sss * LightingSSS ( viewDirectionWS, normalWS, lightDirectionWS, lightColor, lightAttenuation, 0.4f, 0.2f, 1, 0);
+    return brdfData.sss * LightingSSS ( viewDirectionWS, normalWS, lightDirectionWS, lightColor, lightAttenuation, 0.2f, 0.4f, 0.3f, brdfData.shadeToony);
 }
 
 

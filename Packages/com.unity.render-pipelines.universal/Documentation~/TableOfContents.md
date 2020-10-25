@@ -7,6 +7,7 @@
   * [Install URP into an existing Project](InstallURPIntoAProject.md)
   * [The Universal Render Pipeline Asset](universalrp-asset.md)
 * [Upgrade guides](upgrade-guides.md)
+  * [Upgrading to URP 10.0.x](upgrade-guide-10-0-x.md)
   * [Upgrading to URP 9.0.x](upgrade-guide-9-0-x.md)
   * [Upgrading to URP 8.2.0](upgrade-guide-8-2-0.md)
   * [Upgrading to URP 8.1.0](upgrade-guide-8-1-0.md)
@@ -34,6 +35,7 @@
     * [Volume Profile](VolumeProfile.md)
     * [Volume Overrides](VolumeOverrides.md)
   * [Effect List](EffectList.md)
+    * [Ambient Occlusion](post-processing-ssao.md)
     * [Bloom](post-processing-bloom.md)
     * [Channel Mixer](Post-Processing-Channel-Mixer.md)
     * [Chromatic Aberration](post-processing-chromatic-aberration.md)
@@ -80,12 +82,12 @@
   * [Lights 2D properties](2DLightProperties.md)
 
     * [Light types](LightTypes.md)
+  * [2D Shadows](2DShadows.md)
   * [Configuring the 2D Renderer Asset](2DRendererData_overview.md)
 
     * [HDR emulation scale](HDREmulationScale.md)
     * [Light Blend Styles](LightBlendStyles.md)
     
-    * [2D Shadows](2DShadows.md)
   * [2D Renderer and Shader Graph](ShaderGraph.md)
   * [2D Pixel Perfect](2d-pixelperfect.md)
     * [Cinemachine Pixel Perfect extension](pixel-cinemachine.md)

@@ -35,7 +35,7 @@ namespace UnityEditor.Rendering.Universal
             // Quality
             public static GUIContent hdrText = EditorGUIUtility.TrTextContent("HDR", "Controls the global HDR settings.");
             public static GUIContent msaaText = EditorGUIUtility.TrTextContent("Anti Aliasing (MSAA)", "Controls the global anti aliasing settings.");
-            public static GUIContent renderScaleText = EditorGUIUtility.TrTextContent("Render Scale", "Scales the camera render target allowing the game to render at a resolution different than native resolution. UI is always rendered at native resolution. When VR is enabled, this is overridden by XRSettings.");
+            public static GUIContent renderScaleText = EditorGUIUtility.TrTextContent("Render Scale", "Scales the camera render target allowing the game to render at a resolution different than native resolution. UI is always rendered at native resolution.");
 
             // Main light
             public static GUIContent mainLightRenderingModeText = EditorGUIUtility.TrTextContent("Main Light", "Main light is the brightest directional light.");
@@ -81,6 +81,8 @@ namespace UnityEditor.Rendering.Universal
                 EditorGUIUtility.TrTextContent("Missing Default Renderer\nThere is no default renderer assigned, so Unity can’t perform any rendering. Set another renderer to be the new Default, or assign a renderer to the Default slot.");
             public static GUIContent rendererMissingMessage =
                 EditorGUIUtility.TrTextContent("Missing Renderer(s)\nOne or more renderers are either missing or unassigned.  Switching to these renderers at runtime can cause issues.");
+            public static GUIContent rendererUnsupportedAPIMessage =
+                EditorGUIUtility.TrTextContent("Some Renderer(s) in the Renderer List are incompatible with the Player Graphics APIs list.  Switching to these renderers at runtime can cause issues.\n\n");
 
             // Dropdown menu options
             public static string[] mainLightOptions = { "Disabled", "Per Pixel" };
@@ -227,11 +229,14 @@ namespace UnityEditor.Rendering.Universal
                 EditorGUI.indentLevel++;
 
                 UniversalRenderPipelineAsset asset = target as UniversalRenderPipelineAsset;
+                string unsupportedGraphicsApisMessage;
 
                 if (!asset.ValidateRendererData(-1))
                     EditorGUILayout.HelpBox(Styles.rendererMissingDefaultMessage.text, MessageType.Error, true);
                 else if (!asset.ValidateRendererDataList(true))
                     EditorGUILayout.HelpBox(Styles.rendererMissingMessage.text, MessageType.Warning, true);
+                else if (!ValidateRendererGraphicsAPIs(asset, out unsupportedGraphicsApisMessage))
+                    EditorGUILayout.HelpBox(Styles.rendererUnsupportedAPIMessage.text + unsupportedGraphicsApisMessage, MessageType.Warning, true);
 
                 EditorGUILayout.PropertyField(m_RequireDepthTextureProp, Styles.requireDepthTextureText);
                 EditorGUILayout.PropertyField(m_RequireOpaqueTextureProp, Styles.requireOpaqueTextureText);
@@ -257,9 +262,7 @@ namespace UnityEditor.Rendering.Universal
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_HDR, Styles.hdrText);
                 EditorGUILayout.PropertyField(m_MSAA, Styles.msaaText);
-                EditorGUI.BeginDisabledGroup(XRGraphics.enabled);
                 m_RenderScale.floatValue = EditorGUILayout.Slider(Styles.renderScaleText, m_RenderScale.floatValue, UniversalRenderPipeline.minRenderScale, UniversalRenderPipeline.maxRenderScale);
-                EditorGUI.EndDisabledGroup();
                 EditorGUI.indentLevel--;
                 EditorGUILayout.Space();
                 EditorGUILayout.Space();
@@ -467,8 +470,6 @@ namespace UnityEditor.Rendering.Universal
 
             list.onCanRemoveCallback = li => { return li.count > 1; };
 
-            list.onCanAddCallback = li => { return li.count < UniversalRenderPipeline.maxScriptableRenderers; };
-
             list.onRemoveCallback = li =>
             {
                 if (li.serializedProperty.arraySize - 1 != m_DefaultRendererProp.intValue)
@@ -485,6 +486,30 @@ namespace UnityEditor.Rendering.Universal
                 }
                 EditorUtility.SetDirty(target);
             };
+        }
+
+        bool ValidateRendererGraphicsAPIs(UniversalRenderPipelineAsset pipelineAsset, out string unsupportedGraphicsApisMessage)
+        {
+            // Check the list of Renderers against all Graphics APIs the player is built with.
+            unsupportedGraphicsApisMessage = null;
+
+            BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
+            GraphicsDeviceType[] graphicsAPIs = PlayerSettings.GetGraphicsAPIs(platform);
+            int rendererCount = pipelineAsset.m_RendererDataList.Length;
+
+            for (int i = 0; i < rendererCount; i++)
+            {
+                ScriptableRenderer renderer = pipelineAsset.GetRenderer(i);
+                GraphicsDeviceType[] unsupportedAPIs = renderer.unsupportedGraphicsDeviceTypes;
+
+                for (int apiIndex = 0; apiIndex < unsupportedAPIs.Length; apiIndex++)
+                {
+                    if (System.Array.FindIndex(graphicsAPIs, element => element == unsupportedAPIs[apiIndex]) >= 0)
+                        unsupportedGraphicsApisMessage += System.String.Format("{0} at index {1} does not support {2}.\n", renderer, i, unsupportedAPIs[apiIndex]);
+                }
+            }
+
+            return unsupportedGraphicsApisMessage == null;
         }
     }
 }
