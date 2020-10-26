@@ -3616,7 +3616,7 @@
     "m_ObjectId": "804e3577852847a0bd09bf0e45a10d38",
     "m_AlphaTest": false,
     "m_SurfaceType": 1,
-    "m_AlphaMode": 0,
+    "m_AlphaMode": 2,
     "m_WorkflowMode": 1,
     "m_NormalDropOffSpace": 0,
     "m_AlphaClip": false
