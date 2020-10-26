@@ -20,8 +20,26 @@ namespace UnityEditor.ShaderGraph
     {
         const string kAssetGuid = "9172C44166BA4EBAB787AC35964DE4CC";
 
-        [SerializeField]
-        bool m_Lit;
+
+        public enum WorkflowMode
+        {
+            Specular,
+            Metallic,
+        }
+
+        public enum SurfaceType
+        {
+            Opaque,
+            Transparent,
+        }
+
+        public enum AlphaMode
+        {
+            Alpha,
+            Premultiply,
+            Additive,
+            Multiply,
+        }
 
         [SerializeField]
         bool m_AlphaTest = false;
@@ -29,6 +47,18 @@ namespace UnityEditor.ShaderGraph
 
         [SerializeField]
         SurfaceType m_SurfaceType = SurfaceType.Opaque;
+
+
+        [SerializeField]
+        AlphaMode m_AlphaMode = AlphaMode.Alpha;
+
+
+        [SerializeField]
+        WorkflowMode m_WorkflowMode = WorkflowMode.Metallic;
+
+
+        [SerializeField]
+        NormalDropOffSpace m_NormalDropOffSpace = NormalDropOffSpace.Tangent;
 
 
         [SerializeField]
@@ -40,10 +70,10 @@ namespace UnityEditor.ShaderGraph
             displayName = "Lilium Toon";
         }
 
-        public bool lit
+        public WorkflowMode workflowMode
         {
-            get => m_Lit;
-            set => m_Lit = value;
+            get => m_WorkflowMode;
+            set => m_WorkflowMode = value;
         }
 
         public bool alphaTest
@@ -52,11 +82,16 @@ namespace UnityEditor.ShaderGraph
             set => m_AlphaTest = value;
         }
 
-
         public SurfaceType surfaceType
         {
             get => m_SurfaceType;
             set => m_SurfaceType = value;
+        }
+
+        public AlphaMode alphaMode
+        {
+            get => m_AlphaMode;
+            set => m_AlphaMode = value;
         }
 
 
@@ -64,6 +99,13 @@ namespace UnityEditor.ShaderGraph
         {
             get => m_AlphaClip;
             set => m_AlphaClip = value;
+        }
+
+
+        public NormalDropOffSpace normalDropOffSpace
+        {
+            get => m_NormalDropOffSpace;
+            set => m_NormalDropOffSpace = value;
         }
 
         public string renderType
@@ -112,12 +154,21 @@ namespace UnityEditor.ShaderGraph
         public override void GetFields(ref TargetFieldContext context)
         {
             var descs = context.blocks.Select(x => x.descriptor);
+
             // Core fields
             context.AddField(Fields.GraphVertex,            descs.Contains(BlockFields.VertexDescription.Position) ||
                                                             descs.Contains(BlockFields.VertexDescription.Normal) ||
                                                             descs.Contains(BlockFields.VertexDescription.Tangent));
             context.AddField(Fields.GraphPixel);
             context.AddField(Fields.AlphaClip,              alphaClip);
+
+
+            context.AddField(Fields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
+            context.AddField(Fields.SurfaceTransparent,  surfaceType != SurfaceType.Opaque);
+            context.AddField(Fields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
+            context.AddField(Fields.BlendAlpha,          surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
+            context.AddField(Fields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
+            context.AddField(Fields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
         }
 
         public override bool IsNodeAllowedByTarget(Type nodeType)
@@ -127,7 +178,6 @@ namespace UnityEditor.ShaderGraph
 
         public override void GetActiveBlocks(ref TargetActiveBlockContext context)
         {
-
             // Core blocks
             context.AddBlock(BlockFields.VertexDescription.Position);
             context.AddBlock(BlockFields.VertexDescription.Normal);
@@ -140,22 +190,36 @@ namespace UnityEditor.ShaderGraph
             context.AddBlock(ToonBlockFields.SurfaceDescription.OutlineColor);
         }
 
-        enum MaterialMode
-        {
-            Unlit,
-            Lit
-        }
 
         public override void GetPropertiesGUI(ref TargetPropertyGUIContext context, Action onChange, Action<String> registerUndo)
         {
-            context.AddProperty("Material", new EnumField(MaterialMode.Unlit) { value = m_Lit ? MaterialMode.Lit : MaterialMode.Unlit }, evt =>
+            context.AddProperty("Workflow", new EnumField(WorkflowMode.Metallic) { value = workflowMode }, (evt) =>
             {
-                var newLit = (MaterialMode)evt.newValue == MaterialMode.Lit;
-                if (Equals(m_Lit, newLit))
+                if (Equals(workflowMode, evt.newValue))
                     return;
 
-                registerUndo("Change Material Lit");
-                m_Lit = newLit;
+                registerUndo("Change Workflow");
+                workflowMode = (WorkflowMode)evt.newValue;
+                onChange();
+            });
+
+            context.AddProperty("Surface", new EnumField(SurfaceType.Opaque) { value = surfaceType }, (evt) =>
+            {
+                if (Equals(surfaceType, evt.newValue))
+                    return;
+
+                registerUndo("Change Surface");
+                surfaceType = (SurfaceType)evt.newValue;
+                onChange();
+            });
+
+            context.AddProperty("Blend", new EnumField(AlphaMode.Alpha) { value = alphaMode }, surfaceType == SurfaceType.Transparent, (evt) =>
+            {
+                if (Equals(alphaMode, evt.newValue))
+                    return;
+
+                registerUndo("Change Blend");
+                alphaMode = (AlphaMode)evt.newValue;
                 onChange();
             });
 
@@ -166,6 +230,16 @@ namespace UnityEditor.ShaderGraph
 
                 registerUndo("Change Alpha Test");
                 m_AlphaTest = evt.newValue;
+                onChange();
+            });
+
+            context.AddProperty("Fragment Normal Space", new EnumField(NormalDropOffSpace.Tangent) { value = normalDropOffSpace }, (evt) =>
+            {
+                if (Equals(normalDropOffSpace, evt.newValue))
+                    return;
+
+                registerUndo("Change Fragment Normal Space");
+                normalDropOffSpace = (NormalDropOffSpace)evt.newValue;
                 onChange();
             });
         }
@@ -183,30 +257,7 @@ namespace UnityEditor.ShaderGraph
         public bool TryUpgradeFromMasterNode(IMasterNode1 masterNode, out Dictionary<BlockFieldDescriptor, int> blockMap)
         {
             blockMap = null;
-            if(!(masterNode is VisualEffectMasterNode1 vfxMasterNode))
-                return false;
-
-            lit = vfxMasterNode.m_Lit;
-            alphaTest = vfxMasterNode.m_AlphaTest;
-
-            blockMap = new Dictionary<BlockFieldDescriptor, int>();
-            if (lit)
-            {
-                blockMap.Add(ToonBlockFields.SurfaceDescription.OutlineColor, ShaderGraphVfxAsset.ColorSlotId);
-            }
-            else
-            {
-                blockMap.Add(ToonBlockFields.SurfaceDescription.OutlineColor, ShaderGraphVfxAsset.ColorSlotId);
-            }
-
-            blockMap.Add(BlockFields.SurfaceDescription.Alpha, ShaderGraphVfxAsset.AlphaSlotId);
-
-            if(alphaTest)
-            {
-                blockMap.Add(BlockFields.SurfaceDescription.AlphaClipThreshold, ShaderGraphVfxAsset.AlphaThresholdSlotId);
-            }
-
-            return true;
+            return false;
         }
 
         public override bool WorksWithSRP(RenderPipelineAsset scriptableRenderPipeline)
@@ -306,8 +357,8 @@ namespace UnityEditor.ShaderGraph
                 // Conditional State
                 renderStates = CoreRenderStates.Default,
                 pragmas = CorePragmas.Forward,
-                keywords = UnlitKeywords.Unlit,
-                includes = ToonIncludes.Unlit,
+                keywords = ToonKeywords.Forward,
+                includes = ToonIncludes.Forward,
             };
 
             public static PassDescriptor Outline = new PassDescriptor
@@ -333,7 +384,7 @@ namespace UnityEditor.ShaderGraph
                 // Conditional State
                 renderStates = ToonRenderStates.Outline,
                 pragmas = CorePragmas.Forward,
-                keywords = UnlitKeywords.Unlit,
+                keywords = ToonKeywords.Forward,
                 includes = ToonIncludes.Outline,
             };            
         }
@@ -432,13 +483,54 @@ namespace UnityEditor.ShaderGraph
 
 
 #region Keywords
-        static class UnlitKeywords
+        static class ToonKeywords
         {
-            public static KeywordCollection Unlit = new KeywordCollection
+            public static KeywordDescriptor GBufferNormalsOct = new KeywordDescriptor()
+            {
+                displayName = "GBuffer normal octaedron encoding",
+                referenceName = "_GBUFFER_NORMALS_OCT",
+                type = KeywordType.Boolean,
+                definition = KeywordDefinition.MultiCompile,
+                scope = KeywordScope.Global,
+            };
+
+			public static KeywordDescriptor ScreenSpaceAmbientOcclusion = new KeywordDescriptor()
+            {
+                displayName = "Screen Space Ambient Occlusion",
+                referenceName = "_SCREEN_SPACE_OCCLUSION",
+                type = KeywordType.Boolean,
+                definition = KeywordDefinition.MultiCompile,
+                scope = KeywordScope.Global,
+            };
+
+
+            public static KeywordCollection Forward = new KeywordCollection
+            {
+                { ScreenSpaceAmbientOcclusion },
+                { CoreKeywordDescriptors.Lightmap },
+                { CoreKeywordDescriptors.DirectionalLightmapCombined },
+                { CoreKeywordDescriptors.MainLightShadows },
+                { CoreKeywordDescriptors.MainLightShadowsCascade },
+                { CoreKeywordDescriptors.AdditionalLights },
+                { CoreKeywordDescriptors.AdditionalLightShadows },
+                { CoreKeywordDescriptors.ShadowsSoft },
+                { CoreKeywordDescriptors.MixedLightingSubtractive },
+            };
+
+            public static KeywordCollection GBuffer = new KeywordCollection
             {
                 { CoreKeywordDescriptors.Lightmap },
                 { CoreKeywordDescriptors.DirectionalLightmapCombined },
-                { CoreKeywordDescriptors.SampleGI },
+                { CoreKeywordDescriptors.MainLightShadows },
+                { CoreKeywordDescriptors.MainLightShadowsCascade },
+                { CoreKeywordDescriptors.ShadowsSoft },
+                { CoreKeywordDescriptors.MixedLightingSubtractive },
+                { GBufferNormalsOct },
+            };
+
+            public static KeywordCollection Meta = new KeywordCollection
+            {
+                { CoreKeywordDescriptors.SmoothnessChannel },
             };
         }
 #endregion
@@ -446,10 +538,10 @@ namespace UnityEditor.ShaderGraph
 #region Includes
         static class ToonIncludes
         {
-            const string kUnlitPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/UnlitPass.hlsl";            
+            const string kForwardPass = "Packages/jp.lilium.toongraph/Editor/ShaderGraph/ToonForwardPass.hlsl";
             const string kOutlinePass = "Packages/jp.lilium.toongraph/Editor/ShaderGraph/ToonOutlinePass.hlsl";
             
-            public static IncludeCollection Unlit = new IncludeCollection
+            public static IncludeCollection Forward = new IncludeCollection
             {
                 // Pre-graph
                 { CoreIncludes.CorePregraph },
@@ -457,7 +549,7 @@ namespace UnityEditor.ShaderGraph
 
                 // Post-graph
                 { CoreIncludes.CorePostgraph },
-                { kUnlitPass, IncludeLocation.Postgraph },
+                { kForwardPass, IncludeLocation.Postgraph },
             };
 
             public static IncludeCollection Outline = new IncludeCollection

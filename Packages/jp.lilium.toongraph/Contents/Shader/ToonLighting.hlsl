@@ -7,7 +7,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
-//TODO: 削除
+//TODO: delete
 float __ToonyLighting = 0;
 
 
