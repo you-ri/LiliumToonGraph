@@ -104,9 +104,13 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 
     return lerp((half3)value * (1 - brdfData.shadeShift), toonedValue, brdfData.toonyLighting);
 }
 
+inline half3 CameraDirectionWS()
+{
+    return mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
+}
 
 inline void InitializeToonBRDFData(
-    half3 albedo, half4 shade, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shadeShift, half shadeToony, float toonyLighting, Texture2D shadeRamp, 
     out ToonBRDFData outBRDFData)
 {
@@ -124,7 +128,7 @@ inline void InitializeToonBRDFData(
 
     // Toon Paramaters
     outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
-    outBRDFData.sss = shade.rgb;
+    outBRDFData.sss = sss.rgb;
 #else
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
     half reflectivity = 1.0 - oneMinusReflectivity;
@@ -134,7 +138,7 @@ inline void InitializeToonBRDFData(
 
     // Toon Paramaters
     outBRDFData.base = albedo * oneMinusReflectivity;
-    outBRDFData.sss = shade.rgb;
+    outBRDFData.sss = sss.rgb;
 #endif
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
@@ -192,7 +196,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
-    half3 c = indirectDiffuse * brdfData.base;
+    half3 c = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss;
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
     return c;
@@ -354,24 +358,25 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 }
 
 
-inline half3 LightingSSS(
+half3 LightingSSS(
     half3 V, half3 N, half3 lightDirection, half3 lightColor, half lightDistanceAtten, 
     half distortion, half power, half scale,
     half shadeToony)
 {
     half3 L = lightDirection;
+    
+    V = lerp(V, CameraDirectionWS(), __ToonyLighting);
 
     half3 H = normalize(L + N * distortion);
     half VdotH = saturate(dot(V, -H));
-    half ToonedVdotH = ToonyValue(VdotH, shadeToony);
-    half radiance =  pow(ToonedVdotH, power) * scale;
+    half radiance = pow(VdotH, power) * scale;
 
     return lightColor * lightDistanceAtten * radiance; 
 }
 
 half3 LightingToonySSS(ToonBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
-    return brdfData.sss * LightingSSS ( viewDirectionWS, normalWS, lightDirectionWS, lightColor, lightAttenuation, 0.2f, 0.4f, 0.3f, brdfData.shadeToony);
+    return brdfData.sss * LightingSSS ( viewDirectionWS, normalWS, lightDirectionWS, lightColor, lightAttenuation, 0.0f, 1.0f, 1.0f, brdfData.shadeToony);
 }
 
 
@@ -404,25 +409,25 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 */
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 //                      Fragment Functions                                   //
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(
-    InputData inputData, half3 diffuse, half4 shade,
+    InputData inputData, half3 diffuse, half3 sss,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
-    half shadeShift, half shadeToony, Texture2D shadeRamp, half toonyLighing)
+    half shadeShift, half shadeToony, Texture2D shadeRamp, half toonyLighing, out half3 shadeColor)
 {
     ToonBRDFData brdfData;
-    InitializeToonBRDFData(diffuse, shade, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, brdfData);
+    InitializeToonBRDFData(diffuse, sss, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, brdfData);
     __ToonyLighting = toonyLighing; //TODO: ToonBRDFDataに埋め込む
     
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 sssIntensity = inputData.bakedGI;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    color += brdfData.sss * sssIntensity;
+    shadeColor = color;
 
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 #ifdef _ADDITIONAL_LIGHTS
@@ -438,7 +443,7 @@ half4 UniversalFragmentToon(
     color += inputData.vertexLighting * brdfData.base;
 #endif
     color += emission;
-    //color = brdfData.sss + FastSRGBToLinear(half3(0.5, 0.5, 0.5));
+    //color = brdfData.diffuse;
     return half4(color, alpha);
 }
 

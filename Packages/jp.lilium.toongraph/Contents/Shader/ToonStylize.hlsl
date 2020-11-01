@@ -1,42 +1,55 @@
 #ifndef LILIUM_TOONSTYLEZE_NCLUDED
 #define LILIUM_TOONSTYLEZE_NCLUDED
 
+
 // o = s + l
-// albedo = sss*s + base*o;
-// shade = sss*s + base*s
-// sss = shade/s - base;
+// base = albedo
+// shade = sss*s + albedo*s
 //----------------
+// sss = shade/s - albedo;
+
+
+
+// nl ... normal intensity
+// dl ... direct light intensity
+// il ... indirect light intensity
 //----------------
-// base = shade/s - sss
-// sss = (albedo - base*l) / s
-// base = (shade/s) - ((abled - base*l) / s)
-// base = (shade - (albedo - base*l)) / s
-// base = (shade - albedo + base*l) / s
-// base = (shade - albedo) / s + base*l / s
-// base - base*l / s = (shade - albedo) / s
-// (1-l/s) * base  = (shade - albedo) / s
-// base = (shade - albedo) / s / (1-l/s)
+// nl = dl + il
+// albedo = shade/dl - sss
+// shade = sss*dl + albedo*dl
+//----------------
+// base = sss*s + albedo*nl;
+// sss = shade/s - albedo;
+//----------------
+// sss = (base - albedo*il) / dl
+// albedo = (shade/dl) - ((abledo2 - albedo*il) / dl)
+// albedo = (shade - (base - albedo*il)) / dl
+// albedo = (shade - base + albedo*il) / dl
+// albedo = (shade - base) / dl + albedo*il / dl
+// albedo - albedo*il / dl = (shade - base) / dl
+// (1-il/dl) * albedo  = (shade - base) / dl
+// albedo = (shade - base) / dl / (1-il/dl)
 
 
 //
 void ToonStylizing_half(half3 Base, half3 Shade, half3 AmibentReference, out half3 Albedo, out half3 SSS)
 {
-    half l = AmibentReference.r;
-    half s = FastSRGBToLinear(1 - FastLinearToSRGB(l)); 
+    half il = AmibentReference.r;
+    half dl = FastSRGBToLinear(1 - FastLinearToSRGB(il)); 
 
-    Albedo = (Shade - Base) / s / (1-(s+l)/s);
-    SSS = Shade/l - Albedo;
-
-    SSS = (Shade / AmibentReference) - Base;
+    Albedo = (Shade - Base) / dl / (1-il/dl);
+    SSS = Shade/il - Albedo;
+    Albedo = Base;
 }
 
 void ToonStylizing_float(float3 Base, float3 Shade, float3 AmibentReference, out float3 Albedo, out float3 SSS)
 {
-    float l = AmibentReference.r;
-    float s = FastSRGBToLinear(1 - FastLinearToSRGB(l)); 
+    float il = AmibentReference.r;
+    float dl = FastSRGBToLinear(1 - FastLinearToSRGB(il)); 
 
-    Albedo = (Shade - Base) / s / (1-(s+l)/s);
-    SSS = Shade/s - Albedo;
+    Albedo = (Shade - Base) / dl / (1-il/dl);
+    SSS = Shade/il - Albedo;
+    Albedo = Base;
 } 
 
 #endif
