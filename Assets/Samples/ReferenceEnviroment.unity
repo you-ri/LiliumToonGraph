@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_AmbientSkyColor: {r: 1, g: 0.9481132, b: 0.9481132, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -500,7 +500,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 277742523}
-  m_Text: Color Shade
+  m_Text: SSS
   m_OffsetZ: 0
   m_CharacterSize: 0.05
   m_LineSpacing: 0.8
@@ -1362,10 +1362,6 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400070, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 400070, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -1373,7 +1369,7 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 400120, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+    - target: {fileID: 400070, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
@@ -1389,6 +1385,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.001539916
       objectReference: {fileID: 0}
+    - target: {fileID: 400120, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+      propertyPath: m_RootOrder
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.67
@@ -1402,6 +1406,10 @@ PrefabInstance:
       value: -1.37
       objectReference: {fileID: 0}
     - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
@@ -1412,14 +1420,6 @@ PrefabInstance:
     - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
-      propertyPath: m_RootOrder
-      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 400264, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1442,6 +1442,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 60ed05b7b9e6b504a9f2cd8a59bb31a1, type: 2}
     - target: {fileID: 13700004, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
+      propertyPath: m_DirtyAABB
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 13700004, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_AABB.m_Center.y
       value: 0.75360024
       objectReference: {fileID: 0}
@@ -1460,10 +1464,6 @@ PrefabInstance:
     - target: {fileID: 13700004, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_AABB.m_Extent.z
       value: 0.06875077
-      objectReference: {fileID: 0}
-    - target: {fileID: 13700004, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
-      propertyPath: m_DirtyAABB
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 13700004, guid: 44c592f7be513c543b1eef40ae986c73, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -1810,7 +1810,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1551342429}
-  m_Text: Color Shade
+  m_Text: SSS
   m_OffsetZ: 0
   m_CharacterSize: 0.05
   m_LineSpacing: 0.8
@@ -2049,8 +2049,8 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_Intensity: 1.5
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -2172,7 +2172,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d40cbeddc24dc47a686c374a85679f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentIndex: 0
+  currentIndex: 2
   lightingEnvironments:
   - {fileID: 11400000, guid: 620d7d165a67b7b4685bd3accfab8c63, type: 2}
   - {fileID: 11400000, guid: 7af1f19bfa66498418e18aacc8ac937a, type: 2}

@@ -426,8 +426,9 @@ half4 UniversalFragmentToon(
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
+    half3 indirectDiffuse = inputData.bakedGI * occlusion;
+    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
-    shadeColor = color;
 
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 #ifdef _ADDITIONAL_LIGHTS
@@ -443,6 +444,7 @@ half4 UniversalFragmentToon(
     color += inputData.vertexLighting * brdfData.base;
 #endif
     color += emission;
+    color = max(color, 0);
     //color = brdfData.diffuse;
     return half4(color, alpha);
 }

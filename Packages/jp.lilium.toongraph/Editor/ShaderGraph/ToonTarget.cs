@@ -1,24 +1,26 @@
+// Referance on: UniversalTarget.cs
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using UnityEditor.ShaderGraph;
-using UnityEditor.ShaderGraph.Drawing;
-using UnityEditor.Graphing.Util;
 using UnityEditor.ShaderGraph.Internal;
+using UnityEditor.UIElements;
+using UnityEditor.ShaderGraph.Serialization;
 using UnityEditor.ShaderGraph.Legacy;
+
 
 using UnityEditor.Rendering.Universal.ShaderGraph;
 
 
 namespace UnityEditor.ShaderGraph
 {
-    sealed class ToonTarget : Target, ILegacyTarget
+    sealed class ToonTarget : Target
     {
-        const string kAssetGuid = "9172C44166BA4EBAB787AC35964DE4CC";
+        static readonly GUID kSourceCodeGuid = new GUID ("9172C44166BA4EBAB787AC35964DE4CC");
 
 
         public enum WorkflowMode
@@ -44,6 +46,7 @@ namespace UnityEditor.ShaderGraph
         [SerializeField]
         bool m_AlphaTest = false;
 
+        TextField m_CustomGUIField;
 
         [SerializeField]
         SurfaceType m_SurfaceType = SurfaceType.Opaque;
@@ -64,6 +67,8 @@ namespace UnityEditor.ShaderGraph
         [SerializeField]
         bool m_AlphaClip = false;        
 
+        [SerializeField]
+        string m_CustomEditorGUI;
         
         public ToonTarget()
         {
@@ -132,23 +137,24 @@ namespace UnityEditor.ShaderGraph
             }
         }        
 
-        public override bool IsActive() => true;
-        
-        public override void Setup(ref TargetSetupContext context)
+        public string customEditorGUI
         {
-            context.AddAssetDependencyPath(AssetDatabase.GUIDToAssetPath(kAssetGuid));
+            get => m_CustomEditorGUI;
+            set => m_CustomEditorGUI = value;
+        }
 
-            // Process SubShaders
-            SubShaderDescriptor[] subShaders = { SubShaders.Unlit, SubShaders.UnlitDOTS };
-            for(int i = 0; i < subShaders.Length; i++)
-            {
-                // Update Render State
-                subShaders[i].renderType = this.renderType;
-                subShaders[i].renderQueue = this.renderQueue;
+        public override bool IsActive()
+        {
+            bool isUniversalRenderPipeline = GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset;
+            return isUniversalRenderPipeline;
+        }
 
-                // Add
-                context.AddSubShader(subShaders[i]);
-            }            
+
+        public override bool IsNodeAllowedByTarget(Type nodeType)
+        {
+            SRPFilterAttribute srpFilter = NodeClassCache.GetAttributeOnNodeType<SRPFilterAttribute>(nodeType);
+            bool worksWithThisSrp = srpFilter == null || srpFilter.srpTypes.Contains(typeof(UniversalRenderPipeline));
+            return worksWithThisSrp && base.IsNodeAllowedByTarget(nodeType);
         }
 
         public override void GetFields(ref TargetFieldContext context)
@@ -163,17 +169,36 @@ namespace UnityEditor.ShaderGraph
             context.AddField(Fields.AlphaClip,              alphaClip);
 
 
-            context.AddField(Fields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
-            context.AddField(Fields.SurfaceTransparent,  surfaceType != SurfaceType.Opaque);
-            context.AddField(Fields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
-            context.AddField(Fields.BlendAlpha,          surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
-            context.AddField(Fields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
-            context.AddField(Fields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
+            context.AddField(UniversalFields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
+            context.AddField(UniversalFields.SurfaceTransparent,  surfaceType != SurfaceType.Opaque);
+            context.AddField(UniversalFields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
+            context.AddField(Fields.BlendAlpha,                   surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
+            context.AddField(UniversalFields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
+            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
         }
 
-        public override bool IsNodeAllowedByTarget(Type nodeType)
+        public override void Setup(ref TargetSetupContext context)
         {
-            return true;
+            // Setup the Target
+            context.AddAssetDependency (kSourceCodeGuid, AssetCollection.Flags.SourceDependency);
+
+            // Process SubShaders
+            SubShaderDescriptor[] subShaders = { SubShaders.Unlit, SubShaders.UnlitDOTS };
+            for(int i = 0; i < subShaders.Length; i++)
+            {
+                // Update Render State
+                subShaders[i].renderType = this.renderType;
+                subShaders[i].renderQueue = this.renderQueue;
+
+                // Add
+                context.AddSubShader(subShaders[i]);
+            }
+
+            // Override EditorGUI
+            if(!string.IsNullOrEmpty(m_CustomEditorGUI))
+            {
+                context.SetDefaultShaderGUI(m_CustomEditorGUI);
+            }                  
         }
 
         public override void GetActiveBlocks(ref TargetActiveBlockContext context)
@@ -242,16 +267,21 @@ namespace UnityEditor.ShaderGraph
                 normalDropOffSpace = (NormalDropOffSpace)evt.newValue;
                 onChange();
             });
-        }
 
-        // TODO: delete ??
-        public static Dictionary<BlockFieldDescriptor, int> s_BlockMap = new Dictionary<BlockFieldDescriptor, int>()
-        {
-            { ToonBlockFields.SurfaceDescription.OutlineColor, ShaderGraphVfxAsset.ColorSlotId },   
-            { ToonBlockFields.VertexDescription.OutlineWidth, ShaderGraphVfxAsset.MetallicSlotId }, //TODO:
-            { BlockFields.SurfaceDescription.Alpha, ShaderGraphVfxAsset.AlphaSlotId },
-            { BlockFields.SurfaceDescription.AlphaClipThreshold, ShaderGraphVfxAsset.AlphaThresholdSlotId },
-        };
+            // Custom Editor GUI
+            // Requires FocusOutEvent
+            m_CustomGUIField = new TextField("") { value = customEditorGUI };
+            m_CustomGUIField.RegisterCallback<FocusOutEvent>(s =>
+            {
+                if (Equals(customEditorGUI, m_CustomGUIField.value))
+                    return;
+
+                registerUndo("Change Custom Editor GUI");
+                customEditorGUI = m_CustomGUIField.value;
+                onChange();
+            });
+            context.AddProperty("Custom Editor GUI", m_CustomGUIField, (evt) => {});        }
+
 
         // TODO: マスターノードからのアップグレードはサポートしないため削除してもよい
         public bool TryUpgradeFromMasterNode(IMasterNode1 masterNode, out Dictionary<BlockFieldDescriptor, int> blockMap)
@@ -262,7 +292,7 @@ namespace UnityEditor.ShaderGraph
 
         public override bool WorksWithSRP(RenderPipelineAsset scriptableRenderPipeline)
         {
-            return GraphicsSettings.currentRenderPipeline != null && scriptableRenderPipeline?.GetType() == GraphicsSettings.currentRenderPipeline.GetType();
+            return scriptableRenderPipeline?.GetType() == typeof(UniversalRenderPipelineAsset);
         }
 
 
@@ -333,10 +363,12 @@ namespace UnityEditor.ShaderGraph
 
         static class UnlitPasses
         {
+
+
             public static PassDescriptor Unlit = new PassDescriptor
             {
                 // Definition
-                displayName = "Pass",
+                displayName = "Lilium Toon",
                 referenceName = "SHADERPASS_UNLIT",
                 lightMode = "UniversalForward",
                 useInPreview = true,
@@ -364,7 +396,7 @@ namespace UnityEditor.ShaderGraph
             public static PassDescriptor Outline = new PassDescriptor
             {
                 // Definition
-                displayName = "Universal Outline",
+                displayName = "Lilium Outline",
                 referenceName = "SHADERPASS_FORWARD",
                 useInPreview = true,
 
@@ -514,7 +546,8 @@ namespace UnityEditor.ShaderGraph
                 { CoreKeywordDescriptors.AdditionalLights },
                 { CoreKeywordDescriptors.AdditionalLightShadows },
                 { CoreKeywordDescriptors.ShadowsSoft },
-                { CoreKeywordDescriptors.MixedLightingSubtractive },
+                { CoreKeywordDescriptors.LightmapShadowMixing },
+                { CoreKeywordDescriptors.ShadowsShadowmask },
             };
 
             public static KeywordCollection GBuffer = new KeywordCollection
