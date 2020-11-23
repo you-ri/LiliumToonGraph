@@ -12,16 +12,17 @@ using UnityEditor.UIElements;
 using UnityEditor.ShaderGraph.Serialization;
 using UnityEditor.ShaderGraph.Legacy;
 
-
 using UnityEditor.Rendering.Universal.ShaderGraph;
 
 
 namespace UnityEditor.ShaderGraph
 {
+    /// <summary>
+    /// トゥーンターゲット
+    /// </summary>
     sealed class ToonTarget : Target
     {
         static readonly GUID kSourceCodeGuid = new GUID ("9172C44166BA4EBAB787AC35964DE4CC");
-
 
         public enum WorkflowMode
         {
@@ -43,8 +44,6 @@ namespace UnityEditor.ShaderGraph
             Multiply,
         }
 
-        [SerializeField]
-        bool m_AlphaTest = false;
 
         TextField m_CustomGUIField;
 
@@ -79,12 +78,6 @@ namespace UnityEditor.ShaderGraph
         {
             get => m_WorkflowMode;
             set => m_WorkflowMode = value;
-        }
-
-        public bool alphaTest
-        {
-            get => m_AlphaTest;
-            set => m_AlphaTest = value;
         }
 
         public SurfaceType surfaceType
@@ -157,25 +150,6 @@ namespace UnityEditor.ShaderGraph
             return worksWithThisSrp && base.IsNodeAllowedByTarget(nodeType);
         }
 
-        public override void GetFields(ref TargetFieldContext context)
-        {
-            var descs = context.blocks.Select(x => x.descriptor);
-
-            // Core fields
-            context.AddField(Fields.GraphVertex,            descs.Contains(BlockFields.VertexDescription.Position) ||
-                                                            descs.Contains(BlockFields.VertexDescription.Normal) ||
-                                                            descs.Contains(BlockFields.VertexDescription.Tangent));
-            context.AddField(Fields.GraphPixel);
-            context.AddField(Fields.AlphaClip,              alphaClip);
-
-
-            context.AddField(UniversalFields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
-            context.AddField(UniversalFields.SurfaceTransparent,  surfaceType != SurfaceType.Opaque);
-            context.AddField(UniversalFields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
-            context.AddField(Fields.BlendAlpha,                   surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
-            context.AddField(UniversalFields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
-            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
-        }
 
         public override void Setup(ref TargetSetupContext context)
         {
@@ -201,6 +175,27 @@ namespace UnityEditor.ShaderGraph
             }                  
         }
 
+        public override void GetFields(ref TargetFieldContext context)
+        {
+            var descs = context.blocks.Select(x => x.descriptor);
+
+            // Core fields
+            context.AddField(Fields.GraphVertex,            descs.Contains(BlockFields.VertexDescription.Position) ||
+                                                            descs.Contains(BlockFields.VertexDescription.Normal) ||
+                                                            descs.Contains(BlockFields.VertexDescription.Tangent));
+            context.AddField(Fields.GraphPixel);
+            context.AddField(Fields.AlphaClip,              alphaClip);
+
+
+            context.AddField(UniversalFields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
+            context.AddField(UniversalFields.SurfaceTransparent,  surfaceType != SurfaceType.Opaque);
+            context.AddField(UniversalFields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
+            context.AddField(Fields.BlendAlpha,                   surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
+            context.AddField(UniversalFields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
+            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
+        }
+
+
         public override void GetActiveBlocks(ref TargetActiveBlockContext context)
         {
             // Core blocks
@@ -210,9 +205,9 @@ namespace UnityEditor.ShaderGraph
             context.AddBlock(ToonBlockFields.VertexDescription.OutlineWidth);
 
             context.AddBlock(BlockFields.SurfaceDescription.BaseColor);
-            context.AddBlock(BlockFields.SurfaceDescription.Alpha);
-            context.AddBlock(BlockFields.SurfaceDescription.AlphaClipThreshold, alphaTest);
             context.AddBlock(ToonBlockFields.SurfaceDescription.OutlineColor);
+            context.AddBlock(BlockFields.SurfaceDescription.Alpha, surfaceType == SurfaceType.Transparent || alphaClip);
+            context.AddBlock(BlockFields.SurfaceDescription.AlphaClipThreshold, alphaClip);
         }
 
 
@@ -248,13 +243,13 @@ namespace UnityEditor.ShaderGraph
                 onChange();
             });
 
-            context.AddProperty("Alpha Clipping", new Toggle() { value = m_AlphaTest }, (evt) =>
+            context.AddProperty("Alpha Clipping", new Toggle() { value = alphaClip }, (evt) =>
             {
-                if (Equals(m_AlphaTest, evt.newValue))
+                if (Equals(alphaClip, evt.newValue))
                     return;
 
-                registerUndo("Change Alpha Test");
-                m_AlphaTest = evt.newValue;
+                registerUndo("Change Alpha Clip");
+                alphaClip = evt.newValue;
                 onChange();
             });
 
@@ -280,8 +275,8 @@ namespace UnityEditor.ShaderGraph
                 customEditorGUI = m_CustomGUIField.value;
                 onChange();
             });
-            context.AddProperty("Custom Editor GUI", m_CustomGUIField, (evt) => {});        }
-
+            context.AddProperty("Custom Editor GUI", m_CustomGUIField, (evt) => {});
+        }
 
         // TODO: マスターノードからのアップグレードはサポートしないため削除してもよい
         public bool TryUpgradeFromMasterNode(IMasterNode1 masterNode, out Dictionary<BlockFieldDescriptor, int> blockMap)
@@ -294,7 +289,6 @@ namespace UnityEditor.ShaderGraph
         {
             return scriptableRenderPipeline?.GetType() == typeof(UniversalRenderPipelineAsset);
         }
-
 
 
 #region SubShader
@@ -597,8 +591,6 @@ namespace UnityEditor.ShaderGraph
             };            
         }
 #endregion     
-
-
     }
 
     // based on: com.unity.render-pipelines.universal\Editor\ShaderGraph\AssetCallbacks\CreateLitShaderGraph.cs

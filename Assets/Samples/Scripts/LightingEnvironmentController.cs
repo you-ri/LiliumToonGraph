@@ -5,11 +5,11 @@ using System.Linq;
 using UnityEngine.Rendering;
 
 
-public class LightingEnvironmentController : MonoBehaviour
+public class LightingEnvironmentController: MonoBehaviour
 {
     public int currentIndex;
 
-    public LightingEnvironment[] lightingEnvironments;
+    public LightingEnvironmentAsset[] lightingEnvironments;
 
     public float duration = 2;
 
