@@ -20,9 +20,6 @@ public class RuntimeIBL : MonoBehaviour
     [SerializeField] 
     private Environment[] _environments = null;
 
-    [SerializeField] 
-    private Material[] cubemaps = null;
-
     private ReflectionProbe _reflectionProbe;
 
     void Reset() 

@@ -37,6 +37,12 @@
             "m_Id": "a90b7313cb354dafae9d8180e9fdad63"
         },
         {
+            "m_Id": "fa6ffd5fb81b41cc985789bb4b421991"
+        },
+        {
+            "m_Id": "d1609a9b63714bc7bfb5e8d356d4c8a0"
+        },
+        {
             "m_Id": "dc868fb594024327b5ebc450b50dad35"
         },
         {
@@ -47,12 +53,6 @@
         },
         {
             "m_Id": "3c2f5c886f8040888e0c8b63ce6eb940"
-        },
-        {
-            "m_Id": "fa6ffd5fb81b41cc985789bb4b421991"
-        },
-        {
-            "m_Id": "d1609a9b63714bc7bfb5e8d356d4c8a0"
         }
     ],
     "m_Keywords": [],
@@ -2480,7 +2480,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Texture2DMaterialSlot",
     "m_ObjectId": "4ec46b5b94874c9ea85c0d3f3539724c",
     "m_Id": 0,
-    "m_DisplayName": "Emission",
+    "m_DisplayName": "Emission Map",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
@@ -4004,7 +4004,6 @@
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.ToonTarget",
     "m_ObjectId": "89790f9d5e0044dfa5c6ec9d2bf621c9",
-    "m_AlphaTest": true,
     "m_SurfaceType": 0,
     "m_AlphaMode": 0,
     "m_WorkflowMode": 1,
@@ -4257,7 +4256,7 @@
     "m_Guid": {
         "m_GuidSerialized": "2bec6d4e-f4fe-420e-82c4-115096c66fca"
     },
-    "m_Name": "Normal",
+    "m_Name": "Normal Map",
     "m_DefaultReferenceName": "Texture2D_A43E975D",
     "m_OverrideReferenceName": "_BumpMap",
     "m_GeneratePropertyBlock": true,
@@ -5285,7 +5284,7 @@
     "m_Guid": {
         "m_GuidSerialized": "06dc7018-266b-49ab-996b-26db1b44994a"
     },
-    "m_Name": "Emission",
+    "m_Name": "Emission Map",
     "m_DefaultReferenceName": "Texture2D_C62C5D5D",
     "m_OverrideReferenceName": "_EmissionMap",
     "m_GeneratePropertyBlock": true,
@@ -5906,7 +5905,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Texture2DMaterialSlot",
     "m_ObjectId": "f21cb252466840e986a8b8a7a9d3bd38",
     "m_Id": 0,
-    "m_DisplayName": "Normal",
+    "m_DisplayName": "Normal Map",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

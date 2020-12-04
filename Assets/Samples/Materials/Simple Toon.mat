@@ -125,6 +125,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SssMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - BOOLEAN_5FF062BF: 0
     - BOOLEAN_9B700AD3: 0
@@ -147,6 +151,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _Metalic: 0
     - _Metallic: 0
     - _OcclusionMap: 0.5
     - _OcclusionStrength: 1
@@ -173,4 +178,5 @@ Material:
     - _ShadeColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecGlossColor: {r: 0, g: 0, b: 0, a: 0}
+    - _SssColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
