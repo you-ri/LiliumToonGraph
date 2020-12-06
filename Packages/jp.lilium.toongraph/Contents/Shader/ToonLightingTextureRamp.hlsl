@@ -60,7 +60,7 @@ void ToonLight_half(
 #endif
 
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, ShadeRamp, ToonyLighting, 
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, 1, ShadeRamp, ToonyLighting, 
         ShadeColor);
 }
 

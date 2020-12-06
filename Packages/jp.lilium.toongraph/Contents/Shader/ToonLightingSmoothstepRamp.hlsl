@@ -13,7 +13,9 @@
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony, half ToonyLighting,
+    half ShadeShift, half ShadeToony, 
+    half Curvature, TEXTURE2D(SSSLutTexture),
+    half ToonyLighting, 
     out half4 Color, out half3 ShadeColor)
 {
     InputData inputData;
@@ -56,10 +58,9 @@ void ToonLight_half(
     float3 specular = 0;
     float metallic = Specular.r;
 #endif
-    TEXTURE2D(shadeRamp);
 
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, shadeRamp, ToonyLighting,
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, Curvature, SSSLutTexture, ToonyLighting, 
         ShadeColor);
 }
 
@@ -126,7 +127,9 @@ half4 frag(PackedVaryings packedInput) : SV_TARGET
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony, half ToonyLighting,
+    half ShadeShift, half ShadeToony,
+    half Curvature, Texture2D SSSLutTexture,
+    half ToonyLighting, 
     out half4 Color, out half3 ShadeColor)
 {
     Color = float4(Diffuse, Alpha);

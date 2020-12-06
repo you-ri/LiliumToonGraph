@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Simple Toon (SmoothStep)
-  m_Shader: {fileID: -6465566751694194690, guid: 78689600cd436f846859a8bc6bcb3ebc,
+  m_Shader: {fileID: -6465566751694194690, guid: dc7783e5d7dc4d44fb703af7e336b90b,
     type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 6
@@ -63,6 +63,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_SSSLutTexture_21:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -125,6 +129,14 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SssMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ToonLightingSmoothstepRamp_7490ec7b752e4ec8a91b1b1951ed1e45_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ToonLightingTextureRamp_5133A24_Texture2DED058F03_4268568337:
         m_Texture: {fileID: 2800000, guid: 20ce0b92e76a8d94bb16137424e0091f, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -137,6 +149,7 @@ Material:
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
+    - _Curvature: 0.515
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -152,7 +165,7 @@ Material:
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 0.544
+    - _ShadeToony: 1
     - _ShdeToony: 1
     - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
@@ -174,4 +187,5 @@ Material:
     - _ShadeEnvironmentalColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SssColor: {r: 1, g: 0.02352941, b: 0.045813862, a: 1}
   m_BuildTextureStacks: []
