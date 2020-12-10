@@ -58,8 +58,8 @@ half3 LightingSSS(
     NdotL = ((NdotL+ 1) / 2);
 
     half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(NdotL, curvature));
-    half radiance = saturate(lut.r - lut.b);
-    return radiance;
+    //half radiance = saturate(lut.r - lut.b);
+    return lut;
 }
 
 half3 EnvironmentSSS(half curvature,  Texture2D sssLutTexture)
@@ -90,7 +90,7 @@ struct ToonBRDFData
 
     // toony extend
     half3 base; // 基本色
-    half3 sss;
+    half4 sss;
     half occlusion;
 
     half shadow;
@@ -135,7 +135,7 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 
 
 
 inline void InitializeToonBRDFData(
-    half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half3 albedo, half4 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shadow, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
@@ -167,7 +167,7 @@ inline void InitializeToonBRDFData(
 
 #endif
     // SSS Parameters
-    outBRDFData.sss = sss.rgb;
+    outBRDFData.sss = sss;
     outBRDFData.curvature = curvature;
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
@@ -374,6 +374,31 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 }
 */
 
+// Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
+// Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
+// Note: This does not use distance attenuation, as it is intented to be used with a sun light.
+// Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
+half3 LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius) {
+    // Calculate normalized wrapped lighting. This spreads the light without adding energy.
+    // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
+    // to wrap the light further around an object.
+    //
+    // A normalization term is applied to make sure we do not add energy.
+    // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
+
+    half NdotL = dot(normalWS, lightDirectionWS);
+    half alpha = subsurfaceRadius;
+    half theta_m = acos(-alpha); // boundary of the lighting function
+
+    half theta = max(0, NdotL + alpha) - alpha;
+    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
+    half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
+
+    half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
+    half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+
+    return wrapped_jgt;
+}
 
 half3 LightingToonyBasedSSS(
     ToonBRDFData brdfData, 
@@ -382,13 +407,14 @@ half3 LightingToonyBasedSSS(
 {
     half NdotL = dot(normalWS, lightDirectionWS); 
     half oneMinusShade = (ToonyShadeValue(brdfData, NdotL) );
-    half3 radiance = LightingSSS (normalWS, lightDirectionWS, brdfData.curvature, brdfData.shadeRamp, lightShadow);
+    //half3 radiance = LightingSSS (normalWS, lightDirectionWS, brdfData.curvature, brdfData.shadeRamp, lightShadow);
+    half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature);
 
     half intensity = (oneMinusShade * lightShadow);
-    half3 color = radiance * lightShadow * lightColor * lightAttenuation * brdfData.sss;
+    half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
     half3 toonyColor = (0.2f * brdfData.curvature) *  (1-intensity) * lightColor * lightAttenuation * brdfData.sss;
 
-    return lerp(color, toonyColor, __ToonyLighting);
+    return color;//lerp(color, toonyColor, __ToonyLighting);
 }
 
 
@@ -399,14 +425,14 @@ half3 LightingToonyBased(
 {
     half NdotL = saturate(dot(normalWS, lightDirectionWS)); 
     half3 radiance = lightColor * (lightAttenuation * lightShadow * ToonyShadeValue(brdfData, NdotL));
-    
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance);
 }
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
-    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS);
-    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS);
+    half _sss = brdfData.sss.a;
+    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS) * (1-_sss);
+    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * _sss;
     return color;
 }
 
@@ -432,7 +458,7 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(
-    InputData inputData, half3 diffuse, half3 sss,
+    InputData inputData, half3 diffuse, half4 sss,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
     half shadeShift, half shadeToony, 
     half curvature, Texture2D shadeRamp, 

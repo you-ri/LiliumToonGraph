@@ -158,7 +158,7 @@ Material:
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
-    - _Curvature: 0
+    - _Curvature: 1
     - _Cutoff: 0.5
     - _DstBlend: 0
     - _EnvironmentReflections: 1
@@ -192,5 +192,5 @@ Material:
     - _ShadeColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecGlossColor: {r: 0, g: 0, b: 0, a: 0}
-    - _SssColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SssColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

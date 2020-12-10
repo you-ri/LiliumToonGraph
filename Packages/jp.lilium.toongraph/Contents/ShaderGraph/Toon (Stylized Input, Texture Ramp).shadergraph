@@ -193,6 +193,20 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
+                    "m_Id": "041495d9da724630a886735576fb2bd4"
+                },
+                "m_SlotId": 2
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "3adcc2730cf747f584033092ccf7d5f7"
+                },
+                "m_SlotId": -221838699
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
                     "m_Id": "0636c2b583534f30bcfffbcca56344dc"
                 },
                 "m_SlotId": 0
@@ -766,9 +780,9 @@
         "m_Position": {
             "serializedVersion": "2",
             "x": -1903.0,
-            "y": -297.0,
-            "width": 130.0,
-            "height": 118.0
+            "y": -272.9999694824219,
+            "width": 129.99998474121095,
+            "height": 117.99999237060547
         }
     },
     "m_Slots": [
@@ -998,9 +1012,9 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0,
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
         "a": 0.0
     },
     "m_ColorMode": 0
@@ -1076,6 +1090,31 @@
         "m_SerializableColors": []
     },
     "m_SerializedDescriptor": "ToonVertexDescription.OutlineWidth"
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "0f3d6039d38a46e78ae05eb68e10c65d",
+    "m_Id": -221838699,
+    "m_DisplayName": "SSS",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Color_1d3a761e471e4de7902496d49c375f8d",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
 }
 
 {
@@ -1613,6 +1652,9 @@
             "m_Id": "5461fe06e8ec42389f906822bc180731"
         },
         {
+            "m_Id": "0f3d6039d38a46e78ae05eb68e10c65d"
+        },
+        {
             "m_Id": "05bdc0a5e831469ab7fd7bda2e0d1860"
         },
         {
@@ -1675,7 +1717,8 @@
         "71b73ea0-d95c-4679-a405-a707d33bd6ba",
         "286836de-2ef4-45b7-90cf-4eb2bfd612a2",
         "ff6c2c89-6a77-4d14-8c81-b936c3e07ccb",
-        "aee41391-0411-4fa9-bf47-7b312dc93cf3"
+        "aee41391-0411-4fa9-bf47-7b312dc93cf3",
+        "112a44a0-f0ed-46d6-b997-13482ffd64e3"
     ],
     "m_PropertyIds": [
         -1453565557,
@@ -1696,7 +1739,8 @@
         267090019,
         1218212811,
         739991894,
-        -772449077
+        -772449077,
+        -221838699
     ]
 }
 
@@ -2187,7 +2231,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "5461fe06e8ec42389f906822bc180731",
     "m_Id": -1868619947,
-    "m_DisplayName": "SSS",
+    "m_DisplayName": "SSS(Obsolate)",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector3_E2468740",
