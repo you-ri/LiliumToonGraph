@@ -116,7 +116,7 @@ Material:
     - _OutlineWidth: 0.5
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 1
+    - _ShadeToony: 0
     - _Smoothness: 0.3
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -134,5 +134,5 @@ Material:
     - _ShadeColor: {r: 0, g: 0, b: 1, a: 1}
     - _ShadeEnvironmentalColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _SssColor: {r: 1, g: 0, b: 0, a: 0.5019608}
+    - _SssColor: {r: 1, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

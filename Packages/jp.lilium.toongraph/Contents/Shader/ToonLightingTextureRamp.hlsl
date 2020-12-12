@@ -15,7 +15,7 @@
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half4 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony, TEXTURE2D(ShadeRamp), half ToonyLighting,
+    half ShadeShift, half ShadeToony, TEXTURE2D(ShadeRamp), half Curvature, half ToonyLighting,
     out half4 Color, out half3 ShadeColor)
 {
 
@@ -60,7 +60,7 @@ void ToonLight_half(
 #endif
 
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, 1, ShadeRamp, ToonyLighting, 
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
         ShadeColor);
 }
 
@@ -69,7 +69,7 @@ void ToonLight_half(
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony, Texture2D ShadeRamp, half ToonyLighting,
+    half ShadeShift, half ShadeToony, Texture2D ShadeRamp, half Curvature, half ToonyLighting,
     out half4 Color, out half3 ShadeColor)
 {
     Color.rgb = Diffuse;

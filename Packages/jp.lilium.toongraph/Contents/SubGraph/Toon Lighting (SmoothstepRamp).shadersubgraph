@@ -626,23 +626,6 @@
 }
 
 {
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Texture2DInputMaterialSlot",
-    "m_ObjectId": "17cdb14622054a1bb0c3658dab61de5a",
-    "m_Id": 21,
-    "m_DisplayName": "SSSLutTexture",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "SSSLutTexture",
-    "m_StageCapability": 3,
-    "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"63f8961755d8d5b45a64165581eb373e\",\"type\":3}}",
-        "m_Guid": ""
-    },
-    "m_DefaultType": 0
-}
-
-{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
     "m_ObjectId": "1a8d9e098ea745e5baded23cee8406af",
@@ -2030,9 +2013,6 @@
         },
         {
             "m_Id": "ae60ba2579c54aeb978fade97a1ed8df"
-        },
-        {
-            "m_Id": "17cdb14622054a1bb0c3658dab61de5a"
         },
         {
             "m_Id": "147ad666bdac422893d3b44310eb8411"

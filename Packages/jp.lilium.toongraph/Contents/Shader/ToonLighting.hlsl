@@ -49,19 +49,6 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 // referenced: http://project-asura.com/blog/archives/4650
 // referenced: https://j1jeong.wordpress.com/2018/06/20/pre-intergrated-skin-shading-in-colorspace/
 
-half3 LightingSSS(
-    half3 normalWS, half3 lightDirectionWS,
-    half curvature,
-    Texture2D sssLutTexture, half shadowAttenuation)
-{
-    half NdotL = dot(normalWS, lightDirectionWS);
-    NdotL = ((NdotL+ 1) / 2);
-
-    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(NdotL, curvature));
-    //half radiance = saturate(lut.r - lut.b);
-    return lut;
-}
-
 half3 EnvironmentSSS(half curvature,  Texture2D sssLutTexture)
 {
     half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(0.5f, curvature));
@@ -99,7 +86,9 @@ struct ToonBRDFData
     half toonyLighting;
 
     // sss extend
-    TEXTURE2D( shadeRamp);
+#ifdef SHADEMODEL_RAMP    
+    Texture2D shadeRamp;
+#endif
     half curvature;
 };
 
@@ -124,12 +113,12 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, 
 // Convert toony value (shade use)
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
-#ifdef SHADEMODEL_RAMP
-    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.shadeToony), 0) * maxValue;
-#else
+//#ifdef SHADEMODEL_RAMP
+//    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.shadeToony), 0) * maxValue;
+//#else
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
     half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony + 0.000001f, 1), value / maxValue) * maxValue;
-#endif
+//#endif
     return lerp((half3)value * (1 - brdfData.shadeShift), toonedValue, brdfData.toonyLighting);
 }
 
@@ -180,8 +169,9 @@ inline void InitializeToonBRDFData(
 
     // Toony Paramaters
     outBRDFData.occlusion = occlusion;
+#ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
-
+#endif
 
 #ifdef _ALPHAPREMULTIPLY_ON
     outBRDFData.base *= alpha;
@@ -224,7 +214,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
     half3 c = indirectDiffuse * brdfData.base;
-    c += indirectDiffuse * EnvironmentSSS(brdfData.curvature, brdfData.shadeRamp) * brdfData.sss.rgb * brdfData.sss.a;
+    //c += indirectDiffuse * EnvironmentSSS(brdfData.curvature, brdfData.shadeRamp) * brdfData.sss.rgb * brdfData.sss.a;
 
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
@@ -374,6 +364,18 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 }
 */
 
+
+half3 LightingSubsurfaceRamp(
+     half3 lightDirectionWS, half3 normalWS, half curvature, Texture2D sssLutTexture)
+{
+    half NdotL = dot(normalWS, lightDirectionWS);
+    NdotL = ((NdotL+ 1) / 2);
+
+    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(NdotL, curvature));
+    return lut;
+}
+
+
 // Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
 // Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
 // Note: This does not use distance attenuation, as it is intented to be used with a sun light.
@@ -406,15 +408,22 @@ half3 LightingToonyBasedSSS(
     half3 normalWS)
 {
     half NdotL = dot(normalWS, lightDirectionWS); 
-    half oneMinusShade = (ToonyShadeValue(brdfData, NdotL) );
-    //half3 radiance = LightingSSS (normalWS, lightDirectionWS, brdfData.curvature, brdfData.shadeRamp, lightShadow);
+    half oneMinusShade = ToonyShadeValue(brdfData, NdotL);
+
+#ifdef SHADEMODEL_RAMP
+    half3 radiance = LightingSubsurfaceRamp (lightDirectionWS, normalWS, brdfData.curvature, brdfData.shadeRamp);
+    half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
+    return color;
+
+#else
     half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature);
 
-    half intensity = (oneMinusShade * lightShadow);
     half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
-    half3 toonyColor = (0.2f * brdfData.curvature) *  (1-intensity) * lightColor * lightAttenuation * brdfData.sss;
+    half3 toonyColor = (0.1f * brdfData.curvature) * lightColor * lightAttenuation * brdfData.sss;
+    toonyColor += oneMinusShade * brdfData.sss * lightColor * lightAttenuation;
 
-    return color;//lerp(color, toonyColor, __ToonyLighting);
+    return lerp(color, toonyColor, __ToonyLighting);
+#endif
 }
 
 
@@ -430,9 +439,12 @@ half3 LightingToonyBased(
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
+    half NdotL = dot(normalWS, light.direction); 
+    half oneMinusShade = 1 - ToonyShadeValue(brdfData, NdotL);
+
     half subSurface = brdfData.sss.a;
-    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS) * (1-subSurface);
-    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * subSurface;
+    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS);// * (1-subSurface);
+    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * oneMinusShade; //subSurface * ;
     return color;
 }
 
