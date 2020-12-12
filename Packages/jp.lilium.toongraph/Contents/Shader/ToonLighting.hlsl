@@ -224,7 +224,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
     half3 c = indirectDiffuse * brdfData.base;
-    c += indirectDiffuse * EnvironmentSSS(brdfData.curvature, brdfData.shadeRamp) * brdfData.sss;
+    c += indirectDiffuse * EnvironmentSSS(brdfData.curvature, brdfData.shadeRamp) * brdfData.sss.rgb * brdfData.sss.a;
 
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
@@ -430,9 +430,9 @@ half3 LightingToonyBased(
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
-    half _sss = brdfData.sss.a;
-    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS) * (1-_sss);
-    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * _sss;
+    half subSurface = brdfData.sss.a;
+    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS) * (1-subSurface);
+    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * subSurface;
     return color;
 }
 
@@ -473,7 +473,6 @@ half4 UniversalFragmentToon(
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
     half3 indirectDiffuse = inputData.bakedGI * occlusion;
-    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss * 0.2f;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
 
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
@@ -491,6 +490,9 @@ half4 UniversalFragmentToon(
 #endif
     color += emission;
     color = max(color, 0);
+
+    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss.rgb * brdfData.sss.a;
+
     //color = brdfData.diffuse;
     return half4(color, alpha);
 }
