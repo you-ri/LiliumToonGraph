@@ -119,15 +119,14 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, 
     return lerp(value, smoothstep((threshold/maxValue) - brdfData.shadeToony / 2, (threshold/maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
-// Convert toony value (shade use)
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
-//#ifdef SHADEMODEL_RAMP
-//    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.shadeToony), 0) * maxValue;
-//#else
+#ifdef SHADEMODEL_RAMP
+    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.curvature), 0) * maxValue;
+#else
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
     half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony + 0.000001f, 1), value / maxValue) * maxValue;
-//#endif
+#endif
     return lerp((half3)value * (1 - brdfData.shadeShift), toonedValue, brdfData.toonyLighting);
 }
 
@@ -414,7 +413,7 @@ half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceR
 
 }
 
-half3 LightingToonyBasedSSS(
+half3 LightingToonySubsurface(
     ToonBRDFData brdfData, 
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow,
     half3 normalWS)
@@ -422,18 +421,18 @@ half3 LightingToonyBasedSSS(
 
 #ifdef SHADEMODEL_RAMP
     half3 radiance = LightingSubsurfaceRamp (lightDirectionWS, normalWS, brdfData.curvature, brdfData.shadeRamp);
-    half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
+    half3 color = radiance * lightColor * lightAttenuation * lightShadow * brdfData.sss;
     return color;
 
 #else
     half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature, __ToonyLighting);
-    half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
+    half3 color = radiance * lightColor * lightAttenuation * lightShadow * brdfData.sss;
     return color;
 #endif
 }
 
 
-half3 LightingToonyBased(
+half3 LightingToonyDirect(
     ToonBRDFData brdfData, 
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow, 
     half3 normalWS, half3 viewDirectionWS)
@@ -449,10 +448,11 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     half shade = ToonyShadeValue(brdfData, NdotL);
     half shadow = brdfData.shadow * light.shadowAttenuation;
 
-    shade *= shadow;
+    half unsubsurface = shade * shadow;
 
-    half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS);// * (1-subSurface);
-    color += LightingToonyBasedSSS(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * (1-shade);
+    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shadow, normalWS, viewDirectionWS) * unsubsurface;
+    color += LightingToonySubsurface(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * (1-unsubsurface);
+
     return color;
 }
 

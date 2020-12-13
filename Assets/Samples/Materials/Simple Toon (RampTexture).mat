@@ -153,7 +153,7 @@ Material:
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 0.413
+    - _ShadeToony: 1
     - _ShdeToony: 1
     - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
@@ -172,7 +172,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 1, g: 1, b: 1, a: 0.5882353}
+    - _ShadeColor: {r: 0.51886785, g: 0.51886785, b: 0.51886785, a: 1}
     - _ShadeEnvironmentalColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
