@@ -140,7 +140,6 @@
     "m_Id": 0,
     "m_DisplayName": "Ambient Reference",
     "m_SlotType": 1,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
@@ -213,7 +212,6 @@
     "m_Id": 3,
     "m_DisplayName": "Albedo",
     "m_SlotType": 1,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Albedo",
     "m_StageCapability": 3,
@@ -241,7 +239,6 @@
     "m_Id": 4,
     "m_DisplayName": "SSS",
     "m_SlotType": 1,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "SSS",
     "m_StageCapability": 3,
@@ -304,7 +301,6 @@
     "m_Id": 3,
     "m_DisplayName": "Albedo",
     "m_SlotType": 0,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Albedo",
     "m_StageCapability": 3,
@@ -326,7 +322,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.Internal.ColorShaderProperty",
     "m_ObjectId": "5afb9c3a67c5494eb2497c2092eee675",
     "m_Guid": {
@@ -337,7 +333,8 @@
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
-    "m_GPUInstanced": false,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
         "r": 0.5,
@@ -355,7 +352,6 @@
     "m_Id": 2,
     "m_DisplayName": "Ambient Reference",
     "m_SlotType": 0,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "AmbientReference",
     "m_StageCapability": 3,
@@ -377,7 +373,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.Internal.ColorShaderProperty",
     "m_ObjectId": "9d2f686c87a24748be3f06c4312efb65",
     "m_Guid": {
@@ -388,7 +384,8 @@
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
-    "m_GPUInstanced": false,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
         "r": 1.0,
@@ -406,7 +403,6 @@
     "m_Id": 0,
     "m_DisplayName": "Shade",
     "m_SlotType": 1,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
@@ -432,7 +428,6 @@
     "m_Id": 1,
     "m_DisplayName": "Shade",
     "m_SlotType": 0,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Shade",
     "m_StageCapability": 3,
@@ -460,7 +455,6 @@
     "m_Id": 0,
     "m_DisplayName": "Base",
     "m_SlotType": 0,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Base",
     "m_StageCapability": 3,
@@ -516,7 +510,7 @@
 }
 
 {
-    "m_SGVersion": 1,
+    "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.Internal.ColorShaderProperty",
     "m_ObjectId": "e63ca6bfc25549129629d8529501c513",
     "m_Guid": {
@@ -527,7 +521,8 @@
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
-    "m_GPUInstanced": false,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
         "r": 0.5,
@@ -545,7 +540,6 @@
     "m_Id": 4,
     "m_DisplayName": "SSS",
     "m_SlotType": 0,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "SSS",
     "m_StageCapability": 3,
@@ -641,7 +635,6 @@
     "m_Id": 0,
     "m_DisplayName": "Base",
     "m_SlotType": 1,
-    "m_Priority": 2147483647,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
