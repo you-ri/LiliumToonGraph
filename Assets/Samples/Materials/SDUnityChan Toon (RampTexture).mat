@@ -133,6 +133,7 @@ Material:
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
+    - _Curvature: 0.3
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -144,7 +145,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 0.5
+    - _OutlineWidth: 2
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1

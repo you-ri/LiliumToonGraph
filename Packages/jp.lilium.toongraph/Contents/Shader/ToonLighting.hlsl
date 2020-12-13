@@ -43,6 +43,15 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 }
 
 
+inline half ToonyValue2(half value, half threshold = 0.5h, half minValue = 0 , half maxValue = 1)
+{
+    half toonyValue = smoothstep( threshold, threshold, value);
+    toonyValue = clamp(toonyValue, minValue, maxValue);
+
+    return lerp( value, toonyValue, __ToonyLighting);
+}
+
+
 // Based on Penner pre-integrated skin rendering (siggraph 2011 advances in real-time rendering course)
 // https://www.slideshare.net/leegoonz/penner-preintegrated-skin-rendering-siggraph-2011-advances-in-realtime-rendering-course
 //
@@ -312,10 +321,10 @@ half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughn
     half3 irradiance = encodedIrradiance.rgb;
 #endif
 
-    return irradiance * occlusion;
+    return irradiance;// * occlusion;
 #endif // GLOSSY_REFLECTIONS
 
-    return _GlossyEnvironmentColor.rgb * occlusion;
+    return _GlossyEnvironmentColor.rgb;// * occlusion;
 }
 /*
 half3 GlossyEnvironmentReflection(half3 reflectVector, half perceptualRoughness, half occlusion)
@@ -345,7 +354,7 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
     // toony fresnel
     fresnelTerm = ToonyValue(brdfData, fresnelTerm);
 
-    half3 indirectDiffuse = bakedGI * occlusion;
+    half3 indirectDiffuse = bakedGI;// * occlusion;
     half3 indirectSpecular = GlossyEnvironmentReflectionToon(reflectVector, brdfData.perceptualRoughness, occlusion, viewDirectionWS);
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
@@ -380,7 +389,7 @@ half3 LightingSubsurfaceRamp(
 // Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
 // Note: This does not use distance attenuation, as it is intented to be used with a sun light.
 // Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
-half3 LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius) {
+half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius, half toony) {
     // Calculate normalized wrapped lighting. This spreads the light without adding energy.
     // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
     // to wrap the light further around an object.
@@ -396,10 +405,13 @@ half3 LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurface
     half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
     half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
-    half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
-    half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+    wrapped_jgt = ToonyValue2(wrapped_jgt, 0, 0, 1-(alpha*0.9f));
+
+    //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
+    //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
 
     return wrapped_jgt;
+
 }
 
 half3 LightingToonyBasedSSS(
@@ -407,8 +419,6 @@ half3 LightingToonyBasedSSS(
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow,
     half3 normalWS)
 {
-    half NdotL = dot(normalWS, lightDirectionWS); 
-    half oneMinusShade = ToonyShadeValue(brdfData, NdotL);
 
 #ifdef SHADEMODEL_RAMP
     half3 radiance = LightingSubsurfaceRamp (lightDirectionWS, normalWS, brdfData.curvature, brdfData.shadeRamp);
@@ -416,13 +426,9 @@ half3 LightingToonyBasedSSS(
     return color;
 
 #else
-    half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature);
-
+    half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature, __ToonyLighting);
     half3 color = radiance * lightColor * lightAttenuation * brdfData.sss;
-    half3 toonyColor = (0.1f * brdfData.curvature) * lightColor * lightAttenuation * brdfData.sss;
-    toonyColor += oneMinusShade * brdfData.sss * lightColor * lightAttenuation;
-
-    return lerp(color, toonyColor, __ToonyLighting);
+    return color;
 #endif
 }
 
@@ -440,11 +446,13 @@ half3 LightingToonyBased(
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
     half NdotL = dot(normalWS, light.direction); 
-    half oneMinusShade = 1 - ToonyShadeValue(brdfData, NdotL);
+    half shade = ToonyShadeValue(brdfData, NdotL);
+    half shadow = brdfData.shadow * light.shadowAttenuation;
 
-    half subSurface = brdfData.sss.a;
+    shade *= shadow;
+
     half3 color = LightingToonyBased(brdfData, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS, viewDirectionWS);// * (1-subSurface);
-    color += LightingToonyBasedSSS(brdfData,  light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation * brdfData.shadow, normalWS) * oneMinusShade; //subSurface * ;
+    color += LightingToonyBasedSSS(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * (1-shade);
     return color;
 }
 
@@ -484,7 +492,7 @@ half4 UniversalFragmentToon(
     Light mainLight = GetMainLight(inputData.shadowCoord);
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 indirectDiffuse = inputData.bakedGI * occlusion;
+    half3 indirectDiffuse = inputData.bakedGI;// * occlusion;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
 
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
@@ -500,10 +508,11 @@ half4 UniversalFragmentToon(
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     color += inputData.vertexLighting * brdfData.base;
 #endif
+    color *= occlusion;
     color += emission;
     color = max(color, 0);
 
-    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss.rgb * brdfData.sss.a;
+    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss.rgb * brdfData.sss.a * 0.1f;
 
     //color = brdfData.diffuse;
     return half4(color, alpha);

@@ -113,7 +113,7 @@ Material:
     - _Metalic: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 0.5
+    - _OutlineWidth: 2
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ShadeToony: 0
