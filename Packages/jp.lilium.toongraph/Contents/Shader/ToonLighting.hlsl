@@ -19,12 +19,6 @@ SamplerState sampler_LinearClamp
 };
 
 
-
-inline half average (half3 value)
-{
-    return (value.x + value.y + value.z) * 0.3333333333h;
-}
-
 inline half3 CameraDirectionWS()
 {
     return mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
@@ -52,19 +46,34 @@ inline half ToonyValue2(half value, half threshold = 0.5h, half minValue = 0 , h
 }
 
 
-// Based on Penner pre-integrated skin rendering (siggraph 2011 advances in real-time rendering course)
-// https://www.slideshare.net/leegoonz/penner-preintegrated-skin-rendering-siggraph-2011-advances-in-realtime-rendering-course
-//
-// referenced: http://project-asura.com/blog/archives/4650
-// referenced: https://j1jeong.wordpress.com/2018/06/20/pre-intergrated-skin-shading-in-colorspace/
+// Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
+// Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
+// Note: This does not use distance attenuation, as it is intented to be used with a sun light.
+// Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
+half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius, half toony) {
+    // Calculate normalized wrapped lighting. This spreads the light without adding energy.
+    // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
+    // to wrap the light further around an object.
+    //
+    // A normalization term is applied to make sure we do not add energy.
+    // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
 
-half3 EnvironmentSSS(half curvature,  Texture2D sssLutTexture)
-{
-    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(0.5f, curvature));
+    half NdotL = dot(normalWS, lightDirectionWS);
+    half alpha = subsurfaceRadius;
+    half theta_m = acos(-alpha); // boundary of the lighting function
 
-    half radiance = saturate(lut.r - lut.b) * 0.2f;
-    return radiance;
+    half theta = max(0, NdotL + alpha) - alpha;
+    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
+    half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
+
+    wrapped_jgt = ToonyValue2(wrapped_jgt, 0, 0, 1-(alpha*0.9f));
+
+    //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
+    //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+
+    return wrapped_jgt;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //                         Toon BRDF Functions                                    //
@@ -86,7 +95,7 @@ struct ToonBRDFData
 
     // toony extend
     half3 base; // 基本色
-    half4 sss;
+    half3 sss;
     half occlusion;
 
     half shadow;
@@ -130,7 +139,7 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
     half3 toonedValue = smoothstep(0 - shadeShift+1, min(brdfData.shadeToony - shadeShift+1 + 0.000001f, 1), value / maxValue) * maxValue;
 #endif
-    return lerp((half3)normalizedValue, toonedValue, brdfData.toonyLighting);
+    return lerp((half3)value, toonedValue, brdfData.toonyLighting);
 }
 
 
@@ -224,7 +233,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
     half3 c = indirectDiffuse * brdfData.base;
-    //c += indirectDiffuse * EnvironmentSSS(brdfData.curvature, brdfData.shadeRamp) * brdfData.sss.rgb * brdfData.sss.a;
+    c += indirectDiffuse * brdfData.sss;
 
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
@@ -386,35 +395,6 @@ half3 LightingSubsurfaceRamp(
 }
 
 
-// Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
-// Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
-// Note: This does not use distance attenuation, as it is intented to be used with a sun light.
-// Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
-half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius, half toony) {
-    // Calculate normalized wrapped lighting. This spreads the light without adding energy.
-    // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
-    // to wrap the light further around an object.
-    //
-    // A normalization term is applied to make sure we do not add energy.
-    // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
-
-    half NdotL = dot(normalWS, lightDirectionWS);
-    half alpha = subsurfaceRadius;
-    half theta_m = acos(-alpha); // boundary of the lighting function
-
-    half theta = max(0, NdotL + alpha) - alpha;
-    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
-    half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
-
-    wrapped_jgt = ToonyValue2(wrapped_jgt, 0, 0, 1-(alpha*0.9f));
-
-    //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
-    //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
-
-    return wrapped_jgt;
-
-}
-
 half3 LightingToonySubsurface(
     ToonBRDFData brdfData, 
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow,
@@ -514,7 +494,7 @@ half4 UniversalFragmentToon(
     color += emission;
     color = max(color, 0);
 
-    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss.rgb * brdfData.sss.a * 0.1f;
+    shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss;
 
     //color = brdfData.diffuse;
     return half4(color, alpha);
