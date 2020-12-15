@@ -128,6 +128,7 @@ Material:
     m_Floats:
     - Vector1_4FDCBCA2: 0.3
     - Vector1_7DE6D5AB: 0.9
+    - Vector1_812be4631501458ea83339c066bed988: 1
     - Vector1_D9A6FB2A: 1
     - _AlphaClip: 0
     - _Blend: 0
@@ -145,7 +146,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 2
+    - _OutlineWidth: 1
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1

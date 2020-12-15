@@ -112,9 +112,10 @@ Material:
     - _Metalic: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 2
+    - _OutlineWidth: 1
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _Shade: 1
     - _ShadeToony: 1
     - _Smoothness: 0.3
     - _SmoothnessTextureChannel: 0

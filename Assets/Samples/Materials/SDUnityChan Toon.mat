@@ -137,6 +137,7 @@ Material:
     - Vector1_4FDCBCA2: 0.3
     - Vector1_7DE6D5AB: 0.9
     - Vector1_D9A6FB2A: 1
+    - Vector1_b1c9e85843fc414190d2d722e0594503: 0
     - _AlphaClip: 0
     - _Blend: 0
     - _BumpScale: 1
@@ -153,10 +154,11 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 2
+    - _OutlineWidth: 1
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _Shade: 1
     - _ShadeToony: 1
     - _ShdeToony: 1
     - _Smoothness: 0.2
@@ -176,7 +178,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 0.9811321, g: 0.5507298, b: 0.5507298, a: 1}
+    - _ShadeColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadeEnvironmentalColor: {r: 0.62352943, g: 0.62352943, b: 0.62352943, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
