@@ -2876,33 +2876,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
-    "m_ObjectId": "944f2a98c32f44fb8b42d7550ca63c4f",
-    "m_Id": 513456201,
-    "m_DisplayName": "SSS(Obsolate)",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Vector3_B838E475",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-    },
-    "m_Labels": [
-        "X",
-        "Y",
-        "Z"
-    ]
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "95a0583884a2448ebacfb64b41eae77f",
     "m_Id": 7,
@@ -4520,9 +4493,6 @@
         },
         {
             "m_Id": "609587edb9db4c1a86dd8f1a9ff3824c"
-        },
-        {
-            "m_Id": "944f2a98c32f44fb8b42d7550ca63c4f"
         },
         {
             "m_Id": "cc00135a6c3947539d979e78a290732c"

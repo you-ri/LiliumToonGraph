@@ -52,7 +52,7 @@ inline float3 TransformViewToProjection(float3 v)
 
 float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float outlineWidth)
 {
-    const half _OutlineScaledMaxDistance = 2;
+    const half _OutlineScaledMaxDistance = 1;
     
     float4 nearUpperRight = mul(inverse(UNITY_MATRIX_P), float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
     float aspect = abs(nearUpperRight.y / nearUpperRight.x);
@@ -61,7 +61,7 @@ float4 TransformOutlineToHClipScreenSpace(float3 position, float3 normal, float 
     float3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
     float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
     float2 projectedNormal = normalize(clipNormal.xy);
-
+    projectedNormal *= min(vertex.w, _OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
     projectedNormal.x *= aspect;
     vertex.xy += 0.01 * outlineWidth * projectedNormal.xy* saturate(1 - abs(normalize(viewNormal).z));
 

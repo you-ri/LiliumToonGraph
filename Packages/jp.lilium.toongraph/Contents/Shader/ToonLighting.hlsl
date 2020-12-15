@@ -90,7 +90,7 @@ struct ToonBRDFData
     half occlusion;
 
     half shadow;
-    half shadeShift; // TODO: delete?
+    half shadeShift;
     half shadeToony;
     half toonyLighting;
 
@@ -119,28 +119,30 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, 
     return lerp(value, smoothstep((threshold/maxValue) - brdfData.shadeToony / 2, (threshold/maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
+
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
 {
+    half shadeShift = brdfData.shadeShift;
+    half normalizedValue = saturate((value + shadeShift) / 2);
 #ifdef SHADEMODEL_RAMP
-    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(((value + 1 - brdfData.shadeShift) / 2), brdfData.curvature), 0) * maxValue;
+    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(normalizedValue, brdfData.shadeToony), 0) * maxValue;
 #else
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
-    half3 toonedValue = smoothstep(max(brdfData.shadeShift, 0), min(brdfData.shadeShift + brdfData.shadeToony + 0.000001f, 1), value / maxValue) * maxValue;
+    half3 toonedValue = smoothstep(0 - shadeShift+1, min(brdfData.shadeToony - shadeShift+1 + 0.000001f, 1), value / maxValue) * maxValue;
 #endif
-    return lerp((half3)value * (1 - brdfData.shadeShift), toonedValue, brdfData.toonyLighting);
+    return lerp((half3)normalizedValue, toonedValue, brdfData.toonyLighting);
 }
 
 
 inline void InitializeToonBRDFData(
     half3 albedo, half4 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
-    half shadow, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
+    half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
     // Toon Paramaters
-
-    outBRDFData.shadow = shadow;
+    outBRDFData.shadow = 1;//shade;
     outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = 0;//(1 - shadow);
+    outBRDFData.shadeShift = shade;
     outBRDFData.toonyLighting = toonyLighting;
 
 #if _SPECULAR_SETUP
@@ -448,7 +450,7 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     half shade = ToonyShadeValue(brdfData, NdotL);
     half shadow = brdfData.shadow * light.shadowAttenuation;
 
-    half unsubsurface = shade * shadow;
+    half unsubsurface = shade * shadow; 
 
     half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shadow, normalWS, viewDirectionWS) * unsubsurface;
     color += LightingToonySubsurface(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * (1-unsubsurface);

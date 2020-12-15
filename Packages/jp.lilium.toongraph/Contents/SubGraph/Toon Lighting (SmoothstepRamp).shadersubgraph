@@ -38,9 +38,6 @@
         },
         {
             "m_Id": "df419ace391242afa7efe54d21317c03"
-        },
-        {
-            "m_Id": "067484642fa341aca839945d47cfb8b0"
         }
     ],
     "m_Keywords": [],
@@ -501,29 +498,6 @@
         "Y",
         "Z"
     ]
-}
-
-{
-    "m_SGVersion": 1,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
-    "m_ObjectId": "067484642fa341aca839945d47cfb8b0",
-    "m_Guid": {
-        "m_GuidSerialized": "33e4f1b6-e27e-4978-969a-cf3ae1475787"
-    },
-    "m_Name": "SSS(Obsolate)",
-    "m_DefaultReferenceName": "Vector3_B838E475",
-    "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0,
-        "w": 0.0
-    }
 }
 
 {

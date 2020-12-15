@@ -108,3 +108,11 @@ Update Mode: updateDependencies
 
 The following packages were updated:
   com.unity.ide.vscode from version 1.2.2 to 1.2.3
+
+=== Wed Dec 16 01:01:18 2020
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.render-pipelines.universal from version 10.2.1 to 10.2.2
