@@ -94,7 +94,7 @@ struct ToonBRDFData
     half roughness2MinusOne; // roughness² - 1.0
 
     // toony extend
-    half3 base; // 基本色
+    half3 base;
     half3 sss;
     half occlusion;
 
@@ -148,35 +148,19 @@ inline void InitializeToonBRDFData(
     half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
-    // Toon Paramaters
-    outBRDFData.shadow = 1;//shade;
-    outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = shade;
-    outBRDFData.toonyLighting = toonyLighting;
-
 #if _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
     half oneMinusReflectivity = 1.0 - reflectivity;
 
     outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
-
-    // Toon Paramaters
-    outBRDFData.base = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
 #else
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
     half reflectivity = 1.0 - oneMinusReflectivity;
 
     outBRDFData.diffuse = albedo * oneMinusReflectivity;
     outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
-
-    // Toon Paramaters
-    outBRDFData.base = albedo * oneMinusReflectivity;
-
 #endif
-    // SSS Parameters
-    outBRDFData.sss = sss;
-    outBRDFData.curvature = curvature;
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
     outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
@@ -186,14 +170,23 @@ inline void InitializeToonBRDFData(
     outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
-    // Toony Paramaters
+
+    // Toon Parameters
+    outBRDFData.base = albedo;
+    outBRDFData.sss = sss;
     outBRDFData.occlusion = occlusion;
+    outBRDFData.curvature = curvature;
+    outBRDFData.shadow = 1;
+    outBRDFData.shadeToony = (1 - shadeToony);
+    outBRDFData.shadeShift = shade;
+    outBRDFData.toonyLighting = toonyLighting;
+
 #ifdef SHADEMODEL_RAMP
     outBRDFData.shadeRamp = shadeRamp;
 #endif
 
 #ifdef _ALPHAPREMULTIPLY_ON
-    outBRDFData.base *= alpha;
+    outBRDFData.diffuse *= alpha;
     alpha = alpha * oneMinusReflectivity + reflectivity;
 #endif
 }
@@ -232,7 +225,7 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
-    half3 c = indirectDiffuse * brdfData.base;
+    half3 c = indirectDiffuse * brdfData.diffuse;
     c += indirectDiffuse * brdfData.sss;
 
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
@@ -281,10 +274,10 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     half radiancePower = length(radiance);
     half specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiancePower, maxSpecularTerm*radiancePower, 4); //TODO: 閾値を4に決め打ちしているが調整する方法が必要
 
-    half3 color = (specularTermWithRadiance * SafeNormalize(radiance) * brdfData.specular) + (brdfData.base * radiance);
+    half3 color = (specularTermWithRadiance * SafeNormalize(radiance) * brdfData.specular) + (brdfData.diffuse * radiance);
     return color;
 #else
-    return brdfData.base * radiance;
+    return brdfData.diffuse * radiance;
 #endif
 
 }
@@ -488,7 +481,7 @@ half4 UniversalFragmentToon(
 #endif
 
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
-    color += inputData.vertexLighting * brdfData.base;
+    color += inputData.vertexLighting * brdfData.diffuse;
 #endif
     color *= occlusion;
     color += emission;
@@ -496,7 +489,6 @@ half4 UniversalFragmentToon(
 
     shadeColor = indirectDiffuse * brdfData.base + indirectDiffuse * brdfData.sss;
 
-    //color = brdfData.diffuse;
     return half4(color, alpha);
 }
 

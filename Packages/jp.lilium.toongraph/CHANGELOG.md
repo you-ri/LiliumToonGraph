@@ -1,12 +1,16 @@
 # Change Log
 
-## [Unreleased] - xxxx-xx-xx
-- Unity2020.2.x
-- 変更：影色計算の変更
-- 変更：ToonLightingノードのShadeスロットを廃止。代わりにSSSを追加。
-- 追加：ToonStylizingサブグラフを追加。
-- 変更：URP 10.2.x / Master Stackに対応
+## [0.3.0-prevew.11] - 2020-12-16
+- Unity2020.2.0
+- URP 10.2.2 
+- 変更：ShaderGraphのMasterStackに対応
+- 変更：影色計算をSSSベースに変更
+- 追加：SSS用曲率を設定するためのCurvatureスロットを追加
+- 追加：影色を取得するためのShadeColor出力スロットを追加
+- 変更：ToonLightingノードのShadeスロットを廃止。代わりにSSSスロットを追加
+- 追加：ToonStylizingサブグラフを追加
 - 追加：Lighting Environentを追加
+- 変更：Stylized Input系ShaderGraphを一旦削除
 
 ## [0.2.2-preivew.8] - 2020 - 08 - 09
 

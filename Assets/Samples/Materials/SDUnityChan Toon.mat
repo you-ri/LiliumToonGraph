@@ -154,6 +154,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
+    - _OutlineIntensity: 0.5
     - _OutlineWidth: 1
     - _Parallax: 0.02
     - _QueueOffset: 0

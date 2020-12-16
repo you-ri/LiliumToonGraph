@@ -597,15 +597,20 @@ namespace UnityEditor.ShaderGraph
     // TODO:
     static class CreateToonShaderGraph
     {
-        [MenuItem("Assets/Create/Shader/Toon Shader Graph", false, 208)]
+        [MenuItem("Assets/Create/Shader/Universal Render Pipeline/Lilium Toon Shader Graph", false, 208)]
         public static void CreateToonGraph()
         {
             var target = (ToonTarget)Activator.CreateInstance(typeof(ToonTarget));
 
             var blockDescriptors = new [] 
             { 
+                BlockFields.VertexDescription.Position,
+                BlockFields.VertexDescription.Normal,
+                BlockFields.VertexDescription.Tangent,
+
                 BlockFields.SurfaceDescription.BaseColor,
-                BlockFields.SurfaceDescription.Alpha,
+                ToonBlockFields.SurfaceDescription.OutlineColor,
+                ToonBlockFields.VertexDescription.OutlineWidth,
             };
 
             GraphUtil.CreateNewGraphWithOutputs(new [] {target}, blockDescriptors);
