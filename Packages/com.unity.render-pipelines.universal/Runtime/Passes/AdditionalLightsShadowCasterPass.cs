@@ -42,12 +42,15 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         List<int> m_AdditionalShadowCastingLightIndices = new List<int>();
         List<int> m_AdditionalShadowCastingLightIndicesMap = new List<int>();
+        // Get the shadow light index for a visible light index, or -1.
+        List<int> m_ShadowCastingLightIndicesMap = new List<int>();
+
         bool m_SupportsBoxFilterForShadows;
-        const string m_ProfilerTag = "Render Additional Shadows";
-        ProfilingSampler m_ProfilingSampler = new ProfilingSampler(m_ProfilerTag);
+        ProfilingSampler m_ProfilingSetupSampler = new ProfilingSampler("Setup Additional Shadows");
 
         public AdditionalLightsShadowCasterPass(RenderPassEvent evt)
         {
+            base.profilingSampler = new ProfilingSampler(nameof(AdditionalLightsShadowCasterPass));
             renderPassEvent = evt;
 
             AdditionalShadowsConstantBuffer._AdditionalLightsWorldToShadow = Shader.PropertyToID("_AdditionalLightsWorldToShadow");
@@ -75,6 +78,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         public bool Setup(ref RenderingData renderingData)
         {
+            using var profScope = new ProfilingScope(null, m_ProfilingSetupSampler);
+
             Clear();
 
             m_ShadowmapWidth = renderingData.shadowData.additionalLightsShadowmapWidth;
@@ -88,6 +93,10 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             if (m_AdditionalLightsShadowData == null || m_AdditionalLightsShadowData.Length < additionalLightsCount)
                 m_AdditionalLightsShadowData = new ShaderInput.ShadowData[additionalLightsCount];
+
+            // By default visible lights do not have shadow light indices.
+            for (int i = 0; i < visibleLights.Length; ++i)
+                m_ShadowCastingLightIndicesMap.Add(-1);
 
             int validShadowCastingLights = 0;
             bool supportsSoftShadows = renderingData.shadowData.supportsSoftShadows;
@@ -106,9 +115,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                     // We need to iterate the lights even though additional lights are disabled because
                     // cullResults.GetShadowCasterBounds() does the fence sync for the shadow culling jobs.
                     if (!renderingData.shadowData.supportsAdditionalLightShadows)
-                    {
                         continue;
-                    }
 
                     if (IsValidShadowCastingLight(ref renderingData.lightData, i))
                     {
@@ -170,6 +177,8 @@ namespace UnityEngine.Rendering.Universal.Internal
                     m_AdditionalLightSlices[shadowCastingLightIndex].viewMatrix = identity;
                     m_AdditionalLightSlices[shadowCastingLightIndex].projectionMatrix = identity;
                 }
+
+                m_ShadowCastingLightIndicesMap[i] = isValidShadowSlice ? shadowCastingLightIndex : -1;
             }
 
             // Lights that need to be rendered in the shadow map atlas
@@ -236,7 +245,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 RenderAdditionalShadowmapAtlas(ref context, ref renderingData.cullResults, ref renderingData.lightData, ref renderingData.shadowData);
         }
 
-        public override void FrameCleanup(CommandBuffer cmd)
+        public override void OnCameraCleanup(CommandBuffer cmd)
         {
             if (cmd == null)
                 throw new ArgumentNullException("cmd");
@@ -248,11 +257,19 @@ namespace UnityEngine.Rendering.Universal.Internal
             }
         }
 
+        public int GetShadowLightIndexFromLightIndex(int visibleLightIndex)
+        {
+            if (visibleLightIndex < 0 || visibleLightIndex >= m_ShadowCastingLightIndicesMap.Count)
+                return -1;
+            return m_ShadowCastingLightIndicesMap[visibleLightIndex];
+        }
+
         void Clear()
         {
             m_AdditionalShadowCastingLightIndices.Clear();
             m_AdditionalShadowCastingLightIndicesMap.Clear();
             m_AdditionalLightsShadowmapTexture = null;
+            m_ShadowCastingLightIndicesMap.Clear();
         }
 
         void RenderAdditionalShadowmapAtlas(ref ScriptableRenderContext context, ref CullingResults cullResults, ref LightData lightData, ref ShadowData shadowData)
@@ -260,8 +277,10 @@ namespace UnityEngine.Rendering.Universal.Internal
             NativeArray<VisibleLight> visibleLights = lightData.visibleLights;
 
             bool additionalLightHasSoftShadows = false;
-            CommandBuffer cmd = CommandBufferPool.Get(m_ProfilerTag);
-            using (new ProfilingScope(cmd, m_ProfilingSampler))
+            // NOTE: Do NOT mix ProfilingScope with named CommandBuffers i.e. CommandBufferPool.Get("name").
+            // Currently there's an issue which results in mismatched markers.
+            CommandBuffer cmd = CommandBufferPool.Get();
+            using (new ProfilingScope(cmd, ProfilingSampler.Get(URPProfileId.AdditionalLightsShadow)))
             {
                 bool anyShadowSliceRenderer = false;
                 int shadowSlicesCount = m_AdditionalShadowCastingLightIndices.Count;
@@ -315,7 +334,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         void SetupAdditionalLightsShadowReceiverConstants(CommandBuffer cmd, ref ShadowData shadowData, bool softShadows)
         {
             int shadowLightsCount = m_AdditionalShadowCastingLightIndices.Count;
-            
+
             float invShadowAtlasWidth = 1.0f / shadowData.additionalLightsShadowmapWidth;
             float invShadowAtlasHeight = 1.0f / shadowData.additionalLightsShadowmapHeight;
             float invHalfShadowAtlasWidth = 0.5f * invShadowAtlasWidth;

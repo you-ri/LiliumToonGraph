@@ -117,6 +117,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ShadowMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -128,11 +132,13 @@ Material:
     m_Floats:
     - Vector1_4FDCBCA2: 0.3
     - Vector1_7DE6D5AB: 0.9
+    - Vector1_812be4631501458ea83339c066bed988: 1
     - Vector1_D9A6FB2A: 1
     - _AlphaClip: 0
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
+    - _Curvature: 0.3
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -144,11 +150,11 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 0.5
+    - _OutlineWidth: 1
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _ShadeToony: 0.544
+    - _ShadeToony: 1
     - _ShdeToony: 1
     - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
@@ -162,10 +168,12 @@ Material:
     m_Colors:
     - Color_76D10967: {r: 1, g: 1, b: 1, a: 1}
     - Color_AEA6BBA8: {r: 0, g: 0, b: 0, a: 0}
+    - Color_D9108BC9: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
     - Color_E8797B55: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ShadeColor: {r: 0.51886785, g: 0.51886785, b: 0.51886785, a: 1}
     - _ShadeEnvironmentalColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}

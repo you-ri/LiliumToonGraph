@@ -1,10 +1,10 @@
 {
   "name": "jp.lilium.toongraph",
-  "version": "0.2.2-preview.8",
-  "unity": "2020.1",
+  "version": "0.3.0-preview.11",
+  "unity": "2020.2",
   "author": "You-Ri",
   "displayName": "Lilium ToonGraph",
   "dependencies": {
-    "com.unity.render-pipelines.universal": "8.2.0"
+    "com.unity.render-pipelines.universal": "10.2.2"
   }
 }

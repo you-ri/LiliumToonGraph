@@ -113,15 +113,12 @@ namespace UnityEngine.Rendering.Universal
     [ImageEffectAllowedInSceneView]
     [MovedFrom("UnityEngine.Rendering.LWRP")] public class UniversalAdditionalCameraData : MonoBehaviour, ISerializationCallbackReceiver
     {
-        [Tooltip("If enabled shadows will render for this camera.")]
         [FormerlySerializedAs("renderShadows"), SerializeField]
         bool m_RenderShadows = true;
 
-        [Tooltip("If enabled depth texture will render for this camera bound as _CameraDepthTexture.")]
         [SerializeField]
         CameraOverrideOption m_RequiresDepthTextureOption = CameraOverrideOption.UsePipelineSettings;
 
-        [Tooltip("If enabled opaque color texture will render for this camera and bound as _CameraOpaqueTexture.")]
         [SerializeField]
         CameraOverrideOption m_RequiresOpaqueTextureOption = CameraOverrideOption.UsePipelineSettings;
 
@@ -138,6 +135,7 @@ namespace UnityEngine.Rendering.Universal
         [SerializeField] bool m_StopNaN = false;
         [SerializeField] bool m_Dithering = false;
         [SerializeField] bool m_ClearDepth = true;
+        [SerializeField] bool m_AllowXRRendering = true;
 
         // Deprecated:
         [FormerlySerializedAs("requiresDepthTexture"), SerializeField]
@@ -224,8 +222,22 @@ namespace UnityEngine.Rendering.Universal
                     Debug.LogWarning(string.Format("{0}: This camera has a ScriptableRenderer that doesn't support camera stacking. Camera stack is null.", camera.name));
                     return null;
                 }
-
                 return m_Cameras;
+            }
+        }
+
+        internal void UpdateCameraStack()
+        {
+#if UNITY_EDITOR
+            Undo.RecordObject(this, "Update camera stack");
+#endif
+            int prev = m_Cameras.Count;
+            m_Cameras.RemoveAll(cam => cam == null);
+            int curr = m_Cameras.Count;
+            int removedCamsCount = prev - curr;
+            if (removedCamsCount != 0)
+            {
+                Debug.LogWarning(name + ": " + removedCamsCount + " camera overlay" + (removedCamsCount > 1 ? "s" : "") + " no longer exists and will be removed from the camera stack.");
             }
         }
 
@@ -282,7 +294,7 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         public ScriptableRenderer scriptableRenderer
         {
-            get => UniversalRenderPipeline.asset.GetRenderer(m_RendererIndex);
+            get => UniversalRenderPipeline.asset?.GetRenderer(m_RendererIndex);
         }
 
         /// <summary>
@@ -345,6 +357,15 @@ namespace UnityEngine.Rendering.Universal
         {
             get => m_Dithering;
             set => m_Dithering = value;
+        }
+
+        /// <summary>
+        /// Returns true if this camera allows render in XR.
+        /// </summary>
+        public bool allowXRRendering
+        {
+            get => m_AllowXRRendering;
+            set => m_AllowXRRendering = value;
         }
 
         public void OnBeforeSerialize()

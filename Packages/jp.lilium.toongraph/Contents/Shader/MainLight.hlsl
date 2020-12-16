@@ -1,12 +1,13 @@
-#ifndef LILIUM_MAINLIGHT_NCLUDED
-#define LILIUM_MAINLIGHT_NCLUDED
+#ifndef LILIUM_MAINLIGHT_INCLUDED
+#define LILIUM_MAINLIGHT_INCLUDED
 
 //
 // Reference: https://blogs.unity3d.com/2019/07/31/custom-lighting-in-shader-graph-expanding-your-graphs-in-2019/
 //
 void MainLight_half(float3 WorldPos, out half3 Direction, out half3 Color, out half DistanceAtten, out half ShadowAtten)
 {
-#if SHADERGRAPH_PREVIEW
+
+#ifdef SHADERGRAPH_PREVIEW
    Direction = half3(0.5, 0.5, 0);
    Color = 1;
    DistanceAtten = 1;

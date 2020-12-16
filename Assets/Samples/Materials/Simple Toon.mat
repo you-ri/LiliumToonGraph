@@ -73,6 +73,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _CustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_SSSLutTexture_21:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -125,6 +129,14 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SssMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ToonLightingSmoothstepRamp_7490ec7b752e4ec8a91b1b1951ed1e45_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - BOOLEAN_5FF062BF: 0
     - BOOLEAN_9B700AD3: 0
@@ -137,22 +149,26 @@ Material:
     - Vector1_4FDCBCA2: 0.5
     - Vector1_6D6B064A: 0
     - Vector1_758139A: 1
+    - Vector1_bf61c90a2da548d6951a321f732d3d5b: 1
     - _AlphaClip: 0
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
+    - _Curvature: 0
     - _Cutoff: 0.5
     - _DstBlend: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _Metalic: 0
     - _Metallic: 0
     - _OcclusionMap: 0.5
     - _OcclusionStrength: 1
-    - _OutlineWidth: 0.5
+    - _OutlineWidth: 1
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _Shade: 1
     - _ShadeToony: 1
     - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
@@ -170,7 +186,8 @@ Material:
     - _BaseColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
     - _Color: {r: 0.7, g: 0.7, b: 0.7, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _ShadeColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecGlossColor: {r: 0, g: 0, b: 0, a: 0}
+    - _SssColor: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

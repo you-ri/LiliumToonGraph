@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-1819634281953464270
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 1
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Simple Toon (AlphaClipping)
+  m_Shader: {fileID: -6465566751694194690, guid: dc7783e5d7dc4d44fb703af7e336b90b,
+    type: 3}
+  m_ShaderKeywords: ENUM_BB805A98_B
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - Texture2D_11035104:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_39CB185:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_A43E975D:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_BB515267:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_C1F70CCA:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_EF82F75B:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_F3F57C2D:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: ec2f01df0bb1bfe459b5562a9e71c8d4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CustomFunction_A062B59F_ShadeRamp_17:
+        m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_SSSLutTexture_21:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LiliumToonLightingSmoothstepRamp_45CD7D82_Texture2DED058F03_4268568337:
+        m_Texture: {fileID: 2800000, guid: a7d6dbe7d04d9ce438607a5a60786631, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_1263EFA7_Texture_1:
+        m_Texture: {fileID: 2800000, guid: 470c40004b504b44d81b18dc675f9941, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_498A2E8C_Texture:
+        m_Texture: {fileID: 2800000, guid: c460f8ebd4dad0e43af1b7b9ff2d9064, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_5673BF28_Texture:
+        m_Texture: {fileID: 2800000, guid: 470c40004b504b44d81b18dc675f9941, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_96E454D5_Texture:
+        m_Texture: {fileID: 2800000, guid: 331a012fdbf7f934796cdbc74ae62fb3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadeMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadeTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadowMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SssMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ToonLightingSmoothstepRamp_7490ec7b752e4ec8a91b1b1951ed1e45_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
+        m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - BOOLEAN_5FF062BF: 0
+    - BOOLEAN_9B700AD3: 0
+    - BOOLEAN_B3D4D13: 0
+    - ENUM_BB805A98: 1
+    - SHADEMODEL: 0
+    - Vector1_309B4A83: 0
+    - Vector1_49E9B1A1: 1
+    - Vector1_4BAB6E0C: 0.5
+    - Vector1_4FDCBCA2: 0.5
+    - Vector1_6D6B064A: 0
+    - Vector1_758139A: 1
+    - _AlphaClip: 0
+    - _Blend: 0
+    - _BumpScale: 1
+    - _Cull: 2
+    - _Curvature: 0
+    - _Cutoff: 0.5
+    - _DstBlend: 0
+    - _EnvironmentReflections: 1
+    - _GlossMapScale: 0
+    - _Glossiness: 0
+    - _GlossyReflections: 0
+    - _Metalic: 0
+    - _Metallic: 0
+    - _OcclusionMap: 0.5
+    - _OcclusionStrength: 1
+    - _OutlineWidth: 1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 1
+    - _Shade: 1
+    - _ShadeToony: 1
+    - _Smoothness: 0
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Surface: 0
+    - _ToonyLighting: 1
+    - _WorkflowMode: 1
+    - _ZWrite: 1
+    m_Colors:
+    - Color_537E3FFF: {r: 0, g: 0, b: 0, a: 0}
+    - Color_76D10967: {r: 0.6981132, g: 0.6981132, b: 0.6981132, a: 1}
+    - Color_C36862AF: {r: 1, g: 1, b: 1, a: 1}
+    - Color_C83E9D68: {r: 0, g: 0, b: 0, a: 0}
+    - _BaseColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+    - _Color: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ShadeColor: {r: 0, g: 0, b: 0, a: 1}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _SpecGlossColor: {r: 0, g: 0, b: 0, a: 0}
+    - _SssColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []

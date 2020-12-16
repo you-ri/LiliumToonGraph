@@ -36,6 +36,7 @@ Shader "Universal Render Pipeline/Nature/SpeedTree8"
             "RenderType"="TransparentCutout"
             "DisableBatching"="LODFading"
             "RenderPipeline" = "UniversalPipeline"
+            "UniversalMaterialType" = "Lit"
         }
         LOD 400
         Cull [_TwoSided]
@@ -55,6 +56,7 @@ Shader "Universal Render Pipeline/Nature/SpeedTree8"
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile _ _SHADOWS_SOFT
+            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile_vertex LOD_FADE_PERCENTAGE
             #pragma multi_compile __ LOD_FADE_CROSSFADE
             #pragma multi_compile_fog
@@ -83,8 +85,6 @@ Shader "Universal Render Pipeline/Nature/SpeedTree8"
             Name "SceneSelectionPass"
             Tags{"LightMode" = "SceneSelectionPass"}
 
-            ColorMask 0
-
             HLSLPROGRAM
 
             #pragma vertex SpeedTree8VertDepth
@@ -110,8 +110,49 @@ Shader "Universal Render Pipeline/Nature/SpeedTree8"
 
         Pass
         {
+            Name "GBuffer"
+            Tags{"LightMode" = "UniversalGBuffer"}
+
+            HLSLPROGRAM
+            #pragma exclude_renderers gles
+            #pragma vertex SpeedTree8Vert
+            #pragma fragment SpeedTree8Frag
+
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
+            //#pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+            //#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
+            #pragma multi_compile _ _SHADOWS_SOFT
+            #pragma multi_compile_vertex LOD_FADE_PERCENTAGE
+            #pragma multi_compile __ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+
+            #pragma multi_compile_instancing
+            #pragma instancing_options assumeuniformscaling maxcount:50
+
+            #pragma shader_feature_local _WINDQUALITY_NONE _WINDQUALITY_FASTEST _WINDQUALITY_FAST _WINDQUALITY_BETTER _WINDQUALITY_BEST _WINDQUALITY_PALM
+            #pragma shader_feature_local EFFECT_BILLBOARD
+            #pragma shader_feature_local EFFECT_HUE_VARIATION
+            //#pragma shader_feature_local EFFECT_SUBSURFACE // GI dependent.
+            #pragma shader_feature_local EFFECT_BUMP
+            #pragma shader_feature_local EFFECT_EXTRA_TEX
+
+            #define ENABLE_WIND
+            #define EFFECT_BACKSIDE_NORMALS
+            #define GBUFFER
+
+            #include "SpeedTree8Input.hlsl"
+            #include "SpeedTree8Passes.hlsl"
+
+            ENDHLSL
+        }
+
+        Pass
+        {
             Name "ShadowCaster"
             Tags{"LightMode" = "ShadowCaster"}
+
+            ColorMask 0
 
             HLSLPROGRAM
 
@@ -162,6 +203,35 @@ Shader "Universal Render Pipeline/Nature/SpeedTree8"
             #include "SpeedTree8Input.hlsl"
             #include "SpeedTree8Passes.hlsl"
 
+            ENDHLSL
+        }
+
+        // This pass is used when drawing to a _CameraNormalsTexture texture
+        Pass
+        {
+            Name "DepthNormals"
+            Tags{"LightMode" = "DepthNormals"}
+
+            ZWrite On
+
+            HLSLPROGRAM
+            #pragma vertex SpeedTree8VertDepthNormal
+            #pragma fragment SpeedTree8FragDepthNormal
+
+            #pragma shader_feature_local _WINDQUALITY_NONE _WINDQUALITY_FASTEST _WINDQUALITY_FAST _WINDQUALITY_BETTER _WINDQUALITY_BEST _WINDQUALITY_PALM
+            #pragma shader_feature_local EFFECT_BUMP
+
+            #pragma multi_compile_instancing
+            #pragma multi_compile_vertex LOD_FADE_PERCENTAGE
+            #pragma multi_compile __ LOD_FADE_CROSSFADE
+
+            #pragma instancing_options assumeuniformscaling maxcount:50
+
+            #define ENABLE_WIND
+            #define EFFECT_BACKSIDE_NORMALS
+
+            #include "SpeedTree8Input.hlsl"
+            #include "SpeedTree8Passes.hlsl"
             ENDHLSL
         }
     }
