@@ -7,6 +7,7 @@
 + UniversalRP対応トゥーンシェーダーです。
 + アウトラインはマスタースタックの `Lilium Toon` ターゲットで実装しています。これは `Universal` ターゲットを改造する形で開発しました。
 + 表現の実験中。PBR環境と親和性の高いトゥーンシェーダーを目指しています。
++ 開発中です。将来のバージョンで仕様が変わります。また実装には処理効率が悪い部分等があります。
 ![](https://i.imgur.com/uvc6CwX.gif)
 
 
@@ -16,11 +17,11 @@
 
 ## 同梱しているカスタム UniversalRP パッケージについて
 
-アウトライン色をShaderGraphで制御できるようにするにはUniversalRPパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。そのためにカスタム版UniversalRPパッケージを同梱しています。
+アウトライン色をShaderGraphで制御できるようにするにはUniversalRPパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。そのためにカスタムUniversalRPパッケージを同梱しています。
 
-内包しているカスタムUniversalRPパッケージは必須ではありません。`Unlit Shader Graph`と[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)の組み合わせでも動作します。その場合は`Lilium ToonGraph/Editor`フォルダを削除し、`Lilium ToonGraph/Contents`フォルダのみ使用してください。
+カスタムUniversalRPパッケージは必須ではありません。`Unlit Shader Graph`と[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)の組み合わせでも動作します。その場合は`Lilium ToonGraph/Editor`フォルダを削除し、`Lilium ToonGraph/Contents`フォルダのみ使用してください。
 
-RenderFeatureだけで実現する方法を模索しています。もしくはカスタムターゲット追加が正式にサポートされる時を待っています。
+RenderFeatureだけで実現する方法を模索しています。もしくはカスタムターゲットが正式にサポートされる時を待っています。
 
 ## Dependenceis
 + Unity2020.2.0f1 or later
