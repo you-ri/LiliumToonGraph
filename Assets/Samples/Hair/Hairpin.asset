@@ -138,6 +138,7 @@ Material:
     - _BlendMode: 1
     - _BumpScale: 1
     - _CullMode: 0
+    - _Curvature: 0
     - _Cutoff: 0.5
     - _DebugMode: 0
     - _DstBlend: 0
@@ -151,6 +152,7 @@ Material:
     - _OutlineWidth: 0.2
     - _OutlineWidthMode: 0
     - _ReceiveShadowRate: 1
+    - _Shade: 1
     - _ShadeShift: -0.3
     - _ShadeToony: 1
     - _ShadingGradeRate: 1

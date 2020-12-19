@@ -102,7 +102,7 @@ Material:
     - _Blend: 0
     - _BumpScale: 1
     - _Cull: 2
-    - _Curvature: 0.572
+    - _Curvature: 0.3
     - _Cutoff: 0.5
     - _DstBlend: 0
     - _EnvironmentReflections: 1
