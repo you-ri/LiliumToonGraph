@@ -17,11 +17,12 @@
 
 ## 同梱しているカスタム UniversalRP パッケージについて
 
-アウトライン色をShaderGraphで制御できるようにするにはUniversalRPパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。そのためにカスタムUniversalRPパッケージを同梱しています。
+アウトライン色をShaderGraphで制御できるようにするにはShaderGraph、UniversalRPパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。そのためにカスタムUniversalRPパッケージを同梱しています。
 
 カスタムUniversalRPパッケージは必須ではありません。`Unlit Shader Graph`と[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)の組み合わせでも動作します。その場合は`Lilium ToonGraph/Editor`フォルダを削除し、`Lilium ToonGraph/Contents`フォルダのみ使用してください。
 
-RenderFeatureだけで実現する方法を模索しています。もしくはカスタムターゲットが正式にサポートされる時を待っています。
+カスタムUniversalRPパッケージを同梱しなくてもよい方法を模索しています。
+もしくはカスタムターゲットが正式にサポートされる時を待っています。
 
 ## Dependenceis
 + Unity2020.2.0f1 or later
