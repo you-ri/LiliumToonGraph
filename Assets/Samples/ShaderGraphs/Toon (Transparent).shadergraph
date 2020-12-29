@@ -739,7 +739,7 @@
     },
     "m_ActiveTargets": [
         {
-            "m_Id": "804e3577852847a0bd09bf0e45a10d38"
+            "m_Id": "01eba160de654daeb44efcf8091ab808"
         }
     ]
 }
@@ -831,6 +831,18 @@
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "Lilium.ToonGraph.Editor.ToonTarget",
+    "m_ObjectId": "01eba160de654daeb44efcf8091ab808",
+    "m_SurfaceType": 0,
+    "m_AlphaMode": 0,
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0,
+    "m_AlphaClip": false,
+    "m_CustomEditorGUI": ""
 }
 
 {
@@ -3357,18 +3369,6 @@
     "m_Hidden": false,
     "m_ShaderOutputName": "Sampler",
     "m_StageCapability": 3
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.ToonTarget",
-    "m_ObjectId": "804e3577852847a0bd09bf0e45a10d38",
-    "m_SurfaceType": 1,
-    "m_AlphaMode": 2,
-    "m_WorkflowMode": 1,
-    "m_NormalDropOffSpace": 0,
-    "m_AlphaClip": false,
-    "m_CustomEditorGUI": ""
 }
 
 {

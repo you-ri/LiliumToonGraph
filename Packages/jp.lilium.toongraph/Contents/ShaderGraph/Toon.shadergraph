@@ -190,9 +190,6 @@
             "m_Id": "0cf55e732fe14c81bd62626e57e1efec"
         },
         {
-            "m_Id": "24b2fb0eb8434f7fb487070932fa7d68"
-        },
-        {
             "m_Id": "fd4f3aeee3af4897956a9bfea83e8ff2"
         },
         {
@@ -834,9 +831,6 @@
             },
             {
                 "m_Id": "e39568002dd0478d93e11ec2228177e7"
-            },
-            {
-                "m_Id": "24b2fb0eb8434f7fb487070932fa7d68"
             }
         ]
     },
@@ -853,7 +847,7 @@
     },
     "m_ActiveTargets": [
         {
-            "m_Id": "89790f9d5e0044dfa5c6ec9d2bf621c9"
+            "m_Id": "1860ef0a81c24d8fb9c0c404d7d9ad99"
         }
     ]
 }
@@ -1407,6 +1401,18 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "Lilium.ToonGraph.Editor.ToonTarget",
+    "m_ObjectId": "1860ef0a81c24d8fb9c0c404d7d9ad99",
+    "m_SurfaceType": 0,
+    "m_AlphaMode": 0,
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0,
+    "m_AlphaClip": false,
+    "m_CustomEditorGUI": ""
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.SamplerStateMaterialSlot",
     "m_ObjectId": "19d5a5fe98ac47b38686b8cba39c0f9d",
     "m_Id": 3,
@@ -1656,38 +1662,6 @@
         "Y"
     ],
     "m_Channel": 0
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
-    "m_ObjectId": "24b2fb0eb8434f7fb487070932fa7d68",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "SurfaceDescription.AlphaClipThreshold",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.0,
-            "height": 0.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "9ed336656d65406eb9b5d0e809df82a2"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_SerializedDescriptor": "SurfaceDescription.AlphaClipThreshold"
 }
 
 {
@@ -4068,18 +4042,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.ToonTarget",
-    "m_ObjectId": "89790f9d5e0044dfa5c6ec9d2bf621c9",
-    "m_SurfaceType": 0,
-    "m_AlphaMode": 0,
-    "m_WorkflowMode": 1,
-    "m_NormalDropOffSpace": 0,
-    "m_AlphaClip": false,
-    "m_CustomEditorGUI": ""
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "8b73dcd2b68d4931a9faf0553fa8e877",
     "m_Id": 0,
@@ -4635,23 +4597,6 @@
     "m_Property": {
         "m_Id": "3c2f5c886f8040888e0c8b63ce6eb940"
     }
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "9ed336656d65406eb9b5d0e809df82a2",
-    "m_Id": 0,
-    "m_DisplayName": "Alpha Clip Threshold",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "AlphaClipThreshold",
-    "m_StageCapability": 2,
-    "m_Value": 0.5,
-    "m_DefaultValue": 0.5,
-    "m_Labels": [
-        "X"
-    ]
 }
 
 {
