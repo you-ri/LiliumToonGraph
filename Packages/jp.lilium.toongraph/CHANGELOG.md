@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.0-preivew.1] -2020-12-29
+- 変更：Custom UniversalRP パッケージを削除。
+- 変更：ToonTarget kSourceCodeGuid を変更。すべてのShaderGraphでTargetの再追加が作業が必要になります。
+
 ## [0.3.0-prevew.11] - 2020-12-16
 - Unity2020.2.0
 - URP 10.2.2 
