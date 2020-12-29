@@ -15,18 +15,9 @@
 
 旧URPマスターノードでトゥーンライティングモデルを実装しているバージョンは[こちら](https://github.com/you-ri/LiliumToonGraph/tree/urp-master-node-toon)
 
-## 同梱しているカスタム UniversalRP パッケージについて
-
-アウトライン色をShaderGraphで制御できるようにするにはShaderGraph、UniversalRPパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。そのためにカスタムUniversalRPパッケージを同梱しています。
-
-カスタムUniversalRPパッケージは必須ではありません。`Unlit Shader Graph`と[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)の組み合わせでも動作します。その場合は`Lilium ToonGraph/Editor`フォルダを削除し、`Lilium ToonGraph/Contents`フォルダのみ使用してください。
-
-カスタムUniversalRPパッケージを同梱しなくてもよい方法を模索しています。
-もしくはカスタムターゲットが正式にサポートされる時を待っています。
-
 ## Dependenceis
 + Unity2020.2.0f1 or later
-+ UniversalRP v10.2.2
++ UniversalRP v10.2.x
 
 ## How to use
 
@@ -39,7 +30,14 @@ Assets/Samples/ToonSample.unity
 3. Create node `Sub Graphs > ToonLighting (SmoothstepRamp)` or `Sub Graphs > ToonLighing (TextureRamp)`
 4. Connect nodes.
 
-See `Packages/Lilium ToonGraph/Contents/ShaderGraph/Toon.shadergraph`
+See `Assets/Samples/ShaderGraphs/Toon.shadergraph`
+
+## HDRP 偽装について
+
+アウトライン色をShaderGraphで制御できるようにするにはShaderGraphパッケージのInternalなクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。
+Lilium.ToonGraphアセンブリはHDRP(Unity.RenderPipelines.HighDefinition.Editor)に偽装することで、これを解決しています。
+
+[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)でアウトラインの色を制御する方法を見つけるか、もしくはカスタムターゲットが正式なサポートを待っています。
 
 ## Reference
 
@@ -53,6 +51,6 @@ See `Packages/Lilium ToonGraph/Contents/ShaderGraph/Toon.shadergraph`
 
 MIT
 
-"Assets/UnityChan" and "Packages/com.unity.render-pipelines.universal" Folders License below to their licenses.
+"Assets/UnityChan" Folders License below to their licenses.
 
 © Unity Technologies Japan/UCL
