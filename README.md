@@ -34,10 +34,10 @@ See `Assets/Samples/ShaderGraphs/Toon.shadergraph`
 
 ## HDRP 偽装について
 
-アウトライン色をShaderGraphで制御できるようにするにはShaderGraph、パッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。
-そのためにLiliumToonGraphはHDRP (Unity.RenderPipelines.HighDefinition.Editor) に偽装しています。
+アウトライン色をShaderGraphで制御できるようにするにはShaderGraphパッケージのInternalなクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。
+Lilium.ToonGraphアセンブリはHDRP(Unity.RenderPipelines.HighDefinition.Editor)に偽装することで、これを解決しています。
 
-[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)でアウトラインの色を制御する方法を見つけるか、もしくはカスタムターゲットが正式にサポートするのを待っています。
+[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)でアウトラインの色を制御する方法を見つけるか、もしくはカスタムターゲットが正式なサポートを待っています。
 
 ## Reference
 
