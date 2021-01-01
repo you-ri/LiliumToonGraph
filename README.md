@@ -7,7 +7,7 @@
 + UniversalRP対応トゥーンシェーダーです。
 + アウトラインはマスタースタックの `Lilium Toon` ターゲットで実装しています。これは `Universal` ターゲットを改造する形で開発しました。
 + 表現の実験中。PBR環境と親和性の高いトゥーンシェーダーを目指しています。
-+ 開発中です。将来のバージョンで仕様が変わります。また実装には処理効率が悪い部分等があります。
++ 開発中です。将来のバージョンで仕様が変わります。また実装には処理効率が悪い部分があります。
 ![](https://i.imgur.com/uvc6CwX.gif)
 
 
@@ -17,7 +17,7 @@
 
 ## Dependenceis
 + Unity2020.2.0f1 or later
-+ UniversalRP v10.2.x
++ UniversalRP v10.2.x or later
 
 ## How to use
 
@@ -34,10 +34,10 @@ See `Assets/Samples/ShaderGraphs/Toon.shadergraph`
 
 ## HDRP 偽装について
 
-アウトライン色をShaderGraphで制御できるようにするにはShaderGraphパッケージのInternalなクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。
-Lilium.ToonGraphアセンブリはHDRP(Unity.RenderPipelines.HighDefinition.Editor)に偽装することで、これを解決しています。
+アウトラインの色をShaderGraphで制御できるようにするにはShaderGraphパッケージのInternalクラスにアクセスし、Master Stackの追加のターゲットを作成する必要があります。
+アセンブリをHDRP(Unity.RenderPipelines.HighDefinition.Editor)に偽装することで、この問題を解決しています。
 
-[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)でアウトラインの色を制御する方法を見つけるか、もしくはカスタムターゲットが正式なサポートを待っています。
+[Render Feature](https://github.com/Unity-Technologies/UniversalRenderingExamples)でアウトラインの色を制御する方法を見つけるか、もしくはカスタムターゲットが正式にサポートされるのを待っています。
 
 ## Reference
 
