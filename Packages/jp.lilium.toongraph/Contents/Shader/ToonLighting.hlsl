@@ -50,7 +50,7 @@ inline half ToonyValue2(half value, half threshold = 0.5h, half minValue = 0 , h
 // Calculates the subsurface light radiating out from the current fragment. This is a simple approximation using wrapped lighting.
 // Note: This does not use distance attenuation, as it is intented to be used with a sun light.
 // Note: This does not subtract out cast shadows (light.shadowAttenuation), as it is intended to be used on non-shadowed objects. (for now)
-half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceRadius, half toony) {
+half LightingSubsurface(half3 NdotL, half subsurfaceRadius, half toony) {
     // Calculate normalized wrapped lighting. This spreads the light without adding energy.
     // This is a normal lambertian lighting calculation (using N dot L), but warping NdotL
     // to wrap the light further around an object.
@@ -58,7 +58,7 @@ half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceR
     // A normalization term is applied to make sure we do not add energy.
     // http://www.cim.mcgill.ca/~derek/files/jgt_wrap.pdf
 
-    half NdotL = dot(normalWS, lightDirectionWS);
+    //half NdotL = dot(normalWS, lightDirectionWS);
     half alpha = subsurfaceRadius;
     half theta_m = acos(-alpha); // boundary of the lighting function
 
@@ -66,7 +66,7 @@ half LightingSubsurface(half3 lightDirectionWS, half3 normalWS, half subsurfaceR
     half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
     half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
-    wrapped_jgt = ToonyValue2(wrapped_jgt, 0, 0, 1-(alpha*0.9f));
+    wrapped_jgt = ToonyValue2(wrapped_jgt, 0, 0, 1);
 
     //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
     //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
@@ -98,7 +98,7 @@ struct ToonBRDFData
     half occlusion;
 
     half shadow;
-    half shadeShift;
+    half shadeShift;            // shade shift value -2 ~ 2 default(0)
     half shadeToony;
     half toonyLighting;
 #ifdef SHADEMODEL_RAMP    
@@ -130,15 +130,15 @@ inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, 
 }
 
 
-inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value, half maxValue = 1)
+inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value)
 {
     half shadeShift = brdfData.shadeShift;
-    half normalizedValue = saturate((value + shadeShift) / 2);
+    half normalizedValue = saturate( (value + shadeShift + 1) / 2);   // -1 ~ 1 -> 0 ~ 1
 #ifdef SHADEMODEL_RAMP
-    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(normalizedValue, brdfData.shadeToony), 0) * maxValue;
+    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(normalizedValue, brdfData.shadeToony), 0);
 #else
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
-    half3 toonedValue = smoothstep(0 - shadeShift+1, min(brdfData.shadeToony - shadeShift+1 + 0.000001f, 1), value / maxValue) * maxValue;
+    half3 toonedValue = smoothstep(0.5, brdfData.shadeToony + 0.500001f, normalizedValue);
 #endif
     return lerp((half3)value, toonedValue, brdfData.toonyLighting);
 }
@@ -173,14 +173,14 @@ inline void InitializeToonBRDFData(
 
 
     // Toon Parameters
-    outBRDFData.base = albedo;
+    outBRDFData.base = outBRDFData.diffuse; // albedo
     outBRDFData.sss = sss.rgb;
-    outBRDFData.subsurface = sss.a;
+    outBRDFData.subsurface = 1;
     outBRDFData.occlusion = occlusion;
     outBRDFData.curvature = curvature;
     outBRDFData.shadow = 1;
     outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = shade;
+    outBRDFData.shadeShift = shade*2 - 2;           // 0 ~ 2 default(1) > -2 ~ 2 default(0)
     outBRDFData.toonyLighting = toonyLighting;
 
 #ifdef SHADEMODEL_RAMP
@@ -394,6 +394,7 @@ half3 LightingToonySubsurface(
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow,
     half3 normalWS)
 {
+    half NdotL = clamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, -1, 1) ;
 
 #ifdef SHADEMODEL_RAMP
     half3 radiance = LightingSubsurfaceRamp (lightDirectionWS, normalWS, brdfData.curvature, brdfData.shadeRamp);
@@ -401,7 +402,7 @@ half3 LightingToonySubsurface(
     return color;
 
 #else
-    half3 radiance = LightingSubsurface(lightDirectionWS, normalWS, brdfData.curvature, __ToonyLighting);
+    half3 radiance = LightingSubsurface(NdotL, brdfData.curvature, __ToonyLighting);
     half3 color = radiance * lightColor * lightAttenuation * lightShadow * brdfData.sss;
     return color;
 #endif
@@ -488,7 +489,7 @@ half4 UniversalFragmentToon(
     color += emission;
     color = max(color, 0);
 
-    shadeColor = indirectDiffuse * brdfData.base * (1-brdfData.subsurface) + indirectDiffuse * brdfData.sss * (brdfData.subsurface);
+    shadeColor = indirectDiffuse * brdfData.diffuse + indirectDiffuse * brdfData.sss * (brdfData.curvature);
 
     return half4(color, alpha);
 }

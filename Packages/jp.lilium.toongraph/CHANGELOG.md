@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.4.1-preview.1]
+- 変更：SSS Curvatureによる色計算を変更
+- 修正：Shade Shiftの影響を修正
+
 ## [0.4.0-preivew.1] -2020-12-29
 - 変更：Custom UniversalRP パッケージを削除。
 - 変更：ToonTarget kSourceCodeGuid を変更。すべてのShaderGraphでTargetの再追加が作業が必要になります。
