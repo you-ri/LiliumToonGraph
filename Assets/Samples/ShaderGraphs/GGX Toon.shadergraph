@@ -2350,7 +2350,7 @@
     "m_Group": {
         "m_Id": ""
     },
-    "m_Name": "Transform Outline",
+    "m_Name": "Toon Outline Transform",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
@@ -4117,12 +4117,12 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "d4ba2a41f5a54e49a7cdbb8039c393d0",
     "m_Id": 1205408807,
-    "m_DisplayName": "Scaled Max Distance",
+    "m_DisplayName": "Width Scaled Max Distance",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector1_1dee6d5925f94dd39a7dad8505183785",
     "m_StageCapability": 3,
-    "m_Value": 1.0,
+    "m_Value": 0.10000000149011612,
     "m_DefaultValue": 0.0,
     "m_Labels": []
 }

@@ -379,12 +379,11 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 
 
 half3 LightingSubsurfaceRamp(
-     half3 lightDirectionWS, half3 normalWS, half curvature, Texture2D sssLutTexture)
+     half NdotL, half curvature, Texture2D sssLutTexture)
 {
-    half NdotL = dot(normalWS, lightDirectionWS);
-    NdotL = ((NdotL+ 1) / 2);
+    half u = saturate((NdotL+ 1) / 2);   // -1 ~ 1 > 0 ~ 1
 
-    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(NdotL, curvature));
+    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(u, curvature));
     return lut;
 }
 
@@ -397,7 +396,7 @@ half3 LightingToonySubsurface(
     half NdotL = clamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, -1, 1) ;
 
 #ifdef SHADEMODEL_RAMP
-    half3 radiance = LightingSubsurfaceRamp (lightDirectionWS, normalWS, brdfData.curvature, brdfData.shadeRamp);
+    half3 radiance = LightingSubsurfaceRamp (NdotL, brdfData.curvature, brdfData.shadeRamp);
     half3 color = radiance * lightColor * lightAttenuation * lightShadow * brdfData.sss;
     return color;
 

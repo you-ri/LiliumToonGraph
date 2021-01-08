@@ -51,15 +51,16 @@ inline half3 TransformViewToProjection(half3 v)
     return mul((float3x3) UNITY_MATRIX_P, v);
 }
 
+// TODO: 高速化
 void TransformOutlineToHClipScreenSpace_half(half3 position, half3 normal, half outlineWidth, half OutlineScaledMaxDistance, out half3 outlinePosition)
 {    
-    float4 nearUpperRight = mul(inverse(UNITY_MATRIX_P), float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
-    float aspect = abs(nearUpperRight.y / nearUpperRight.x);
+    half4 nearUpperRight = mul(inverse(UNITY_MATRIX_P), half4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
+    half aspect = abs(nearUpperRight.y / nearUpperRight.x);
 
-    float4 vertex = mul(UNITY_MATRIX_MVP, float4(position, 1.0));
-    float3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
-    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
-    float2 projectedNormal = normalize(clipNormal.xy);
+    half4 vertex = mul(UNITY_MATRIX_MVP, half4(position, 1.0));
+    half3 viewNormal = mul((float3x3) UNITY_MATRIX_IT_MV, normal.xyz);
+    half3 clipNormal = TransformViewToProjection(viewNormal.xyz);
+    half2 projectedNormal = normalize(clipNormal.xy);
     projectedNormal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
     projectedNormal.x *= aspect;
     vertex.xy += 0.01 * outlineWidth * projectedNormal.xy* saturate(1 - abs(normalize(viewNormal).z));
@@ -70,7 +71,6 @@ void TransformOutlineToHClipScreenSpace_half(half3 position, half3 normal, half 
 // TODO: 
 void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, float outlineWidth, float OutlineScaledMaxDistance, out float3 outlinePosition)
 {    
-
     float4 nearUpperRight = mul(inverse(UNITY_MATRIX_P), float4(1, 1, UNITY_NEAR_CLIP_VALUE, _ProjectionParams.y));
     float aspect = abs(nearUpperRight.y / nearUpperRight.x);
 

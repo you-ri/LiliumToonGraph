@@ -5729,7 +5729,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "f1c3293b623b4599ac7ec6ab1779126e",
     "m_Id": 1205408807,
-    "m_DisplayName": "Scaled Max Distance",
+    "m_DisplayName": "Width Scaled Max Distance",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector1_1dee6d5925f94dd39a7dad8505183785",

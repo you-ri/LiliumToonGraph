@@ -140,7 +140,7 @@
     "m_Guid": {
         "m_GuidSerialized": "f42c5092-e5f5-44bd-8fae-56f053c64e08"
     },
-    "m_Name": "Scaled Max Distance",
+    "m_Name": "Width Scaled Max Distance",
     "m_DefaultReferenceName": "Vector1_1dee6d5925f94dd39a7dad8505183785",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
@@ -203,7 +203,7 @@
             "m_Id": "b2d19861a5004bd89ee9cb71e7d4d847"
         },
         {
-            "m_Id": "ab64b71484e84af2a71acc0ee17a33ca"
+            "m_Id": "ec367f7e6d5949028aa86751f2e174c4"
         }
     ],
     "synonyms": [],
@@ -466,21 +466,6 @@
 }
 
 {
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "ab64b71484e84af2a71acc0ee17a33ca",
-    "m_Id": 5,
-    "m_DisplayName": "OutlineScaledMaxDistance",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "OutlineScaledMaxDistance",
-    "m_StageCapability": 3,
-    "m_Value": 0.0,
-    "m_DefaultValue": 0.0,
-    "m_Labels": []
-}
-
-{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.PositionNode",
     "m_ObjectId": "afa670ddf504417eb3568ab0cfbc5da2",
@@ -578,10 +563,25 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "e66d986740804072be4ad04c2b57cfda",
     "m_Id": 0,
-    "m_DisplayName": "Scaled Max Distance",
+    "m_DisplayName": "Width Scaled Max Distance",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "ec367f7e6d5949028aa86751f2e174c4",
+    "m_Id": 5,
+    "m_DisplayName": "OutlineWidthScaledMaxDistance",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "OutlineWidthScaledMaxDistance",
     "m_StageCapability": 3,
     "m_Value": 0.0,
     "m_DefaultValue": 0.0,

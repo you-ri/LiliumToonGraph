@@ -9,7 +9,7 @@
 - 変更：Custom UniversalRPパッケージを削除。
 - 変更：ToonTargetのkSourceCodeGuidを変更。すべてのShaderGraphでTargetの再追加作業が必要。
 
-## [0.3.0-prevew.11] - 2020 - 12 - 16
+## [0.3.0-preivew.11] - 2020 - 12 - 16
 - Unity2020.2.0
 - URP 10.2.2 
 - 変更：ShaderGraphのMasterStackに対応
