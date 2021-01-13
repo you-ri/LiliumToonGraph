@@ -1,9 +1,10 @@
 # Change Log
 
-## [0.5.0-preview.1]
+## [0.5.0-preview.2]
 - 変更：Outline Widthを削除し、代わりにOutline PositionとToon Outline Transformサブグラフを追加。Master Stackとグラフの再構築作業が必要。
 - 変更：SSS Curvatureによる色計算を変更。
 - 修正：Shade Shiftの影響を修正。
+- 修正：ライトマップに使うとエラーが発生する不具合を修正。
 
 ## [0.4.0-preivew.1] - 2020 - 12 - 29
 - 変更：Custom UniversalRPパッケージを削除。

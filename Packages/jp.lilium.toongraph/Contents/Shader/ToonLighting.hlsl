@@ -145,7 +145,7 @@ inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value)
 
 
 inline void InitializeToonBRDFData(
-    half3 albedo, half4 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
@@ -448,13 +448,12 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 */
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //                      Fragment Functions                                   //
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(
-    InputData inputData, half3 diffuse, half4 sss,
+    InputData inputData, half3 diffuse, half3 sss,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
     half shadeShift, half shadeToony, 
     half curvature, Texture2D shadeRamp, 
