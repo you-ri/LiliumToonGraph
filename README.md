@@ -17,7 +17,7 @@
 
 ## Dependenceis
 + Unity2020.2.0f1 or later
-+ UniversalRP v10.2.x or later
++ UniversalRP v10.2.x
 
 ## How to use
 
