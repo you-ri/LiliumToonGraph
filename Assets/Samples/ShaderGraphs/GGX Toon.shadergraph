@@ -26,6 +26,9 @@
         },
         {
             "m_Id": "0d8913af27d245aa8860744947e99268"
+        },
+        {
+            "m_Id": "c66ac762276a4a80a5bebd7f86820e1e"
         }
     ],
     "m_Keywords": [],
@@ -134,6 +137,9 @@
         },
         {
             "m_Id": "8149dece5ee546e5b8e98096ec1b2d4d"
+        },
+        {
+            "m_Id": "0d227d6d858941fc860e7091dee9d3ba"
         }
     ],
     "m_GroupDatas": [
@@ -147,6 +153,20 @@
         }
     ],
     "m_Edges": [
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "0d227d6d858941fc860e7091dee9d3ba"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "d50c9b55ffad4f18b4acdad45150750e"
+                },
+                "m_SlotId": 2077475938
+            }
+        },
         {
             "m_OutputSlot": {
                 "m_Node": {
@@ -201,20 +221,6 @@
                     "m_Id": "d50c9b55ffad4f18b4acdad45150750e"
                 },
                 "m_SlotId": -1916270289
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "4bd82c8645234d23b041ea45218e62f6"
-                },
-                "m_SlotId": 2
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "ab09067c18a24b87b117d08c1ccda836"
-                },
-                "m_SlotId": 1
             }
         },
         {
@@ -439,6 +445,20 @@
                     "m_Id": "4bd82c8645234d23b041ea45218e62f6"
                 },
                 "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "c097b72d0951408b91fff5134f521b52"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "ab09067c18a24b87b117d08c1ccda836"
+                },
+                "m_SlotId": 1
             }
         },
         {
@@ -713,7 +733,7 @@
         }
     },
     "m_Path": "Shader Graphs",
-    "m_ConcretePrecision": 1,
+    "m_ConcretePrecision": 0,
     "m_OutputNode": {
         "m_Id": ""
     },
@@ -764,6 +784,40 @@
     "m_Position": {
         "x": -1484.9998779296875,
         "y": 837.9999389648438
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "0d227d6d858941fc860e7091dee9d3ba",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -692.0,
+            "y": 136.0,
+            "width": 102.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "41a98fe45b244c5dba3d75648c65a32d"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "c66ac762276a4a80a5bebd7f86820e1e"
     }
 }
 
@@ -1449,6 +1503,21 @@
     "m_Hidden": false,
     "m_ShaderOutputName": "Sampler",
     "m_StageCapability": 3
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "41a98fe45b244c5dba3d75648c65a32d",
+    "m_Id": 0,
+    "m_DisplayName": "Curvature",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {
@@ -3817,6 +3886,29 @@
     "m_Value": 0.25600001215934756,
     "m_DefaultValue": 0.0,
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "c66ac762276a4a80a5bebd7f86820e1e",
+    "m_Guid": {
+        "m_GuidSerialized": "3f89cf98-0ede-4012-b303-29fda0aa68d2"
+    },
+    "m_Name": "Curvature",
+    "m_DefaultReferenceName": "Vector1_c66ac762276a4a80a5bebd7f86820e1e",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 0.6000000238418579,
+    "m_FloatType": 1,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 1.0
+    }
 }
 
 {

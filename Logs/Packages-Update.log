@@ -116,3 +116,11 @@ Update Mode: updateDependencies
 
 The following packages were updated:
   com.unity.render-pipelines.universal from version 10.2.1 to 10.2.2
+
+=== Sat Feb  6 05:25:25 2021
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.test-framework from version 1.1.19 to 1.1.20

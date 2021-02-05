@@ -424,9 +424,11 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     half shade = ToonyShadeValue(brdfData, NdotL);
     half shadow = brdfData.shadow * light.shadowAttenuation;
 
+    shadow = ToonyValue2(shadow, 0.2f);
+
     half subsurface =  (1 - (shade * shadow)) * brdfData.subsurface;
 
-    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shade, normalWS, viewDirectionWS) * (1-subsurface);
+    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shade * shadow, normalWS, viewDirectionWS);// * (1-subsurface);
     color += LightingToonySubsurface(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * subsurface;
 
     return color;

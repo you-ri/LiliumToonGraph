@@ -758,7 +758,7 @@ namespace Lilium.ToonGraph.Editor
         {
             { RenderState.ZTest(ZTest.LEqual) },
             { RenderState.ZWrite(ZWrite.On) },
-            { RenderState.Cull(Cull.Back), new FieldCondition(Fields.DoubleSided, false) },
+            { RenderState.Cull(Cull.Front), new FieldCondition(Fields.DoubleSided, false) },            // 自身の影を落とさないようにするために調整
             { RenderState.Cull(Cull.Off), new FieldCondition(Fields.DoubleSided, true) },
             { RenderState.ColorMask("ColorMask 0") },
             { RenderState.Blend(Blend.One, Blend.Zero), new FieldCondition(UniversalFields.SurfaceOpaque, true) },
