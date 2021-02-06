@@ -1,6 +1,8 @@
 # Change Log
 
-## [0.5.0-preview.2]
+## [0.5.0-preview.3]
+- Unity2020.2.3
+- UniversalRP v10.3.1
 - 変更：Outline Widthを削除し、代わりにOutline PositionとToon Outline Transformサブグラフを追加。Master Stackとグラフの再構築作業が必要。
 - 変更：SSS Curvatureによる色計算を変更。
 - 修正：Shade Shiftの影響を修正。
@@ -12,7 +14,7 @@
 
 ## [0.3.0-preivew.11] - 2020 - 12 - 16
 - Unity2020.2.0
-- URP 10.2.2 
+- UniversalRP v10.2.2 
 - 変更：ShaderGraphのMasterStackに対応
 - 変更：影色計算をSSSベースに変更
 - 追加：SSS用曲率を設定するためのCurvatureスロットを追加
