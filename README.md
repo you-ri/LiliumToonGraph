@@ -16,8 +16,8 @@
 旧URPマスターノードでトゥーンライティングモデルを実装しているバージョンは[こちら](https://github.com/you-ri/LiliumToonGraph/tree/urp-master-node-toon)
 
 ## Dependenceis
-+ Unity2020.2.0f1 or later
-+ UniversalRP v10.2.x
++ Unity2020.2.3f1 or later
++ UniversalRP v10.3.1
 
 ## How to use
 
