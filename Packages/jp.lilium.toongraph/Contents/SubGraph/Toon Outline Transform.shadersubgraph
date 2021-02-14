@@ -179,7 +179,7 @@
     "m_Group": {
         "m_Id": ""
     },
-    "m_Name": "TransformOutlineToHClipScreenSpace (Custom Function)",
+    "m_Name": "TransformOutlineObjectSpace (Custom Function)",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
@@ -215,7 +215,7 @@
         "m_SerializableColors": []
     },
     "m_SourceType": 0,
-    "m_FunctionName": "TransformOutlineToHClipScreenSpace",
+    "m_FunctionName": "TransformOutlineObjectSpace",
     "m_FunctionSource": "2e317cd579bb78c40a29965b4039f7f1",
     "m_FunctionBody": "Enter function body here..."
 }

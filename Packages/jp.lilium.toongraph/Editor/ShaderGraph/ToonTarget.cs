@@ -201,7 +201,6 @@ namespace Lilium.ToonGraph.Editor
             context.AddBlock(BlockFields.VertexDescription.Position);
             context.AddBlock(BlockFields.VertexDescription.Normal);
             context.AddBlock(BlockFields.VertexDescription.Tangent);
-            context.AddBlock(ToonBlockFields.VertexDescription.OutlineWidth);
             context.AddBlock(ToonBlockFields.VertexDescription.OutlinePosition);
 
             context.AddBlock(BlockFields.SurfaceDescription.BaseColor);
