@@ -5,6 +5,9 @@
     "m_Properties": [
         {
             "m_Id": "78aea86254144fde8d0e857fca6e921b"
+        },
+        {
+            "m_Id": "ab616b7c22bf44b5b4372fbac9b15d35"
         }
     ],
     "m_Keywords": [],
@@ -23,6 +26,9 @@
         },
         {
             "m_Id": "605bfb5720534b8cbe1e6fd5670226ba"
+        },
+        {
+            "m_Id": "70b23f98a7874bfabb3a210beb264cb0"
         }
     ],
     "m_GroupDatas": [],
@@ -68,6 +74,20 @@
                     "m_Id": "41e897d5cb2b40f19b4cd6b9c5726a38"
                 },
                 "m_SlotId": 1
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "70b23f98a7874bfabb3a210beb264cb0"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "41e897d5cb2b40f19b4cd6b9c5726a38"
+                },
+                "m_SlotId": 5
             }
         },
         {
@@ -136,15 +156,15 @@
     "m_Group": {
         "m_Id": ""
     },
-    "m_Name": "TransformOutline (Custom Function)",
+    "m_Name": "TransformOutlineScaledMaxDistance (Custom Function)",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -557.0,
-            "y": 0.9999995827674866,
-            "width": 320.0000305175781,
-            "height": 350.0
+            "x": -564.0,
+            "y": 20.000003814697267,
+            "width": 362.9999694824219,
+            "height": 349.9999694824219
         }
     },
     "m_Slots": [
@@ -158,6 +178,9 @@
             "m_Id": "d176c20f256243939a6492e8635a0950"
         },
         {
+            "m_Id": "bb2d259ab25b4bdcb9947109ba71c81e"
+        },
+        {
             "m_Id": "b2d19861a5004bd89ee9cb71e7d4d847"
         }
     ],
@@ -169,7 +192,7 @@
         "m_SerializableColors": []
     },
     "m_SourceType": 0,
-    "m_FunctionName": "TransformOutline",
+    "m_FunctionName": "TransformOutlineScaledMaxDistance",
     "m_FunctionSource": "2e317cd579bb78c40a29965b4039f7f1",
     "m_FunctionBody": "Enter function body here..."
 }
@@ -186,10 +209,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -863.0,
-            "y": 76.99996948242188,
+            "x": -730.0,
+            "y": 88.99999237060547,
             "width": 107.0,
-            "height": 34.0
+            "height": 33.999996185302737
         }
     },
     "m_Slots": [
@@ -221,8 +244,8 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -966.0,
-            "y": -79.0,
+            "x": -936.0,
+            "y": -66.0,
             "width": 205.99998474121095,
             "height": 131.99998474121095
         }
@@ -263,6 +286,41 @@
         "z": 0.0
     },
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "70b23f98a7874bfabb3a210beb264cb0",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -803.0,
+            "y": 131.99998474121095,
+            "width": 180.0,
+            "height": 33.999996185302737
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "a8a8b59852e54a9bb9fdc1ef5a939c74"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "ab616b7c22bf44b5b4372fbac9b15d35"
+    }
 }
 
 {
@@ -368,6 +426,44 @@
 }
 
 {
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "a8a8b59852e54a9bb9fdc1ef5a939c74",
+    "m_Id": 0,
+    "m_DisplayName": "Max Width Distance",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "ab616b7c22bf44b5b4372fbac9b15d35",
+    "m_Guid": {
+        "m_GuidSerialized": "c9446583-b96e-4f84-a9a3-b0f9e5b40bba"
+    },
+    "m_Name": "Max Width Distance",
+    "m_DefaultReferenceName": "Vector1_ab616b7c22bf44b5b4372fbac9b15d35",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 1.0,
+    "m_FloatType": 0,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 1.0
+    }
+}
+
+{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.PositionNode",
     "m_ObjectId": "afa670ddf504417eb3568ab0cfbc5da2",
@@ -420,6 +516,21 @@
         "y": 0.0,
         "z": 0.0
     },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "bb2d259ab25b4bdcb9947109ba71c81e",
+    "m_Id": 5,
+    "m_DisplayName": "MaxWidthDistance",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "MaxWidthDistance",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
     "m_Labels": []
 }
 

@@ -55,9 +55,6 @@ inline half aspect()
     return abs(nearUpperRight.y / nearUpperRight.x);
 }
 
-
-
-
 inline half3 TransformViewToProjection(half3 v)
 {
     return mul((float3x3) UNITY_MATRIX_P, v);
@@ -91,18 +88,44 @@ void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, fl
     outlinePosition = mul( inverse(UNITY_MATRIX_MVP), vertex).xyz;
 }
 
-void TransformOutlineObjectSpace_float(float3 position, float3 normal, float outlineWidth, float OutlineScaledMaxDistance, out float3 outlinePosition)
+// アウトライン処理
+// スタンダード
+void TransformOutline_float(float3 Position, float3 Normal, float OutlineWidth, out float3 OutlinePosition)
 {    
-    half4 vertex = mul(UNITY_MATRIX_MVP, half4(position, 1.0));
+    // outline size scale. mm to meter.
+    Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
+
+    OutlinePosition = Position;
+}
+
+
+// アウトライン処理
+// UTS2互換
+void TransformOutlineUTS2_float(float3 Position, float3 Normal, float OutlineWidth, float NearestDistance, float FarthestDistance, out float3 OutlinePosition)
+{    
+    float4 vertex = mul(unity_ObjectToWorld, half4(Position, 1.0));    
     
-    //float4 viewPosition = mul(UNITY_MATRIX_MV, float4(position, 1.0));
-    //float3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
-    normal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
+    OutlineWidth *= smoothstep(FarthestDistance, NearestDistance, distance(vertex, _WorldSpaceCameraPos));
     
     // outline size scale. mm to meter.
-    position.xyz += 0.001 * outlineWidth * normal.xyz;
+    Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
 
-    outlinePosition = position;
+    OutlinePosition = Position;
+}
+
+
+// アウトライン処理
+// MToon互換
+void TransformOutlineScaledMaxDistance_float(float3 Position, float3 Normal, float OutlineWidth, float WidthScaledMaxDistance, out float3 OutlinePosition)
+{    
+    float4 vertex = mul(UNITY_MATRIX_MVP, float4(Position, 1.0));
+    
+    OutlineWidth *= min(vertex.w * (1 / WidthScaledMaxDistance), 1);
+    
+    // outline size scale. mm to meter.
+    Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
+
+    OutlinePosition = Position;
 }
 
 

@@ -94,7 +94,8 @@ inline void InitializeToonBRDFData(
     half reflectivity = ReflectivitySpecular(specular);
     half oneMinusReflectivity = 1.0 - reflectivity;
 
-    outBRDFData.diffuse = albedo;//  * (half3(1.0h, 1.0h, 1.0h) - specular);
+    // SpecluarSetup時は非PBRベース
+    outBRDFData.diffuse = albedo; //  * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
 #else
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
