@@ -26,6 +26,7 @@ public class LightingEnvironmentController: MonoBehaviour
         _reflectionProbe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting;
         _reflectionProbe.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
         _reflectionProbe.size = new Vector3(100, 100, 100);
+        currentIndex --;
 
         for (int i = 0; ; i++) {
             currentIndex = (++currentIndex) % lightingEnvironments.Length;

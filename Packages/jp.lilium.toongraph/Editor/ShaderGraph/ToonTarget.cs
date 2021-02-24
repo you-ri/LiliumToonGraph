@@ -191,7 +191,16 @@ namespace Lilium.ToonGraph.Editor
             context.AddField(UniversalFields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
             context.AddField(Fields.BlendAlpha,                   surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
             context.AddField(UniversalFields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
-            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
+            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);        
+
+            context.AddField(UniversalFields.NormalDropOffOS,     normalDropOffSpace == NormalDropOffSpace.Object);
+            context.AddField(UniversalFields.NormalDropOffTS,     normalDropOffSpace == NormalDropOffSpace.Tangent);
+            context.AddField(UniversalFields.NormalDropOffWS,     normalDropOffSpace == NormalDropOffSpace.World);
+            context.AddField(UniversalFields.SpecularSetup,       workflowMode == WorkflowMode.Specular);
+            context.AddField(UniversalFields.Normal,              descs.Contains(BlockFields.SurfaceDescription.NormalOS) ||
+                                                                             descs.Contains(BlockFields.SurfaceDescription.NormalTS) ||
+                                                                             descs.Contains(BlockFields.SurfaceDescription.NormalWS));
+
         }
 
 

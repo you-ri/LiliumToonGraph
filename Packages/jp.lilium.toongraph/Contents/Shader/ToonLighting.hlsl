@@ -85,18 +85,16 @@ struct ToonBRDFData
     half curvature;
 };
 
-
-
 inline void InitializeToonBRDFData(
     half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
-#if _SPECULAR_SETUP
+#ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
     half oneMinusReflectivity = 1.0 - reflectivity;
 
-    outBRDFData.diffuse = albedo * (half3(1.0h, 1.0h, 1.0h) - specular);
+    outBRDFData.diffuse = albedo;//  * (half3(1.0h, 1.0h, 1.0h) - specular);
     outBRDFData.specular = specular;
 #else
     half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
@@ -113,7 +111,6 @@ inline void InitializeToonBRDFData(
 
     outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
-
 
     // Toon Parameters
     outBRDFData.base = outBRDFData.diffuse; // albedo
