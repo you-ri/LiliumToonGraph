@@ -191,7 +191,16 @@ namespace Lilium.ToonGraph.Editor
             context.AddField(UniversalFields.BlendAdd,            surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Additive);
             context.AddField(Fields.BlendAlpha,                   surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Alpha);
             context.AddField(UniversalFields.BlendMultiply,       surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Multiply);
-            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);            
+            context.AddField(UniversalFields.BlendPremultiply,    surfaceType != SurfaceType.Opaque && alphaMode == AlphaMode.Premultiply);        
+
+            context.AddField(UniversalFields.NormalDropOffOS,     normalDropOffSpace == NormalDropOffSpace.Object);
+            context.AddField(UniversalFields.NormalDropOffTS,     normalDropOffSpace == NormalDropOffSpace.Tangent);
+            context.AddField(UniversalFields.NormalDropOffWS,     normalDropOffSpace == NormalDropOffSpace.World);
+            context.AddField(UniversalFields.SpecularSetup,       workflowMode == WorkflowMode.Specular);
+            context.AddField(UniversalFields.Normal,              descs.Contains(BlockFields.SurfaceDescription.NormalOS) ||
+                                                                             descs.Contains(BlockFields.SurfaceDescription.NormalTS) ||
+                                                                             descs.Contains(BlockFields.SurfaceDescription.NormalWS));
+
         }
 
 
@@ -201,7 +210,7 @@ namespace Lilium.ToonGraph.Editor
             context.AddBlock(BlockFields.VertexDescription.Position);
             context.AddBlock(BlockFields.VertexDescription.Normal);
             context.AddBlock(BlockFields.VertexDescription.Tangent);
-            context.AddBlock(ToonBlockFields.VertexDescription.OutlineWidth);
+            context.AddBlock(ToonBlockFields.VertexDescription.OutlinePosition);
 
             context.AddBlock(BlockFields.SurfaceDescription.BaseColor);
             context.AddBlock(ToonBlockFields.SurfaceDescription.OutlineColor);
@@ -546,6 +555,7 @@ namespace Lilium.ToonGraph.Editor
     static class CoreIncludes
     {
         const string kColor = "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl";
+        const string kTexture = "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl";
         const string kCore = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl";
         const string kLighting = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl";
         const string kGraphFunctions = "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl";
@@ -554,11 +564,12 @@ namespace Lilium.ToonGraph.Editor
         const string kDepthOnlyPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthOnlyPass.hlsl";
         const string kDepthNormalsOnlyPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/DepthNormalsOnlyPass.hlsl";
         const string kShadowCasterPass = "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShadowCasterPass.hlsl";
-        const string kTextureStack = "Packages/com.unity.render-pipelines.core/ShaderLibrary/TextureStack.hlsl";
+        const string kTextureStack = "Packages/com.unity.render-pipelines.core/ShaderLibrary/TextureStack.hlsl";        
 
         public static readonly IncludeCollection CorePregraph = new IncludeCollection
         {
             { kColor, IncludeLocation.Pregraph },
+            { kTexture, IncludeLocation.Pregraph },
             { kCore, IncludeLocation.Pregraph },
             { kLighting, IncludeLocation.Pregraph },
             { kTextureStack, IncludeLocation.Pregraph },        // TODO: put this on a conditional
@@ -757,7 +768,7 @@ namespace Lilium.ToonGraph.Editor
         {
             { RenderState.ZTest(ZTest.LEqual) },
             { RenderState.ZWrite(ZWrite.On) },
-            { RenderState.Cull(Cull.Back), new FieldCondition(Fields.DoubleSided, false) },
+            { RenderState.Cull(Cull.Front), new FieldCondition(Fields.DoubleSided, false) },            // 自身の影を落とさないようにするために調整
             { RenderState.Cull(Cull.Off), new FieldCondition(Fields.DoubleSided, true) },
             { RenderState.ColorMask("ColorMask 0") },
             { RenderState.Blend(Blend.One, Blend.Zero), new FieldCondition(UniversalFields.SurfaceOpaque, true) },
@@ -805,6 +816,7 @@ namespace Lilium.ToonGraph.Editor
                 BlockFields.VertexDescription.Normal,
                 BlockFields.VertexDescription.Tangent,
                 ToonBlockFields.VertexDescription.OutlineWidth,
+                ToonBlockFields.VertexDescription.OutlinePosition,
             };            
 
             public static BlockFieldDescriptor[] FragmentToon = new BlockFieldDescriptor[]

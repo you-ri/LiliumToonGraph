@@ -18,10 +18,10 @@ namespace Lilium.ToonGraph.Editor
                 BlockFields.VertexDescription.Position,
                 BlockFields.VertexDescription.Normal,
                 BlockFields.VertexDescription.Tangent,
+                ToonBlockFields.VertexDescription.OutlinePosition,
 
                 BlockFields.SurfaceDescription.BaseColor,
                 ToonBlockFields.SurfaceDescription.OutlineColor,
-                ToonBlockFields.VertexDescription.OutlineWidth,
             };
 
             GraphUtil.CreateNewGraphWithOutputs(new [] {target}, blockDescriptors);
