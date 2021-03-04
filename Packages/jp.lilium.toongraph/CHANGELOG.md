@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.1-preview.x] -
+
+- Occlusion周りの式を修正
+
 ## [0.5.0-preview.5] - 2021 - 02 - 25
 - Unity2020.2.6f1
 - UniversalRP v10.3.1

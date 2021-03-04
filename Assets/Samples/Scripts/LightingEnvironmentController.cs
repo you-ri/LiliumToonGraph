@@ -65,6 +65,7 @@ public class LightingEnvironmentController: MonoBehaviour
             RenderSettings.skybox = lightingEnvironment.skybox;
         }
         else {
+            RenderSettings.skybox = null;
             RenderSettings.ambientMode = AmbientMode.Flat;
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
             RenderSettings.ambientLight = lightingEnvironment.ambientColor;

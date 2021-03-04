@@ -67,22 +67,22 @@ struct ToonBRDFData
     half normalizationTerm; // roughness * 4.0 + 2.0
     half roughness2MinusOne; // roughness² - 1.0
 
+    // sss extend
+    half3 sss;
+    half subsurface;
+    half curvature;
+
     // toon extend
     half3 base;
     half occlusion;
 
-    half shadow;
-    half shadeShift;            // shade shift value -2 ~ 2 default(0)
+    half shadow;                //  -1 ~ 1 default(0)
+    half shadeShift;            //  -2 ~ 2 default(0)
     half shadeToony;
     half toonyLighting;
 #ifdef SHADEMODEL_RAMP    
     Texture2D shadeRamp;
 #endif
-
-    // sss extend
-    half3 sss;
-    half subsurface;
-    half curvature;
 };
 
 inline void InitializeToonBRDFData(
@@ -119,9 +119,9 @@ inline void InitializeToonBRDFData(
     outBRDFData.subsurface = 1;
     outBRDFData.occlusion = occlusion;
     outBRDFData.curvature = curvature;
-    outBRDFData.shadow = 1;
     outBRDFData.shadeToony = (1 - shadeToony);
-    outBRDFData.shadeShift = shade*2 - 2;           // 0 ~ 2 default(1) > -2 ~ 2 default(0)
+    outBRDFData.shadeShift = shade*2 - 2;               // 0 ~ 2 default(1) > -2 ~ 2 default(0)
+    outBRDFData.shadow = shade - 1;                     // 0 ~ 2 default(1) > -1 ~ 1 default(0)
     outBRDFData.toonyLighting = toonyLighting;
 
 #ifdef SHADEMODEL_RAMP
@@ -298,10 +298,10 @@ half3 GlossyEnvironmentReflectionToon(half3 reflectVector, half perceptualRoughn
     half3 irradiance = encodedIrradiance.rgb;
 #endif
 
-    return irradiance;// * occlusion;
+    return irradiance * occlusion;
 #endif // GLOSSY_REFLECTIONS
 
-    return _GlossyEnvironmentColor.rgb;// * occlusion;
+    return _GlossyEnvironmentColor.rgb * occlusion;
 }
 /*
 half3 GlossyEnvironmentReflection(half3 reflectVector, half perceptualRoughness, half occlusion)
@@ -331,7 +331,7 @@ half3 GlobalIlluminationToon(ToonBRDFData brdfData, half3 bakedGI, half occlusio
     // toony fresnel
     fresnelTerm = ToonyValue(brdfData, fresnelTerm);
 
-    half3 indirectDiffuse = bakedGI;// * occlusion;
+    half3 indirectDiffuse = bakedGI * occlusion;
     half3 indirectSpecular = GlossyEnvironmentReflectionToon(reflectVector, brdfData.perceptualRoughness, occlusion, viewDirectionWS);
 
     return EnvironmentToon(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
@@ -414,7 +414,7 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
 {
     float NdotL = dot(normalWS, light.direction); 
     half shade = ToonyShadeValue(brdfData, NdotL);
-    half shadow = brdfData.shadow * light.shadowAttenuation;
+    half shadow = saturate(brdfData.shadow + light.shadowAttenuation);
 
     // TODO: magic number
     shadow = binarize(shadow, 0.2f);
@@ -455,14 +455,36 @@ half4 UniversalFragmentToon(
     half toonyLighing, 
     out half3 shadeColor)
 {
+#ifdef _SPECULARHIGHLIGHTS_OFF
+    bool specularHighlightsOff = true;
+#else
+    bool specularHighlightsOff = false;
+#endif
+
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, sss, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, curvature, brdfData);
     __ToonyLighting = toonyLighing; //TODO: ToonBRDFDataに埋め込む
     
+    // To ensure backward compatibility we have to avoid using shadowMask input, as it is not present in older shaders
+    // TODO: shadowmask未使用
+#if defined(SHADOWS_SHADOWMASK) && defined(LIGHTMAP_ON)
+    half4 shadowMask = inputData.shadowMask;
+#elif !defined (LIGHTMAP_ON)
+    half4 shadowMask = unity_ProbesOcclusion;
+#else
+    half4 shadowMask = half4(1, 1, 1, 1);
+#endif
+
     Light mainLight = GetMainLight(inputData.shadowCoord);
+    #if defined(_SCREEN_SPACE_OCCLUSION)
+        AmbientOcclusionFactor aoFactor = GetScreenSpaceAmbientOcclusion(inputData.normalizedScreenSpaceUV);
+        mainLight.color *= aoFactor.directAmbientOcclusion;
+        occlusion = min(occlusion, aoFactor.indirectAmbientOcclusion);
+    #endif
+
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
-    half3 indirectDiffuse = inputData.bakedGI;// * occlusion;
+    half3 indirectDiffuse = inputData.bakedGI * occlusion;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
 
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
@@ -471,6 +493,10 @@ half4 UniversalFragmentToon(
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
+        #if defined(_SCREEN_SPACE_OCCLUSION)
+            light.color *= aoFactor.directAmbientOcclusion;
+        #endif
+
         color += LightingToonyBased(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
     }
 #endif
@@ -478,7 +504,6 @@ half4 UniversalFragmentToon(
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     color += inputData.vertexLighting * brdfData.diffuse;
 #endif
-    color *= occlusion;
     color += emission;
     color = max(color, 0);
 

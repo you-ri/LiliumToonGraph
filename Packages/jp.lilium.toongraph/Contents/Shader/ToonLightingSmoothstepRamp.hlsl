@@ -1,6 +1,6 @@
 //
 // referenced: com.unity.render-pipelines.lightweight@5.6.1\ShaderLibrary\Lighting.hlsl
-// referenced: com.unity.render-pipelines.universal@10.2.2\Editor\ShaderGraph\Includes\PBRForwadPass.hlsl
+// referenced: com.unity.render-pipelines.universal@10.2.2\Editor\ShaderGraph\Includes\PBRForwardPass.hlsl
 //
 #ifndef UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
 #define UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
@@ -20,6 +20,9 @@ void ToonLight_half(
 {
     InputData inputData = (InputData)0;
     inputData.positionWS = WorldPosition;
+
+    // TODO: 要高速化
+    //float4 positionCS = TransformWorldToHClip(inputData.positionWS);
 
     //TODO: _NORMALMAP ディレクティブが無効
 #if defined(_NORMALMAP) || 1
@@ -57,7 +60,7 @@ void ToonLight_half(
     //inputData.fogCoord = input.fogFactorAndVertexLight.x;
     //inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
     inputData.vertexLighting = 0;
-    //inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    //inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(positionCS);
     inputData.shadowMask = SAMPLE_SHADOWMASK(lightmapUV);
         
 #ifdef _SPECULAR_SETUP
