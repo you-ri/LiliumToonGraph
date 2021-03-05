@@ -1,0 +1,11 @@
+.unity-label {
+    color: rgba(255, 255, 255, 255);
+}
+
+.head1 {
+    font-size: 18px;
+}
+
+.selected .unity-label {
+    color: rgba(255, 187, 0, 255);
+}

@@ -10,9 +10,6 @@
             "m_Id": "6af91d56d7f14cd68d58c00d9ed9fdf3"
         },
         {
-            "m_Id": "870c9b687ac244dd8d187a6577835fa4"
-        },
-        {
             "m_Id": "f5135218a8c445239db8dea9608ae655"
         },
         {
@@ -4318,30 +4315,6 @@
 }
 
 {
-    "m_SGVersion": 3,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.ColorShaderProperty",
-    "m_ObjectId": "870c9b687ac244dd8d187a6577835fa4",
-    "m_Guid": {
-        "m_GuidSerialized": "f411297e-e078-4fc0-97c4-e82bc7a57a39"
-    },
-    "m_Name": "Shade Environmental Color",
-    "m_DefaultReferenceName": "Color_E8797B55",
-    "m_OverrideReferenceName": "_ShadeEnvironmentalColor",
-    "m_GeneratePropertyBlock": true,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": {
-        "r": 0.501960813999176,
-        "g": 0.501960813999176,
-        "b": 0.501960813999176,
-        "a": 1.0
-    },
-    "m_ColorMode": 0
-}
-
-{
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
     "m_ObjectId": "882cff1dec7a4da98464f7de57dd5f19",
@@ -7166,7 +7139,7 @@
     "m_FloatType": 1,
     "m_RangeValues": {
         "x": 0.0,
-        "y": 10.0
+        "y": 1.0
     }
 }
 

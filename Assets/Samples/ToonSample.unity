@@ -544,6 +544,8 @@ GameObject:
   m_Component:
   - component: {fileID: 225692450}
   - component: {fileID: 225692449}
+  - component: {fileID: 225692452}
+  - component: {fileID: 225692451}
   m_Layer: 0
   m_Name: Lighting Environment
   m_TagString: Untagged
@@ -583,6 +585,35 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &225692451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225692448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7415a13603d81640bf41e9b72dbe806, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &225692452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225692448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f21c074d86024caca2a0034ce4f53f73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelSettings: {fileID: 11400000, guid: 249c25e39ae47da40b3409454b8cb447, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 9197481963319205126, guid: 54673f471d9f93845a612419b605721b,
+    type: 3}
+  m_SortingOrder: 0
 --- !u!95 &423212195 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 9500000, guid: 44c592f7be513c543b1eef40ae986c73,

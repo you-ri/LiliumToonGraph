@@ -32,6 +32,7 @@ public class LightingEnvironmentController: MonoBehaviour
             currentIndex = (++currentIndex) % lightingEnvironments.Length;
             Apply ();
             yield return new WaitForSeconds (duration);
+            yield return new WaitUntil( () => duration != 0);
         }
     }
 
@@ -79,7 +80,8 @@ public class LightingEnvironmentController: MonoBehaviour
 
         if (Application.isPlaying) {
             RenderSettings.defaultReflectionMode = UnityEngine.Rendering.DefaultReflectionMode.Custom;
-            _reflectionProbe.RenderProbe ();    
+            if (_reflectionProbe != null)
+                _reflectionProbe.RenderProbe ();    
         }
     }
 
