@@ -1,5 +1,5 @@
 .unity-label {
-    color: rgba(255, 255, 255, 255);
+    color: rgb(255, 255, 255);
 }
 
 .head1 {
@@ -7,5 +7,5 @@
 }
 
 .selected .unity-label {
-    color: rgba(255, 187, 0, 255);
+    color: rgb(255, 187, 0);
 }

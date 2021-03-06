@@ -43,6 +43,9 @@
             "m_Id": "a90b7313cb354dafae9d8180e9fdad63"
         },
         {
+            "m_Id": "a32e3b6a6fe3433ba0fb14396251b1e8"
+        },
+        {
             "m_Id": "fa6ffd5fb81b41cc985789bb4b421991"
         },
         {
@@ -221,6 +224,9 @@
         },
         {
             "m_Id": "9c41895a93344de180bdee6de227dbb5"
+        },
+        {
+            "m_Id": "20a5c050d62546488b18a8211c2053bb"
         }
     ],
     "m_GroupDatas": [],
@@ -322,6 +328,20 @@
                     "m_Id": "5b18d24ab4984169a8750d5d8bc7c7eb"
                 },
                 "m_SlotId": 1
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "20a5c050d62546488b18a8211c2053bb"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "0988ec60b37e4d8aa158a87d8afa3ca1"
+                },
+                "m_SlotId": -1630612172
             }
         },
         {
@@ -1218,6 +1238,9 @@
             "m_Id": "8680e0d95c0144df8d0feb682565b18e"
         },
         {
+            "m_Id": "80d579f70cfb4fcd9e3f2a7e2876f93c"
+        },
+        {
             "m_Id": "74f128b7224f4d809ae5896240729c40"
         },
         {
@@ -1270,7 +1293,8 @@
         "a53dbeed-e2ea-4c4f-9fa6-2b77e62e8d8e",
         "2d644ebd-2aaf-459e-80ad-090b01236948",
         "16ff8d1c-9c2c-4962-9b55-f1ca915e4b1c",
-        "10243e43-1cbf-4136-b823-bfd51ba6a056"
+        "10243e43-1cbf-4136-b823-bfd51ba6a056",
+        "3ec89883-1f06-4d6c-8a3e-bf9b255e3edb"
     ],
     "m_PropertyIds": [
         -1657152126,
@@ -1298,7 +1322,8 @@
         1826091564,
         248187755,
         2077475938,
-        -1281655005
+        -1281655005,
+        -1630612172
     ]
 }
 
@@ -1738,6 +1763,41 @@
         "m_SerializableColors": []
     },
     "m_SerializedDescriptor": "SurfaceDescription.Alpha"
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "20a5c050d62546488b18a8211c2053bb",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -2080.556884765625,
+            "y": 361.9682312011719,
+            "width": 0.0,
+            "height": 0.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "41cf148224874657a913658ffb212d8e"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "a32e3b6a6fe3433ba0fb14396251b1e8"
+    }
 }
 
 {
@@ -2370,6 +2430,21 @@
     "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
     "m_BareResource": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "41cf148224874657a913658ffb212d8e",
+    "m_Id": 0,
+    "m_DisplayName": "Shadow Shift",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {
@@ -4233,6 +4308,21 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "80d579f70cfb4fcd9e3f2a7e2876f93c",
+    "m_Id": -1630612172,
+    "m_DisplayName": "Shadow Shift",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Vector1_1",
+    "m_StageCapability": 3,
+    "m_Value": 1.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.UVMaterialSlot",
     "m_ObjectId": "83fe7ff86cd34ee5955f5630324e1b0a",
     "m_Id": 2,
@@ -5162,6 +5252,29 @@
     "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "a32e3b6a6fe3433ba0fb14396251b1e8",
+    "m_Guid": {
+        "m_GuidSerialized": "7a9f9e05-1739-4f98-8995-0ff4ce328f88"
+    },
+    "m_Name": "Shadow Shift",
+    "m_DefaultReferenceName": "",
+    "m_OverrideReferenceName": "_Shade_1",
+    "m_GeneratePropertyBlock": true,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 1.0,
+    "m_FloatType": 1,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 2.0
     }
 }
 

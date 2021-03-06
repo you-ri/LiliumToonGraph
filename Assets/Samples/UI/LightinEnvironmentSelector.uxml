@@ -2,7 +2,12 @@
     <Style src="Common.uss" />
     <ui:VisualElement style="align-items: flex-start;">
         <ui:VisualElement name="top-view" style="background-color: rgba(0, 0, 0, 0.68);">
-            <ui:Label text="Lighting Enviromnent" display-tooltip-when-elided="true" class="head1" />
+            <ui:VisualElement name="lightingenvironment-list-view">
+                <ui:Label text="Lighting Environment" display-tooltip-when-elided="true" class="head1" />
+            </ui:VisualElement>
+            <ui:VisualElement name="camera-list-view">
+                <ui:Label text="Camera" display-tooltip-when-elided="true" class="head1" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
