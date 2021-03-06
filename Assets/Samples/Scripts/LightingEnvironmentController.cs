@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using Cinemachine;
 using UnityEngine.Rendering;
 
 
@@ -9,14 +10,25 @@ public class LightingEnvironmentController: MonoBehaviour
 {
     public int currentIndex;
 
-    public LightingEnvironmentAsset[] lightingEnvironments;
+    public LightingEnvironmentAsset[] lightingEnvironments => _lightingEnvironments;
+
+    [SerializeField]
+    [UnityEngine.Serialization.FormerlySerializedAs("lightingEnvironments")]
+    private LightingEnvironmentAsset[] _lightingEnvironments;
 
     public float duration = 2;
 
     private ReflectionProbe _reflectionProbe;
 
     private Light _mainLight;
+    public CinemachineVirtualCamera[] cameras => _cameras;
 
+    [SerializeField]
+    private CinemachineVirtualCamera[] _cameras;
+
+    public int cameraIndex = 0;
+
+    public Light mainLight => _mainLight;
 
     IEnumerator Start()
     {
@@ -29,7 +41,7 @@ public class LightingEnvironmentController: MonoBehaviour
         currentIndex --;
 
         for (int i = 0; ; i++) {
-            currentIndex = (++currentIndex) % lightingEnvironments.Length;
+            currentIndex = (++currentIndex) % _lightingEnvironments.Length;
             Apply ();
             yield return new WaitForSeconds (duration);
             yield return new WaitUntil( () => duration != 0);
@@ -56,7 +68,7 @@ public class LightingEnvironmentController: MonoBehaviour
             return;
         }
 
-        var lightingEnvironment = lightingEnvironments.Skip(currentIndex).FirstOrDefault();
+        var lightingEnvironment = _lightingEnvironments.Skip(currentIndex).FirstOrDefault();
 
         if (lightingEnvironment == null) return;
 
@@ -83,6 +95,11 @@ public class LightingEnvironmentController: MonoBehaviour
             if (_reflectionProbe != null)
                 _reflectionProbe.RenderProbe ();    
         }
+    }
+
+    public void ApplyCamera()
+    {
+        cameras[cameraIndex].MoveToTopOfPrioritySubqueue();
     }
 
 
