@@ -13,7 +13,7 @@
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony,
+    half ShadowShift, half ShadeShift, half ShadeToony,
     half Curvature,
     half ToonyLighting, 
     out half4 Color, out half3 ShadeColor)
@@ -73,7 +73,7 @@ void ToonLight_half(
     TEXTURE2D(shadeRamp);
 
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadeShift, ShadeToony, Curvature, shadeRamp, ToonyLighting, 
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadowShift, ShadeShift, ShadeToony, Curvature, shadeRamp, ToonyLighting, 
         ShadeColor);
 }
 
@@ -123,7 +123,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
-    half ShadeShift, half ShadeToony,
+    half ShadowShift, half ShadeShift, half ShadeToony,
     half Curvature,
     half ToonyLighting, 
     out half4 Color, out half3 ShadeColor)

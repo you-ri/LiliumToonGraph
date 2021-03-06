@@ -87,7 +87,7 @@ struct ToonBRDFData
 
 inline void InitializeToonBRDFData(
     half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
-    half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
+    half shadowShift, half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
 #ifdef _SPECULAR_SETUP
@@ -121,7 +121,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.curvature = curvature;
     outBRDFData.shadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = shade*2 - 2;               // 0 ~ 2 default(1) > -2 ~ 2 default(0)
-    outBRDFData.shadow = shade - 1;                     // 0 ~ 2 default(1) > -1 ~ 1 default(0)
+    outBRDFData.shadow = shadowShift - 1;                     // 0 ~ 2 default(1) > -1 ~ 1 default(0)
     outBRDFData.toonyLighting = toonyLighting;
 
 #ifdef SHADEMODEL_RAMP
@@ -450,7 +450,7 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 half4 UniversalFragmentToon(
     InputData inputData, half3 diffuse, half3 sss,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
-    half shadeShift, half shadeToony, 
+    half shadowShift, half shadeShift,half shadeToony, 
     half curvature, Texture2D shadeRamp, 
     half toonyLighing, 
     out half3 shadeColor)
@@ -462,7 +462,7 @@ half4 UniversalFragmentToon(
 #endif
 
     ToonBRDFData brdfData;
-    InitializeToonBRDFData(diffuse, sss, metallic, specular, smoothness, alpha, occlusion, shadeShift, shadeToony, toonyLighing, shadeRamp, curvature, brdfData);
+    InitializeToonBRDFData(diffuse, sss, metallic, specular, smoothness, alpha, occlusion, shadowShift, shadeShift, shadeToony, toonyLighing, shadeRamp, curvature, brdfData);
     __ToonyLighting = toonyLighing; //TODO: ToonBRDFDataに埋め込む
     
     // To ensure backward compatibility we have to avoid using shadowMask input, as it is not present in older shaders
