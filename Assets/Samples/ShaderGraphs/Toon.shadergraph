@@ -6432,9 +6432,9 @@
     "m_Guid": {
         "m_GuidSerialized": "74fb5741-7e58-4be0-9bd6-c7c26443285f"
     },
-    "m_Name": "Outline Intensity",
+    "m_Name": "Outline Brightness",
     "m_DefaultReferenceName": "Vector1_d7d53ec8bdb94dc0846fabc8c37b4ee2",
-    "m_OverrideReferenceName": "_OutlineIntensity",
+    "m_OverrideReferenceName": "_OutlineBrightness",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,

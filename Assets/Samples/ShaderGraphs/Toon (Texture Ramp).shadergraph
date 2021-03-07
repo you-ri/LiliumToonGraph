@@ -59,6 +59,9 @@
         },
         {
             "m_Id": "af37dd1967294cd89f3eaf2ec8d095ff"
+        },
+        {
+            "m_Id": "57ea879a069f47c48431de1ed1aae82d"
         }
     ],
     "m_Keywords": [],
@@ -203,6 +206,9 @@
         },
         {
             "m_Id": "652306bda77e43328a84fa5b38e21cab"
+        },
+        {
+            "m_Id": "306be593ad444a38b70e59bdf99f7f1c"
         }
     ],
     "m_GroupDatas": [],
@@ -302,6 +308,20 @@
             "m_InputSlot": {
                 "m_Node": {
                     "m_Id": "38099c5df878419c82369715923bacec"
+                },
+                "m_SlotId": 1
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "306be593ad444a38b70e59bdf99f7f1c"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "29a048b3742048f584bb6af5bb69d020"
                 },
                 "m_SlotId": 1
             }
@@ -1050,6 +1070,21 @@
 {
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "0762ff12110143dc9ba106ecdc7430da",
+    "m_Id": 1191773933,
+    "m_DisplayName": "ShadowShift",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Vector1_1",
+    "m_StageCapability": 3,
+    "m_Value": 1.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "08337f005892497f9bd0ef45d6e89013",
     "m_Id": -1306435240,
     "m_DisplayName": "ShadeToony",
@@ -1572,6 +1607,41 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "306be593ad444a38b70e59bdf99f7f1c",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -1375.0,
+            "y": 257.0,
+            "width": 171.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "3cfcdeed6004431bb26a7ddb13914c8b"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "57ea879a069f47c48431de1ed1aae82d"
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "3089e40ca9694802b22c18efeabf4397",
     "m_Id": 5,
@@ -1808,6 +1878,9 @@
             "m_Id": "752239e138c340a09937ca4e032e2c88"
         },
         {
+            "m_Id": "0762ff12110143dc9ba106ecdc7430da"
+        },
+        {
             "m_Id": "fafff4f8e3024167ab8e57a412d40000"
         },
         {
@@ -1861,7 +1934,8 @@
         "ff6c2c89-6a77-4d14-8c81-b936c3e07ccb",
         "aee41391-0411-4fa9-bf47-7b312dc93cf3",
         "112a44a0-f0ed-46d6-b997-13482ffd64e3",
-        "8e2e9a2b-39f3-4425-ac3c-aac42ae3006a"
+        "8e2e9a2b-39f3-4425-ac3c-aac42ae3006a",
+        "8a0548e7-3b0c-4e06-8035-f6c86893cb0c"
     ],
     "m_PropertyIds": [
         -1453565557,
@@ -1884,7 +1958,8 @@
         739991894,
         -772449077,
         -221838699,
-        501079652
+        501079652,
+        1191773933
     ]
 }
 
@@ -1909,6 +1984,21 @@
     },
     "m_Modifiable": true,
     "m_DefaultType": 1
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "3cfcdeed6004431bb26a7ddb13914c8b",
+    "m_Id": 0,
+    "m_DisplayName": "Outline Brightness",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {
@@ -2506,6 +2596,29 @@
     },
     "m_Modifiable": true,
     "m_DefaultType": 0
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
+    "m_ObjectId": "57ea879a069f47c48431de1ed1aae82d",
+    "m_Guid": {
+        "m_GuidSerialized": "bcc41493-688e-4c72-865f-e55507e8917c"
+    },
+    "m_Name": "Outline Brightness",
+    "m_DefaultReferenceName": "",
+    "m_OverrideReferenceName": "_OutlineBrightness",
+    "m_GeneratePropertyBlock": true,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": 0.5,
+    "m_FloatType": 1,
+    "m_RangeValues": {
+        "x": 0.0,
+        "y": 1.0
+    }
 }
 
 {

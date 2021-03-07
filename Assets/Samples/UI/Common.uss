@@ -8,4 +8,5 @@
 
 .unity-label {
     min-width: 70px;
+    color: rgba(233, 233, 233, 255);
 }

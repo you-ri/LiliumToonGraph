@@ -1221,6 +1221,9 @@
             "m_Id": "8680e0d95c0144df8d0feb682565b18e"
         },
         {
+            "m_Id": "59079c5f776748ada33636d173f8d020"
+        },
+        {
             "m_Id": "74f128b7224f4d809ae5896240729c40"
         },
         {
@@ -1273,7 +1276,8 @@
         "a53dbeed-e2ea-4c4f-9fa6-2b77e62e8d8e",
         "2d644ebd-2aaf-459e-80ad-090b01236948",
         "16ff8d1c-9c2c-4962-9b55-f1ca915e4b1c",
-        "10243e43-1cbf-4136-b823-bfd51ba6a056"
+        "10243e43-1cbf-4136-b823-bfd51ba6a056",
+        "3ec89883-1f06-4d6c-8a3e-bf9b255e3edb"
     ],
     "m_PropertyIds": [
         -1657152126,
@@ -1301,7 +1305,8 @@
         1826091564,
         248187755,
         2077475938,
-        -1281655005
+        -1281655005,
+        -1630612172
     ]
 }
 
@@ -2887,6 +2892,21 @@
         "e32": 0.0,
         "e33": 1.0
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "59079c5f776748ada33636d173f8d020",
+    "m_Id": -1630612172,
+    "m_DisplayName": "Shadow Shift",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Vector1_1",
+    "m_StageCapability": 3,
+    "m_Value": 1.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {

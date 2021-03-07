@@ -34,6 +34,12 @@
             "m_Id": "0a0679ed8b1443f5bfc670cafe993d50"
         },
         {
+            "m_Id": "07074506adc24bccba32387191eef8c7"
+        },
+        {
+            "m_Id": "e47ed8dd30d44f1c8f7b2cc2c769ad7f"
+        },
+        {
             "m_Id": "f25a37f313914a6393f2f2b88a404476"
         },
         {
@@ -44,12 +50,6 @@
         },
         {
             "m_Id": "f3c4f9eddc2b4618abc5a603f70190ea"
-        },
-        {
-            "m_Id": "e47ed8dd30d44f1c8f7b2cc2c769ad7f"
-        },
-        {
-            "m_Id": "07074506adc24bccba32387191eef8c7"
         }
     ],
     "m_Keywords": [],
@@ -3621,6 +3621,9 @@
             "m_Id": "2c2d962ebbcd4ac983c51dcc64e44142"
         },
         {
+            "m_Id": "dd532c5c2309418db47463dde3208051"
+        },
+        {
             "m_Id": "d75b402e5cee49ac87ad47a692b924b5"
         },
         {
@@ -3670,7 +3673,8 @@
         "4c09fb6f-0788-4f61-a2f0-eb847e1d6d46",
         "a53dbeed-e2ea-4c4f-9fa6-2b77e62e8d8e",
         "10243e43-1cbf-4136-b823-bfd51ba6a056",
-        "16ff8d1c-9c2c-4962-9b55-f1ca915e4b1c"
+        "16ff8d1c-9c2c-4962-9b55-f1ca915e4b1c",
+        "3ec89883-1f06-4d6c-8a3e-bf9b255e3edb"
     ],
     "m_PropertyIds": [
         -1657152126,
@@ -3695,7 +3699,8 @@
         -1602112440,
         1826091564,
         -1281655005,
-        2077475938
+        2077475938,
+        -1630612172
     ]
 }
 
@@ -5342,6 +5347,21 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "dd532c5c2309418db47463dde3208051",
+    "m_Id": -1630612172,
+    "m_DisplayName": "Shadow Shift",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Vector1_1",
+    "m_StageCapability": 3,
+    "m_Value": 1.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
     "m_ObjectId": "de63ce5ffc1b4735bf72f24c19f461dc",
     "m_Guid": {
@@ -5434,7 +5454,7 @@
     "m_Guid": {
         "m_GuidSerialized": "06dc7018-266b-49ab-996b-26db1b44994a"
     },
-    "m_Name": "Emission",
+    "m_Name": "Emission Map",
     "m_DefaultReferenceName": "Texture2D_C62C5D5D",
     "m_OverrideReferenceName": "_EmissionMap",
     "m_GeneratePropertyBlock": true,

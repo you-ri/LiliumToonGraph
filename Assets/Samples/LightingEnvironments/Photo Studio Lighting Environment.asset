@@ -16,4 +16,4 @@ MonoBehaviour:
   ambientColor: {r: 1, g: 0.94509804, b: 0.72156864, a: 1}
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   lightIntensity: 0.5
-  lightDirection: {x: 1, y: -0.2, z: -1}
+  lightDirection: {x: -1, y: -0.2, z: 1}
