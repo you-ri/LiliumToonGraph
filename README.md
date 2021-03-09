@@ -18,6 +18,8 @@
 
 [![](http://img.youtube.com/vi/GyDyefeGk-M/0.jpg)](http://www.youtube.com/watch?v=GyDyefeGk-M "Toon Sample")
 
+[![](http://img.youtube.com/vi/cvh7FGSDt3w/0.jpg)](http://www.youtube.com/watch?v=cvh7FGSDt3w "Hair Sample")
+
 
 
 
