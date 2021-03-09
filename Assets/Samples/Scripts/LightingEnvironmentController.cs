@@ -23,15 +23,28 @@ public class LightingEnvironmentController: MonoBehaviour
     private Light _mainLight;
     public CinemachineVirtualCamera[] cameras => _cameras;
 
-    [SerializeField]
-    private CinemachineVirtualCamera[] _cameras;
 
     public int cameraIndex = 0;
 
+
+    [SerializeField]
+    private CinemachineVirtualCamera[] _cameras;
+
     public Light mainLight => _mainLight;
+
+
+    [SerializeField]
+    private Component[] _components;
+
+    public Component[] components => _components;
+
+    public bool autoRotation = true;
+
 
     IEnumerator Start()
     {
+        ApplyCamera();
+
         _reflectionProbe = gameObject.AddComponent<ReflectionProbe> ();
         _reflectionProbe.cullingMask = 0;
         _reflectionProbe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
@@ -44,7 +57,7 @@ public class LightingEnvironmentController: MonoBehaviour
             currentIndex = (++currentIndex) % _lightingEnvironments.Length;
             Apply ();
             yield return new WaitForSeconds (duration);
-            yield return new WaitUntil( () => duration != 0);
+            yield return new WaitUntil( () => autoRotation);
         }
     }
 
@@ -99,7 +112,15 @@ public class LightingEnvironmentController: MonoBehaviour
 
     public void ApplyCamera()
     {
+        if (cameras.Length <= cameraIndex) return;
+
         cameras[cameraIndex].MoveToTopOfPrioritySubqueue();
+    }
+
+    public void SetComponentsActivation(int index, bool value)
+    {
+        //components[index].game = true;
+
     }
 
 

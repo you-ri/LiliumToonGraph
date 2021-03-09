@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 [RequireComponent(typeof(LightingEnvironmentController))]
 [RequireComponent(typeof(UIDocument))]
-public class LightingEnvironmentUI : MonoBehaviour
+public class EnvironmentControlUI : MonoBehaviour
 {
     LightingEnvironmentController _model;
 
@@ -15,9 +15,13 @@ public class LightingEnvironmentUI : MonoBehaviour
 
     RadioButtonGroup _cameraGorup;
 
+    Toggle _lightingEnvironemntAutoRotation;
+
     VisualElement _prevSelectedRadioButton;
 
     VisualElement _prevCameraSectedRadioButton;
+
+    Slider _lightIntensity;
 
     Slider _lightYawAngle;
 
@@ -42,7 +46,21 @@ public class LightingEnvironmentUI : MonoBehaviour
         _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
         doc.rootVisualElement.Q("camera-list-view").Add(_cameraGorup);
 
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(new Label("Main Light"));
+        _cameraGorup.value = _model.cameraIndex;
+
+
+        _lightingEnvironemntAutoRotation = new Toggle("Auto Rotation");
+        _lightingEnvironemntAutoRotation.RegisterValueChangedCallback( e => _model.autoRotation = e.newValue);
+        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightingEnvironemntAutoRotation);
+
+        var mainLightLabel = new Label("Main Light");
+        mainLightLabel.AddToClassList("head1");
+        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(mainLightLabel);
+
+        _lightIntensity = new Slider(0,  3);
+        _lightIntensity.label = "Intensity";
+        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightIntensity);
+        _lightIntensity.RegisterValueChangedCallback( e => _model.mainLight.intensity = e.newValue);
 
         _lightYawAngle = new Slider(0,  360);
         _lightYawAngle.label = "Yaw";
@@ -61,8 +79,12 @@ public class LightingEnvironmentUI : MonoBehaviour
         _lightingEnvironmentGorup.SetValueWithoutNotify(_model.currentIndex);
         _UpdateLightingEnvironmentIndex();
 
+        _lightingEnvironemntAutoRotation.SetValueWithoutNotify(_model.autoRotation);
+        _lightIntensity.SetValueWithoutNotify(_model.mainLight.intensity);
         _lightYawAngle.SetValueWithoutNotify(_model.mainLight.transform.localRotation.eulerAngles.y);
         _lightPitchAngle.SetValueWithoutNotify((_model.mainLight.transform.localRotation.eulerAngles.x + 90) % 360);
+
+        _cameraGorup.SetValueWithoutNotify(_model.cameraIndex);
     }
 
     void _UpdateLightingEnvironmentIndex()
@@ -83,7 +105,7 @@ public class LightingEnvironmentUI : MonoBehaviour
 
         if (_model.currentIndex != index) {
             _model.currentIndex = index;
-            _model.duration = 0;
+            _model.autoRotation = false;
             _model.Apply();
         }
 
@@ -91,6 +113,7 @@ public class LightingEnvironmentUI : MonoBehaviour
 
     void _UpdateCameraIndex(int index)
     {
+        if (_cameraGorup.Children().First().Children().Count() <= index) return;
         var selectedRadioButton = _cameraGorup.Children().First().Children().Skip(index).First();
 
         if (_prevCameraSectedRadioButton != null) {
@@ -108,7 +131,6 @@ public class LightingEnvironmentUI : MonoBehaviour
         _model.cameraIndex = index;
         _model.ApplyCamera();
     }
-
 
     void LightYawChanged(float value)
     {
