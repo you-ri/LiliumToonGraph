@@ -4522,7 +4522,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "8b73dcd2b68d4931a9faf0553fa8e877",
     "m_Id": 0,
-    "m_DisplayName": "Outline Intensity",
+    "m_DisplayName": "Outline Brightness",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

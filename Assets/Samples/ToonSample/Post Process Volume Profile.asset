@@ -69,8 +69,8 @@ MonoBehaviour:
   - {fileID: 2673052828435436160}
   - {fileID: -7107051389673168614}
   - {fileID: -5653892241226312766}
-  - {fileID: 655267574855076049}
---- !u!114 &655267574855076049
+  - {fileID: 913308792968532907}
+--- !u!114 &913308792968532907
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,7 +105,7 @@ MonoBehaviour:
     m_Value: 0
   focusDistance:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 10
     min: 0.1
   aperture:
     m_OverrideState: 1
@@ -114,7 +114,7 @@ MonoBehaviour:
     max: 32
   focalLength:
     m_OverrideState: 1
-    m_Value: 58
+    m_Value: 50
     min: 1
     max: 300
   bladeCount:
