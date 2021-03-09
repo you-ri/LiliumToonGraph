@@ -86,7 +86,7 @@ struct ToonBRDFData
 };
 
 inline void InitializeToonBRDFData(
-    half3 albedo, half3 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
+    half3 albedo, half4 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shadowShift, half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
     out ToonBRDFData outBRDFData)
 {
@@ -113,10 +113,11 @@ inline void InitializeToonBRDFData(
     outBRDFData.normalizationTerm = outBRDFData.roughness * 4.0h + 2.0h;
     outBRDFData.roughness2MinusOne = outBRDFData.roughness2 - 1.0h;
 
+
     // Toon Parameters
     outBRDFData.base = outBRDFData.diffuse; // albedo
     outBRDFData.sss = sss.rgb;
-    outBRDFData.subsurface = 1;
+    outBRDFData.subsurface = sss.a;
     outBRDFData.occlusion = occlusion;
     outBRDFData.curvature = curvature;
     outBRDFData.shadeToony = (1 - shadeToony);
@@ -417,11 +418,12 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     half shadow = saturate(brdfData.shadow + light.shadowAttenuation);
 
     // TODO: magic number
-    shadow = binarize(shadow, 0.2f);
+    shadow = binarize(shadow, 0.2h);
 
-    half subsurface =  (1 - (shade * shadow)) * brdfData.subsurface;
+    // 影内のSSSの強さ
+    half subsurface = lerp((1.h - shade) * shadow, 1.h - (shade * shadow), brdfData.subsurface);
 
-    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shade * shadow, normalWS, viewDirectionWS);// * (1-subsurface);
+    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shade * shadow, normalWS, viewDirectionWS) * (1 - subsurface);
     color += LightingToonySubsurface(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * subsurface;
 
     return color;
@@ -448,7 +450,7 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 //       Used by ShaderGraph and others builtin renderers                    //
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentToon(
-    InputData inputData, half3 diffuse, half3 sss,
+    InputData inputData, half3 diffuse, half4 sss,
     half metallic, half3 specular, half occlusion, half smoothness, half3 emission, half alpha, 
     half shadowShift, half shadeShift,half shadeToony, 
     half curvature, Texture2D shadeRamp, 

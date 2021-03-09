@@ -147,7 +147,7 @@ Material:
     - Vector1_767B62E: 0.23
     - Vector1_77B0B5C: 100
     - Vector1_7DE6D5AB: 1
-    - Vector1_CAB8116: 0.347
+    - Vector1_CAB8116: 0.3
     - Vector1_CB657A23: 80
     - Vector1_D9A6FB2A: 1
     - Vector1_DD218029: -0.15
@@ -155,16 +155,18 @@ Material:
     - _BlendMode: 1
     - _BumpScale: 1
     - _CullMode: 0
+    - _Curvature: 0.5
     - _Cutoff: 0.5
     - _DebugMode: 0
     - _DstBlend: 0
     - _IndirectLightIntensity: 0.1
     - _LightColorAttenuation: 0
+    - _OutlineBrightness: 1
     - _OutlineColorMode: 0
     - _OutlineCullMode: 1
     - _OutlineLightingMix: 1
     - _OutlineScaledMaxDistance: 2.71
-    - _OutlineWidth: 0
+    - _OutlineWidth: 2
     - _OutlineWidthMode: 0
     - _PrimaryShift: 0.96
     - _ReceiveShadowRate: 1
