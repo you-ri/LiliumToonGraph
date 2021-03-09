@@ -4,16 +4,22 @@
 
 ![](https://github.com/you-ri/LiliumToonGraph/blob/master/Docs/screenshot.png?raw=true)
 
+
 + UniversalRP対応トゥーンシェーダーです。
 + アウトラインはマスタースタックの `Lilium Toon` ターゲットで実装しています。これは `Universal` ターゲットを改造する形で開発しました。
 + 表現の実験中。PBR環境と親和性の高いトゥーンシェーダーを目指しています。
 + 開発中です。将来のバージョンで仕様が変わります。また実装には処理効率がよくない部分があります。
+
+
+
+## Showcase
+
 ![](https://i.imgur.com/uvc6CwX.gif)
 
+[![](http://img.youtube.com/vi/GyDyefeGk-M/0.jpg)](http://www.youtube.com/watch?v=GyDyefeGk-M "Toon Sample")
 
-旧LWRPマスターノードでトゥーンライティングモデルを実装しているバージョンは[こちら](https://github.com/you-ri/LiliumToonGraph/tree/lwrp)
 
-旧URPマスターノードでトゥーンライティングモデルを実装しているバージョンは[こちら](https://github.com/you-ri/LiliumToonGraph/tree/urp-master-node-toon)
+
 
 ## Dependenceis
 + Unity2020.2.6f1 or later
@@ -55,3 +61,6 @@ MIT
 "Assets/UnityChan" Folders License below to their licenses.
 
 © Unity Technologies Japan/UCL
+
+
+
