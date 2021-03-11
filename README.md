@@ -16,8 +16,13 @@
 
 ![](https://i.imgur.com/uvc6CwX.gif)
 
+
+### [Toon Sample](http://www.youtube.com/watch?v=GyDyefeGk-M)
 [![](http://img.youtube.com/vi/GyDyefeGk-M/0.jpg)](http://www.youtube.com/watch?v=GyDyefeGk-M "Toon Sample")
 
+
+
+### [Hair Sample](http://www.youtube.com/watch?v=cvh7FGSDt3w)
 [![](http://img.youtube.com/vi/cvh7FGSDt3w/0.jpg)](http://www.youtube.com/watch?v=cvh7FGSDt3w "Hair Sample")
 
 
