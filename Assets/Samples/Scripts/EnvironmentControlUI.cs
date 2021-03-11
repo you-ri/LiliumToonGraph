@@ -72,6 +72,14 @@ public class EnvironmentControlUI : MonoBehaviour
         doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightPitchAngle);
         _lightPitchAngle.RegisterValueChangedCallback( e => LightPitchChanged(e.newValue));
 
+        foreach (var obj in _model.objects) {
+            var activationToggle = new Toggle(obj.name);
+            activationToggle.SetValueWithoutNotify(obj.activeSelf);
+            activationToggle.RegisterValueChangedCallback(e => obj.SetActive(!obj.activeSelf));
+            doc.rootVisualElement.Q("object-list-view").Add(activationToggle);
+        }
+
+
     }
 
     void Update()

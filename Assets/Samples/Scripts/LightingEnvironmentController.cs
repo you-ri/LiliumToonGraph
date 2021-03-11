@@ -23,8 +23,9 @@ public class LightingEnvironmentController: MonoBehaviour
     private Light _mainLight;
     public CinemachineVirtualCamera[] cameras => _cameras;
 
-
     public int cameraIndex = 0;
+
+    public bool autoRotation = true;
 
 
     [SerializeField]
@@ -34,11 +35,10 @@ public class LightingEnvironmentController: MonoBehaviour
 
 
     [SerializeField]
-    private Component[] _components;
+    private GameObject[] _objects;
 
-    public Component[] components => _components;
-
-    public bool autoRotation = true;
+    public GameObject[] objects => _objects;
+    
 
 
     IEnumerator Start()
@@ -117,9 +117,11 @@ public class LightingEnvironmentController: MonoBehaviour
         cameras[cameraIndex].MoveToTopOfPrioritySubqueue();
     }
 
-    public void SetComponentsActivation(int index, bool value)
+    public void SetObjectActivation(int index, bool value)
     {
-        //components[index].game = true;
+        if (objects.Length <= index) return;
+
+        objects[index].gameObject.SetActive(value);
 
     }
 

@@ -8,6 +8,9 @@
             <ui:VisualElement name="camera-list-view">
                 <ui:Label text="Camera" display-tooltip-when-elided="true" class="head1" />
             </ui:VisualElement>
+            <ui:VisualElement name="object-list-view">
+                <ui:Label text="Object" display-tooltip-when-elided="true" class="head1" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

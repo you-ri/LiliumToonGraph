@@ -6,7 +6,10 @@
     color: rgb(255, 187, 0);
 }
 
-.unity-label {
+Slider .unity-label {
     min-width: 70px;
-    color: rgba(233, 233, 233, 255);
+}
+
+.unity-label {
+    color: rgb(233, 233, 233);
 }
