@@ -39,8 +39,6 @@ public class LightingEnvironmentController: MonoBehaviour
 
     public GameObject[] objects => _objects;
     
-
-
     IEnumerator Start()
     {
         ApplyCamera();

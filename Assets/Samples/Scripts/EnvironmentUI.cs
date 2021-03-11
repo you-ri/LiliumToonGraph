@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 [RequireComponent(typeof(LightingEnvironmentController))]
 [RequireComponent(typeof(UIDocument))]
-public class EnvironmentControlUI : MonoBehaviour
+public class EnvironmentUI : MonoBehaviour
 {
     LightingEnvironmentController _model;
 
@@ -32,52 +32,56 @@ public class EnvironmentControlUI : MonoBehaviour
         var doc = GetComponent<UIDocument>();
         _model = GetComponent<LightingEnvironmentController>();
 
+        var lightingEnvironmentView = doc.rootVisualElement.Q("lightingenvironment-list-view");
 
         _lightingEnvironmentGorup = new RadioButtonGroup ();
         _lightingEnvironmentGorup.choices = _model.lightingEnvironments.Select ( t => t.name.Replace("Lighting Environment", ""));
         _lightingEnvironmentGorup.RegisterValueChangedCallback( e => LightingEnvironmentSelectionChanged(e.newValue));
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightingEnvironmentGorup);
+        lightingEnvironmentView.Add(_lightingEnvironmentGorup);
 
         _lightingEnvironmentGorup.value = _model.currentIndex;
 
-
-        _cameraGorup = new RadioButtonGroup ();
-        _cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
-        _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
-        doc.rootVisualElement.Q("camera-list-view").Add(_cameraGorup);
-
-        _cameraGorup.value = _model.cameraIndex;
-
-
         _lightingEnvironemntAutoRotation = new Toggle("Auto Rotation");
         _lightingEnvironemntAutoRotation.RegisterValueChangedCallback( e => _model.autoRotation = e.newValue);
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightingEnvironemntAutoRotation);
+        lightingEnvironmentView.Add(_lightingEnvironemntAutoRotation);
 
+        // Main Light
         var mainLightLabel = new Label("Main Light");
         mainLightLabel.AddToClassList("head1");
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(mainLightLabel);
+        lightingEnvironmentView.Add(mainLightLabel);
 
         _lightIntensity = new Slider(0,  3);
         _lightIntensity.label = "Intensity";
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightIntensity);
+        lightingEnvironmentView.Add(_lightIntensity);
         _lightIntensity.RegisterValueChangedCallback( e => _model.mainLight.intensity = e.newValue);
 
         _lightYawAngle = new Slider(0,  360);
         _lightYawAngle.label = "Yaw";
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightYawAngle);
+        lightingEnvironmentView.Add(_lightYawAngle);
         _lightYawAngle.RegisterValueChangedCallback( e => LightYawChanged(e.newValue));
 
         _lightPitchAngle = new Slider(0, 180);
         _lightPitchAngle.label = "Pitch";
-        doc.rootVisualElement.Q("lightingenvironment-list-view").Add(_lightPitchAngle);
+        lightingEnvironmentView.Add(_lightPitchAngle);
         _lightPitchAngle.RegisterValueChangedCallback( e => LightPitchChanged(e.newValue));
 
+        // Camera
+        _cameraGorup = new RadioButtonGroup ();
+        _cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
+        _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
+        doc.rootVisualElement.Q("camera-list-view").Add(_cameraGorup);
+        doc.rootVisualElement.Q("camera-list-view").style.display = _cameraGorup.choices.Count() != 0 ? DisplayStyle.Flex : DisplayStyle.None;
+
+        _cameraGorup.value = _model.cameraIndex;
+
+        // Object
         foreach (var obj in _model.objects) {
             var activationToggle = new Toggle(obj.name);
             activationToggle.SetValueWithoutNotify(obj.activeSelf);
             activationToggle.RegisterValueChangedCallback(e => obj.SetActive(!obj.activeSelf));
             doc.rootVisualElement.Q("object-list-view").Add(activationToggle);
         }
+        doc.rootVisualElement.Q("object-list-view").style.display = _model.objects.Length != 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
 
     }
