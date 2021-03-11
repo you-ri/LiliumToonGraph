@@ -1,11 +1,12 @@
 # Change Log
 
 ## [0.5.1-preview.x] -
-
 - Occlusion周りの式を修正
 - Shadow Shiftを追加
 - Lighting Environment UIを追加
 - 影に対するSSSの影響を調整できるように
+- Toon Outline Transform Scaled Max Distance サブグラフの修正
+- Toon Outline Transform Scaled Max Distance (Screen Space) を追加
 
 ## [0.5.0-preview.5] - 2021 - 02 - 25
 - Unity2020.2.6f1

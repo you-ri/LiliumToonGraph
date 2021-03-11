@@ -60,36 +60,8 @@ inline half3 TransformViewToProjection(half3 v)
     return mul((float3x3) UNITY_MATRIX_P, v);
 }
 
-void TransformOutlineToHClipScreenSpace_half(half3 position, half3 normal, half outlineWidth, half OutlineScaledMaxDistance, out half3 outlinePosition)
-{    
-    half4 vertex = mul(UNITY_MATRIX_MVP, half4(position, 1.0));
-    half3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
-    half3 clipNormal = TransformViewToProjection(viewNormal.xyz);
-    half2 projectedNormal = normalize(clipNormal.xy);
-    projectedNormal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
-    projectedNormal.x *= aspect();
-    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy* saturate(1 - abs(normalize(viewNormal).z));
-
-    outlinePosition = vertex.xyz;
-}
-
-
-
-void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, float outlineWidth, float OutlineScaledMaxDistance, out float3 outlinePosition)
-{    
-    float4 vertex = mul(UNITY_MATRIX_MVP, float4(position, 1.0));
-    float3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
-    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
-    float2 projectedNormal = normalize(clipNormal.xy);
-    projectedNormal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
-    projectedNormal.x *= aspect();
-    vertex.xy += 0.01 * outlineWidth * projectedNormal.xy* saturate(1 - abs(normalize(viewNormal).z));
-
-    outlinePosition = mul( inverse(UNITY_MATRIX_MVP), vertex).xyz;
-}
-
 // アウトライン処理
-// スタンダード
+// シンプル
 void TransformOutline_float(float3 Position, float3 Normal, float OutlineWidth, out float3 OutlinePosition)
 {    
     // outline size scale. mm to meter.
@@ -97,7 +69,6 @@ void TransformOutline_float(float3 Position, float3 Normal, float OutlineWidth, 
 
     OutlinePosition = Position;
 }
-
 
 // アウトライン処理
 // UTS2互換
@@ -115,17 +86,34 @@ void TransformOutlineUTS2_float(float3 Position, float3 Normal, float OutlineWid
 
 
 // アウトライン処理
-// MToon互換
+// MToon互換（ワールドスペース)
 void TransformOutlineScaledMaxDistance_float(float3 Position, float3 Normal, float OutlineWidth, float WidthScaledMaxDistance, out float3 OutlinePosition)
 {    
     float4 vertex = mul(UNITY_MATRIX_MVP, float4(Position, 1.0));
-    
-    OutlineWidth *= min(vertex.w * (1 / WidthScaledMaxDistance), 1);
+    half scale = min(vertex.w * (1 / (WidthScaledMaxDistance * abs(UNITY_MATRIX_P._m11))), 1);
     
     // outline size scale. mm to meter.
-    Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
+    float3 outlineNormal = 0.001 * OutlineWidth * Normal.xyz * scale;
 
-    OutlinePosition = Position;
+    OutlinePosition = Position + outlineNormal;
+}
+
+
+// アウトライン処理
+// MToon互換（スクリーンスペース)
+void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, float outlineWidth, float OutlineScaledMaxDistance, out float3 outlinePosition)
+{    
+    float4 vertex = mul(UNITY_MATRIX_MVP, float4(position, 1.0));
+    float3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
+    float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
+    float2 projectedNormal = normalize(clipNormal.xy);
+    projectedNormal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
+    projectedNormal.x *= aspect();
+
+    // outline size scale. mm to meter.
+    vertex.xy += 0.001 * outlineWidth * projectedNormal.xy * saturate(1 - abs(normalize(viewNormal).z));
+
+    outlinePosition = mul(inverse(UNITY_MATRIX_MVP), vertex).xyz;
 }
 
 
