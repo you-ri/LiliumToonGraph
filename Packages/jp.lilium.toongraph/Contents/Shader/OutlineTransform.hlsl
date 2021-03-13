@@ -107,13 +107,14 @@ void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, fl
     float3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
     float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
     float2 projectedNormal = normalize(clipNormal.xy);
-    projectedNormal *= min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
+    half scale = min(vertex.w, OutlineScaledMaxDistance * abs(UNITY_MATRIX_P._m11));
+
     projectedNormal.x *= aspect();
 
     // outline size scale. mm to meter.
-    vertex.xy += 0.001 * outlineWidth * projectedNormal.xy * saturate(1 - abs(normalize(viewNormal).z));
+    float2 outlineNormal =  projectedNormal.xy * 0.001 * outlineWidth * saturate(1 - abs(normalize(viewNormal).z)) * scale;
 
-    outlinePosition = mul(inverse(UNITY_MATRIX_MVP), vertex).xyz;
+    outlinePosition = mul(inverse(UNITY_MATRIX_MVP), vertex + outlineNormal.xy).xyz;
 }
 
 

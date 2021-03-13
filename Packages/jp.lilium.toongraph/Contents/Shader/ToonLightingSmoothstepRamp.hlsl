@@ -19,16 +19,21 @@ void ToonLight_half(
     out half4 Color, out half3 ShadeColor)
 {
     InputData inputData = (InputData)0;
+
+#if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = WorldPosition;
+#endif
 
     // TODO: 要高速化
     //float4 positionCS = TransformWorldToHClip(inputData.positionWS);
 
-    //TODO: _NORMALMAP ディレクティブが無効
-#if defined(_NORMALMAP) || 1
-    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz));
+#if defined(_NORMALMAP) || defined(_DETAIL)
+
+    float sgn = 1;//WorldTangent.w;      // should be either +1 or -1 TODO: WorldTangent.w の値を取得できないため、１で固定する。
+    float3 bitangent = sgn * cross(WorldNormal.xyz, WorldTangent.xyz);
+    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, bitangent.xyz, WorldNormal.xyz));
 #else
-    inputData.normalWS = Normal;
+    inputData.normalWS = WorldNormal;
 #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);

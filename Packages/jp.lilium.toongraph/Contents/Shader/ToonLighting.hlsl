@@ -414,11 +414,12 @@ half3 LightingToonyDirect(
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
     float NdotL = dot(normalWS, light.direction); 
-    half shade = ToonyShadeValue(brdfData, NdotL);
     half shadow = saturate(brdfData.shadow + light.shadowAttenuation);
 
+    half shade = saturate(ToonyShadeValue(brdfData, NdotL + shadow - 1));
+
     // TODO: magic number
-    shadow = binarize(shadow, 0.2h);
+    shadow = binarize(shadow, 0.01h);
 
     // 影内のSSSの強さ
     half subsurface = lerp((1.h - shade) * shadow, 1.h - (shade * shadow), brdfData.subsurface);
