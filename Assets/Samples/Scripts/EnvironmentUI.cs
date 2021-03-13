@@ -15,6 +15,8 @@ public class EnvironmentUI : MonoBehaviour
 
     RadioButtonGroup _cameraGorup;
 
+    VisualElement _mainLightView;
+
     Toggle _lightingEnvironemntAutoRotation;
 
     VisualElement _prevSelectedRadioButton;
@@ -46,24 +48,27 @@ public class EnvironmentUI : MonoBehaviour
         lightingEnvironmentView.Add(_lightingEnvironemntAutoRotation);
 
         // Main Light
+        _mainLightView = new VisualElement();
         var mainLightLabel = new Label("Main Light");
         mainLightLabel.AddToClassList("head1");
-        lightingEnvironmentView.Add(mainLightLabel);
+        _mainLightView.Add(mainLightLabel);
 
         _lightIntensity = new Slider(0,  3);
         _lightIntensity.label = "Intensity";
-        lightingEnvironmentView.Add(_lightIntensity);
+        _mainLightView.Add(_lightIntensity);
         _lightIntensity.RegisterValueChangedCallback( e => _model.mainLight.intensity = e.newValue);
 
         _lightYawAngle = new Slider(0,  360);
         _lightYawAngle.label = "Yaw";
-        lightingEnvironmentView.Add(_lightYawAngle);
+        _mainLightView.Add(_lightYawAngle);
         _lightYawAngle.RegisterValueChangedCallback( e => LightYawChanged(e.newValue));
 
         _lightPitchAngle = new Slider(0, 180);
         _lightPitchAngle.label = "Pitch";
-        lightingEnvironmentView.Add(_lightPitchAngle);
+        _mainLightView.Add(_lightPitchAngle);
         _lightPitchAngle.RegisterValueChangedCallback( e => LightPitchChanged(e.newValue));
+
+        lightingEnvironmentView.Add(_mainLightView);
 
         // Camera
         _cameraGorup = new RadioButtonGroup ();
@@ -76,10 +81,26 @@ public class EnvironmentUI : MonoBehaviour
 
         // Object
         foreach (var obj in _model.objects) {
+            var objectsView = new VisualElement();
             var activationToggle = new Toggle(obj.name);
             activationToggle.SetValueWithoutNotify(obj.activeSelf);
-            activationToggle.RegisterValueChangedCallback(e => obj.SetActive(!obj.activeSelf));
-            doc.rootVisualElement.Q("object-list-view").Add(activationToggle);
+            activationToggle.RegisterValueChangedCallback(e => obj.SetActive(!obj.gameObject.activeSelf));
+            objectsView.Add(activationToggle);
+ 
+            var controlable = obj.GetComponent<ExposeBehaviour>();
+            if (controlable != null) {
+                var componentsView = new VisualElement();
+                componentsView.style.marginLeft = 8;
+                foreach (var eb in controlable.exposeBehaviours) {
+                    if (eb.behaviour == null) continue;
+                    var componentToggle = new Toggle(eb.name);
+                    componentToggle.SetValueWithoutNotify(obj.activeSelf);
+                    componentToggle.RegisterValueChangedCallback(e => eb.behaviour.enabled = !eb.behaviour.enabled);
+                    componentsView.Add(componentToggle);
+                }
+                objectsView.Add(componentsView);
+            }
+            doc.rootVisualElement.Q("object-list-view").Add(objectsView);
         }
         doc.rootVisualElement.Q("object-list-view").style.display = _model.objects.Length != 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -92,9 +113,14 @@ public class EnvironmentUI : MonoBehaviour
         _UpdateLightingEnvironmentIndex();
 
         _lightingEnvironemntAutoRotation.SetValueWithoutNotify(_model.autoRotation);
-        _lightIntensity.SetValueWithoutNotify(_model.mainLight.intensity);
-        _lightYawAngle.SetValueWithoutNotify(_model.mainLight.transform.localRotation.eulerAngles.y);
-        _lightPitchAngle.SetValueWithoutNotify((_model.mainLight.transform.localRotation.eulerAngles.x + 90) % 360);
+
+
+        if (_model.mainLight != null) {
+            _lightIntensity.SetValueWithoutNotify(_model.mainLight.intensity);
+            _lightYawAngle.SetValueWithoutNotify(_model.mainLight.transform.localRotation.eulerAngles.y);
+            _lightPitchAngle.SetValueWithoutNotify((_model.mainLight.transform.localRotation.eulerAngles.x + 90) % 360);
+            _mainLightView.SetEnabled(_model.mainLight.gameObject.activeInHierarchy);
+        }
 
         _cameraGorup.SetValueWithoutNotify(_model.cameraIndex);
     }
