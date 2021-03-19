@@ -39,9 +39,9 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 
 
 
-inline half binarize(half value, half threshold = 0.5h, half minValue = 0, half maxValue = 1)
+inline half binarize(half value, half threshold = 0.5h, half thresholdWidth = 0, half minValue = 0, half maxValue = 1)
 {
-    half toonyValue = smoothstep(threshold, threshold, value);
+    half toonyValue = smoothstep(threshold - thresholdWidth/2, threshold + thresholdWidth/2, value);
     toonyValue = clamp(toonyValue, minValue, maxValue);
 
     return lerp( value, toonyValue, __ToonyLighting);
@@ -363,7 +363,7 @@ half LightingSubsurface(float NdotL, half subsurfaceRadius, half toony)
     half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
     half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
-    wrapped_jgt = binarize(wrapped_jgt, 0, 0, 1);
+    wrapped_jgt = binarize(wrapped_jgt, 0, 0);
 
     //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
     //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
@@ -419,7 +419,8 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     half shade = saturate(ToonyShadeValue(brdfData, NdotL + shadow - 1));
 
     // TODO: magic number
-    shadow = binarize(shadow, 0.01h);
+    shadow = binarize(shadow, 0.05h, 0.05h, 0, 1);
+    
 
     // 影内のSSSの強さ
     half subsurface = lerp((1.h - shade) * shadow, 1.h - (shade * shadow), brdfData.subsurface);
@@ -444,6 +445,9 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
     return LightingPhysicallyBased(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS);
 }
 */
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -478,12 +482,14 @@ half4 UniversalFragmentToon(
     half4 shadowMask = half4(1, 1, 1, 1);
 #endif
 
+
     Light mainLight = GetMainLight(inputData.shadowCoord);
     #if defined(_SCREEN_SPACE_OCCLUSION)
         AmbientOcclusionFactor aoFactor = GetScreenSpaceAmbientOcclusion(inputData.normalizedScreenSpaceUV);
         mainLight.color *= aoFactor.directAmbientOcclusion;
         occlusion = min(occlusion, aoFactor.indirectAmbientOcclusion);
     #endif
+
 
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 

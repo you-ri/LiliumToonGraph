@@ -5230,7 +5230,7 @@
     },
     "m_Name": "Shadow Shift",
     "m_DefaultReferenceName": "",
-    "m_OverrideReferenceName": "_Shade_1",
+    "m_OverrideReferenceName": "_Shadow",
     "m_GeneratePropertyBlock": true,
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,

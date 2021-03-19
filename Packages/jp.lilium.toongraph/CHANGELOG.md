@@ -7,6 +7,7 @@
 - 影に対するSSSの影響を調整できるように
 - Toon Outline Transform Scaled Max Distance サブグラフの修正
 - Toon Outline Transform Scaled Max Distance (Screen Space) を追加
+- RecieveShadowにもSSSの効果がでるように
 
 ## [0.5.0-preview.5] - 2021 - 02 - 25
 - Unity2020.2.6f1
