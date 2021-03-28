@@ -6,7 +6,7 @@
                 <ui:Label text="Lighting Environment" display-tooltip-when-elided="true" class="head1" />
             </ui:VisualElement>
             <ui:VisualElement name="camera-list-view">
-                <ui:Label text="Camera" display-tooltip-when-elided="true" class="head1" />
+                <ui:Label text="Camera" display-tooltip-when-elided="true" enable-rich-text="true" class="head1" />
             </ui:VisualElement>
             <ui:VisualElement name="object-list-view">
                 <ui:Label text="Object" display-tooltip-when-elided="true" class="head1" />

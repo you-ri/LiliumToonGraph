@@ -7,7 +7,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
-//TODO: delete
+//TODO: obsolate
 float __ToonyLighting = 0;
 
 
@@ -24,6 +24,7 @@ inline half3 CameraDirectionWS()
     return mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
 }   
 
+// TODO: obsolate
 inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5h)
 {
   return 
@@ -38,10 +39,10 @@ inline half ToonyValue(half value, half oneMinusShadeToony, half threshold = 0.5
 
 
 
-
+// TODO: obsolate
 inline half binarize(half value, half threshold = 0.5h, half thresholdWidth = 0, half minValue = 0, half maxValue = 1)
 {
-    half toonyValue = smoothstep(threshold - thresholdWidth/2, threshold + thresholdWidth/2, value);
+    half toonyValue = smoothstep(threshold - thresholdWidth/2, threshold + thresholdWidth/2 + HALF_MIN, value);
     toonyValue = clamp(toonyValue, minValue, maxValue);
 
     return lerp( value, toonyValue, __ToonyLighting);
@@ -78,7 +79,7 @@ struct ToonBRDFData
 
     half shadow;                //  -1 ~ 1 default(0)
     half shadeShift;            //  -2 ~ 2 default(0)
-    half shadeToony;
+    half oneMinusShadeToony;
     half toonyLighting;
 #ifdef SHADEMODEL_RAMP    
     Texture2D shadeRamp;
@@ -120,7 +121,7 @@ inline void InitializeToonBRDFData(
     outBRDFData.subsurface = sss.a;
     outBRDFData.occlusion = occlusion;
     outBRDFData.curvature = curvature;
-    outBRDFData.shadeToony = (1 - shadeToony);
+    outBRDFData.oneMinusShadeToony = (1 - shadeToony);
     outBRDFData.shadeShift = shade*2 - 2;               // 0 ~ 2 default(1) > -2 ~ 2 default(0)
     outBRDFData.shadow = shadowShift - 1;                     // 0 ~ 2 default(1) > -1 ~ 1 default(0)
     outBRDFData.toonyLighting = toonyLighting;
@@ -170,30 +171,29 @@ inline void InitializeBRDFData(half3 albedo, half metallic, half3 specular, half
 // Convert toony value (specular use)
 inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1, half threshold = 0.5h)
 {
-    return lerp(value, smoothstep((threshold / maxValue) - brdfData.shadeToony / 2, (threshold / maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+    return lerp(value, smoothstep((threshold / maxValue) - brdfData.oneMinusShadeToony / 2, (threshold / maxValue) + brdfData.oneMinusShadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
 inline half3 ToonyValue(ToonBRDFData brdfData, half3 value, half3 maxValue = 1, half threshold = 0.5f)
 {
-    return lerp(value, smoothstep((threshold / maxValue) - brdfData.shadeToony / 2, (threshold / maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+    return lerp(value, smoothstep((threshold / maxValue) - brdfData.oneMinusShadeToony / 2, (threshold / maxValue) + brdfData.oneMinusShadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
 
 inline float ToonyValue(ToonBRDFData brdfData, float value, float maxValue = 1, half threshold = 0.5h)
 {
-    return lerp(value, smoothstep((threshold / maxValue) - brdfData.shadeToony / 2, (threshold / maxValue) + brdfData.shadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
+    return lerp(value, smoothstep((threshold / maxValue) - brdfData.oneMinusShadeToony / 2, (threshold / maxValue) + brdfData.oneMinusShadeToony / 2, value / maxValue) * maxValue, brdfData.toonyLighting);
 }
 
 
 inline half3 ToonyShadeValue(ToonBRDFData brdfData, half value)
 {
-    half shadeShift = brdfData.shadeShift;
-    half normalizedValue = saturate((value + shadeShift + 1) / 2); // -1 ~ 1 -> 0 ~ 1
+    half normalizedValue = saturate((value + brdfData.shadeShift + 1) / 2); // -1 ~ 1 -> 0 ~ 1
 #ifdef SHADEMODEL_RAMP
-    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(normalizedValue, brdfData.shadeToony), 0);
+    half3 toonedValue = SAMPLE_TEXTURE2D_LOD(brdfData.shadeRamp, sampler_LinearClamp, half2(normalizedValue, brdfData.oneMinusShadeToony), 0);
 #else
     /// 微小な数字を足して少しでも差を持たせないと smoothstep が不完全になる
-    half3 toonedValue = smoothstep(0.5, brdfData.shadeToony + 0.500001f, normalizedValue);
+    half3 toonedValue = smoothstep(0.5, brdfData.oneMinusShadeToony + 0.500001f, normalizedValue);
 #endif
     return lerp((half3) value, toonedValue, brdfData.toonyLighting);
 }
@@ -356,19 +356,19 @@ half3 GlobalIllumination(BRDFData brdfData, half3 bakedGI, half occlusion, half3
 // Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
 half LightingSubsurface(float NdotL, half subsurfaceRadius, half toony)
 {
-    half alpha = subsurfaceRadius + 0.00001h;
-    half theta_m = acos(-alpha); // boundary of the lighting function
+    half alpha = subsurfaceRadius + HALF_MIN;
+    //half theta_m = acos(-alpha); // boundary of the lighting function
 
     float theta = max(0, NdotL + alpha) - alpha;
     half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
-    half wrapped_jgt = (pow(((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
+    half wrapped_jgt = (pow(abs((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
     wrapped_jgt = binarize(wrapped_jgt, 0, 0);
 
     //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
     //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
 
-    return wrapped_jgt;
+    return saturate(wrapped_jgt);
 }
 
 half3 LightingSubsurfaceRamp(
@@ -376,8 +376,8 @@ half3 LightingSubsurfaceRamp(
 {
     float u = saturate((NdotL+ 1) / 2);   // -1 ~ 1 > 0 ~ 1
 
-    half3 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(u, curvature));
-    return lut;
+    half4 lut = SAMPLE_TEXTURE2D(sssLutTexture, sampler_LinearClamp, half2(u, curvature));
+    return lut.rgb;
 }
 
 
@@ -386,7 +386,8 @@ half3 LightingToonySubsurface(
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow,
     half3 normalWS)
 {
-    float NdotL = clamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, -1, 1) ;
+    //float NdotL = clamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, -1, 1) ;
+    half NdotL = dot(normalWS, lightDirectionWS);
 
 #ifdef SHADEMODEL_RAMP
     half3 radiance = LightingSubsurfaceRamp (NdotL, brdfData.curvature, brdfData.shadeRamp);
@@ -406,27 +407,30 @@ half3 LightingToonyDirect(
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 lightShadow, 
     half3 normalWS, half3 viewDirectionWS)
 {
-    float NdotL = saturate(dot(normalWS, lightDirectionWS)); 
-    half3 radiance = lightColor * (lightAttenuation * lightShadow * ToonyShadeValue(brdfData, NdotL));
+    //float NdotL = saturate(dot(normalWS, lightDirectionWS)); 
+    half3 radiance = lightColor * lightAttenuation * lightShadow;// * ToonyShadeValue(brdfData, NdotL));
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance);
 }
 
 half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
-    float NdotL = dot(normalWS, light.direction); 
-    half shadow = saturate(brdfData.shadow + light.shadowAttenuation);
+    float NdotL = dot(normalWS, light.direction);
+    float shadeNdotL = NdotL + brdfData.shadeShift;
+    float shadowNdotL = NdotL + brdfData.shadow;
 
-    half shade = saturate(ToonyShadeValue(brdfData, NdotL + shadow - 1));
+    half shadow = smoothstep(0.5f - brdfData.oneMinusShadeToony, 0.5f + HALF_MIN, saturate(shadowNdotL) * light.shadowAttenuation);
+    half radiance = smoothstep(0, brdfData.oneMinusShadeToony + HALF_MIN, shadeNdotL) * light.distanceAttenuation;
 
-    // TODO: magic number
-    shadow = binarize(shadow, 0.05h, 0.05h, 0, 1);
+    // SSSの強さ
+    half subsurface = 0.5f;
+//    half subsurfaceShadow = lerp(shadow, 1, brdfData.subsurface);
+    half subsurfaceShadow = smoothstep(0.0f, 0.0f + brdfData.oneMinusShadeToony + HALF_MIN, light.shadowAttenuation);
+    half subsurfaceRadiance = light.distanceAttenuation;
+    brdfData.diffuse -= brdfData.sss;
+
+    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, radiance * shadow, 1, normalWS, viewDirectionWS) * (1 - subsurface);
     
-
-    // 影内のSSSの強さ
-    half subsurface = lerp((1.h - shade) * shadow, 1.h - (shade * shadow), brdfData.subsurface);
-
-    half3 color = LightingToonyDirect(brdfData, light.color, light.direction, light.distanceAttenuation, shade * shadow, normalWS, viewDirectionWS) * (1 - subsurface);
-    color += LightingToonySubsurface(brdfData, light.color, light.direction, light.distanceAttenuation, 1, normalWS) * subsurface;
+    color += LightingToonySubsurface(brdfData, light.color, light.direction, subsurfaceRadiance * subsurfaceShadow, 1, normalWS) * subsurface;
 
     return color;
 }

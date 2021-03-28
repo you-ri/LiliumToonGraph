@@ -9,7 +9,6 @@
 
 #include "ToonLighting.hlsl"
 
-
 void ToonLight_half(
     half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half4 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
@@ -20,12 +19,17 @@ void ToonLight_half(
 {
     InputData inputData = (InputData)0;
 
+    half ShadowOffset = 0;
+    //half ShadowOffset = 1 - ShadowShift;
+    //ShadowShift = 0;
+
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = WorldPosition;
 #endif
 
     // TODO: 要高速化
     //float4 positionCS = TransformWorldToHClip(inputData.positionWS);
+
 
 #if defined(_NORMALMAP) || defined(_DETAIL)
 
@@ -44,7 +48,8 @@ void ToonLight_half(
     //inputData.shadowCoord = input.shadowCoord;
     inputData.shadowCoord = float4(0, 0, 0, 0);
 #elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
-    inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
+    Light mainLight = GetMainLight();
+    inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition + (mainLight.direction * (ShadowOffset)));
 #else
     inputData.shadowCoord = float4(0, 0, 0, 0);
 #endif

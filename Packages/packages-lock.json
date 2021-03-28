@@ -118,7 +118,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.4.6",
+      "version": "1.4.7",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -169,13 +169,6 @@
       "dependencies": {
         "com.unity.render-pipelines.universal": "10.3.1"
       }
-    },
-    "occlusion-probes": {
-      "version": "https://github.com/0lento/OcclusionProbes.git#package",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "9e25e1b03cccf6037268400cbb54a375a4c8f9a3"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

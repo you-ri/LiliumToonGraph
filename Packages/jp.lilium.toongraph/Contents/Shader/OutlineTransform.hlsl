@@ -76,7 +76,7 @@ void TransformOutlineUTS2_float(float3 Position, float3 Normal, float OutlineWid
 {    
     float4 vertex = mul(unity_ObjectToWorld, half4(Position, 1.0));    
     
-    OutlineWidth *= smoothstep(FarthestDistance, NearestDistance, distance(vertex, _WorldSpaceCameraPos));
+    OutlineWidth *= smoothstep(FarthestDistance, NearestDistance, distance(vertex.xyz, _WorldSpaceCameraPos));
     
     // outline size scale. mm to meter.
     Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
@@ -114,7 +114,9 @@ void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, fl
     // outline size scale. mm to meter.
     float2 outlineNormal =  projectedNormal.xy * 0.001 * outlineWidth * saturate(1 - abs(normalize(viewNormal).z)) * scale;
 
-    outlinePosition = mul(inverse(UNITY_MATRIX_MVP), vertex + outlineNormal.xy).xyz;
+    vertex += float4(outlineNormal.x, outlineNormal.y, 0, 0);
+
+    outlinePosition = mul(inverse(UNITY_MATRIX_MVP), vertex).xyz;
 }
 
 
