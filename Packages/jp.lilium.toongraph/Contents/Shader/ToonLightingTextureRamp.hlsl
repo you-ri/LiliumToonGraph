@@ -18,13 +18,20 @@ void ToonLight_half(
     out half4 Color, out half3 ShadeColor)
 {
     InputData inputData = (InputData)0;
-    inputData.positionWS = WorldPosition;
+    half ShadowOffset = 0;
+    //half ShadowOffset = 1 - ShadowShift;
+    //ShadowShift = 0;
 
-    //TODO: _NORMALMAP ディレクティブが無効
-#if defined(_NORMALMAP) || 1
-    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz));
+#if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
+    inputData.positionWS = WorldPosition;
+#endif    
+
+#if defined(_NORMALMAP) || defined(_DETAIL)
+    float sgn = 1;//WorldTangent.w;      // should be either +1 or -1 TODO: WorldTangent.w の値を取得できないため、１で固定する。
+    float3 bitangent = sgn * cross(WorldNormal.xyz, WorldTangent.xyz);
+    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, bitangent.xyz, WorldNormal.xyz));
 #else
-    inputData.normalWS = Normal;
+    inputData.normalWS = WorldNormal;
 #endif
 
     inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
@@ -35,10 +42,12 @@ void ToonLight_half(
     //inputData.shadowCoord = input.shadowCoord;
     inputData.shadowCoord = float4(0, 0, 0, 0);
 #elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
-    inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition);
+    Light mainLight = GetMainLight();
+    inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition + (mainLight.direction * (ShadowOffset)));
 #else
     inputData.shadowCoord = float4(0, 0, 0, 0);
 #endif
+
 
 #if (SHADERPASS == SHADERPASS_FORWARD) || (SHADERPASS == SHADERPASS_GBUFFER)
     float2 lightmapUV = float2(0, 0);
@@ -51,12 +60,12 @@ void ToonLight_half(
     float3 normalWSBakedGI = lerp(inputData.normalWS, cameraDirectionWS, ToonyLighting);        
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     inputData.bakedGI = SAMPLE_GI(lightmapUV, vertexSH, normalWSBakedGI);
-#endif   
+#endif    
     //TODO: 非対応
     //inputData.fogCoord = input.fogFactorAndVertexLight.x;
     //inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
     inputData.vertexLighting = 0;
-    //inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    //inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(positionCS);
     inputData.shadowMask = SAMPLE_SHADOWMASK(lightmapUV);
 
 #ifdef _SPECULAR_SETUP
