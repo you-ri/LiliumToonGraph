@@ -52,9 +52,6 @@
             "m_Id": "08e70495d3034f34bef644a50bd2626a"
         },
         {
-            "m_Id": "945c7db36fdb43b9b39d9ba885f302fc"
-        },
-        {
             "m_Id": "d1cd599c6d19479ea6455644fc61b66b"
         },
         {
@@ -3841,30 +3838,6 @@
     "m_Labels": [
         "X"
     ]
-}
-
-{
-    "m_SGVersion": 3,
-    "m_Type": "UnityEditor.ShaderGraph.Internal.ColorShaderProperty",
-    "m_ObjectId": "945c7db36fdb43b9b39d9ba885f302fc",
-    "m_Guid": {
-        "m_GuidSerialized": "f411297e-e078-4fc0-97c4-e82bc7a57a39"
-    },
-    "m_Name": "Shade Environmental Color",
-    "m_DefaultReferenceName": "Color_E8797B55",
-    "m_OverrideReferenceName": "_ShadeEnvironmentalColor",
-    "m_GeneratePropertyBlock": true,
-    "m_Precision": 0,
-    "overrideHLSLDeclaration": false,
-    "hlslDeclarationOverride": 0,
-    "m_Hidden": false,
-    "m_Value": {
-        "r": 0.501960813999176,
-        "g": 0.501960813999176,
-        "b": 0.501960813999176,
-        "a": 1.0
-    },
-    "m_ColorMode": 0
 }
 
 {
