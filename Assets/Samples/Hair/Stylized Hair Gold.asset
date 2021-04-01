@@ -144,6 +144,7 @@ Material:
     - Vector1_77B0B5C: 100
     - Vector1_7DE6D5AB: 1
     - Vector1_CAB8116: 0.3
+    - Vector1_CAB8116_1: 0.5
     - Vector1_CB657A23: 80
     - Vector1_D9A6FB2A: 1
     - Vector1_DD218029: -0.15
@@ -151,7 +152,7 @@ Material:
     - _BlendMode: 1
     - _BumpScale: 1
     - _CullMode: 0
-    - _Curvature: 0.7
+    - _Curvature: 0.2
     - _Cutoff: 0.5
     - _DebugMode: 0
     - _DstBlend: 0
@@ -167,9 +168,11 @@ Material:
     - _PrimaryShift: 0.96
     - _ReceiveShadowRate: 1
     - _SPECULARHIGHLIGHTS: 1
+    - _Shade: 1
     - _ShadeShift: -0.3
     - _ShadeToony: 0.731
     - _ShadingGradeRate: 1
+    - _Shadow: 1
     - _ShdeToony: 1
     - _Smoothness: 1
     - _SpecularScale: 0.51
@@ -194,7 +197,7 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _MainColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 1, g: 0.7481291, b: 0.19339621, a: 1}
+    - _ShadeColor: {r: 1, g: 0.35982978, b: 0, a: 1}
     - _ShadeEnvironmentalColor: {r: 1, g: 0.6839622, b: 0.6839622, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 5, g: 5, b: 5, a: 0}

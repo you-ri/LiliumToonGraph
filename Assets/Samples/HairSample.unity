@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 3457b412defd59c449c9f11d3785ecd6, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 87194f82c143acc4fb6dfed645d46546, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 8900000, guid: 19d2e5d78ae7c5746baf123f897248ac, type: 3}
   m_Sun: {fileID: 1836709577}
-  m_IndirectSpecularColor: {r: 0.69652784, g: 0.7321913, b: 0.7507105, a: 1}
+  m_IndirectSpecularColor: {r: 0.40956944, g: 0.51206595, b: 0.7776921, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -97,7 +97,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000000, guid: 729533078339e0b489134216459fd154,
+  m_LightingDataAsset: {fileID: 112000000, guid: 94821095df965b740854d6f2321f28e6,
     type: 2}
   m_LightingSettings: {fileID: 1579263462}
 --- !u!196 &4
@@ -4811,8 +4811,8 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.94509804, b: 0.72156864, a: 1}
-  m_Intensity: 0.8
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.5
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -4869,7 +4869,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1836709576}
-  m_LocalRotation: {x: 0.1825742, y: -0.3651484, z: -0, w: 0.91287094}
+  m_LocalRotation: {x: 0.40824828, y: 0.8164966, z: 0, w: 0.40824828}
   m_LocalPosition: {x: -0.89, y: 0, z: 1.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -4965,7 +4965,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d40cbeddc24dc47a686c374a85679f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentIndex: 0
+  currentIndex: 2
   _lightingEnvironments:
   - {fileID: 11400000, guid: 6bc07c7ee13ce764b81116bda60d6797, type: 2}
   - {fileID: 11400000, guid: 9fe1c26a6d118d14781f968aabc007f5, type: 2}
