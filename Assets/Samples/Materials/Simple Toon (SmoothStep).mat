@@ -133,6 +133,14 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ToonLightCustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_New_24:
+        m_Texture: {fileID: 2800000, guid: 796516fe033b0144a950e0f5ec7d3bb8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ToonLightCustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_ShadeLUT_24:
+        m_Texture: {fileID: 2800000, guid: 748732eec48d16d47a621a27443db0ea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ToonLightingSmoothstepRamp_7490ec7b752e4ec8a91b1b1951ed1e45_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
         m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
         m_Scale: {x: 1, y: 1}

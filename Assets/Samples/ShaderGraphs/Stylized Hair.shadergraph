@@ -2649,7 +2649,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "403e7e707f2d4b42937f9bb30f259d7f",
     "m_Id": 0,
-    "m_DisplayName": "Shadow Shift",
+    "m_DisplayName": "Shade Shift",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

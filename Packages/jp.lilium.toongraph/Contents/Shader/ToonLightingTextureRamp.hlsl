@@ -18,9 +18,9 @@ void ToonLight_half(
     out half4 Color, out half3 ShadeColor)
 {
     InputData inputData = (InputData)0;
-    half ShadowOffset = 0;
-    //half ShadowOffset = 1 - ShadowShift;
-    //ShadowShift = 0;
+    //half ShadowOffset = 0;
+    half ShadowOffset = ShadowShift - 1;
+    ShadowShift = 1;
 
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = WorldPosition;

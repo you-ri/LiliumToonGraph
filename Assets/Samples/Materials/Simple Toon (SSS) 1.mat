@@ -97,6 +97,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ToonLightCustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_ShadeLUT_24:
+        m_Texture: {fileID: 2800000, guid: 748732eec48d16d47a621a27443db0ea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ToonLightingSmoothstepRamp_7490ec7b752e4ec8a91b1b1951ed1e45_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
         m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -137,7 +141,7 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Shade2Color: {r: 0.23115504, g: 1, b: 0, a: 1}
-    - _ShadeColor: {r: 1, g: 0, b: 0, a: 0}
+    - _ShadeColor: {r: 1, g: 0, b: 0, a: 0.5019608}
     - _ShadeEnvironmentalColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SssColor: {r: 1, g: 0, b: 0.0670702, a: 1}

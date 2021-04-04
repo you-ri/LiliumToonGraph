@@ -133,6 +133,14 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ToonLightCustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_New_24:
+        m_Texture: {fileID: 2800000, guid: 796516fe033b0144a950e0f5ec7d3bb8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ToonLightCustomFunction_bb929d0fd24b47ba9893d8a9a3b1fcae_ShadeLUT_24:
+        m_Texture: {fileID: 2800000, guid: 748732eec48d16d47a621a27443db0ea, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ToonLightingSmoothstepRamp_0988ec60b37e4d8aa158a87d8afa3ca1_Texture2D34e6fc2fdfc44a82b26bef41447d6d72_248187755:
         m_Texture: {fileID: 2800000, guid: 63f8961755d8d5b45a64165581eb373e, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -182,10 +190,10 @@ Material:
     - _Parallax: 0.02
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Shade: 0.9
+    - _Shade: 1
     - _ShadeToony: 1
     - _Shade_1: 1
-    - _Shadow: 1.2
+    - _Shadow: 1
     - _ShdeToony: 1
     - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
@@ -209,7 +217,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ShadeColor: {r: 0.8490566, g: 0.8490566, b: 0.8490566, a: 0}
+    - _ShadeColor: {r: 1, g: 1, b: 1, a: 0.5019608}
     - _ShadeEnvironmentalColor: {r: 0.62352943, g: 0.62352943, b: 0.62352943, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}

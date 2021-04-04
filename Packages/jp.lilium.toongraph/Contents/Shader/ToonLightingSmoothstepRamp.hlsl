@@ -19,9 +19,9 @@ void ToonLight_half(
 {
     InputData inputData = (InputData)0;
 
-    half ShadowOffset = 0;
-    //half ShadowOffset = 1 - ShadowShift;
-    //ShadowShift = 0;
+    //half ShadowOffset = 0;
+    half ShadowOffset = ShadowShift - 1;
+    ShadowShift = 1;
 
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = WorldPosition;
@@ -80,10 +80,10 @@ void ToonLight_half(
     float3 specular = 0;
     float metallic = Specular.r;
 #endif
-    TEXTURE2D(shadeRamp);
+    TEXTURE2D(ShadeRamp);
 
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadowShift, ShadeShift, ShadeToony, Curvature, shadeRamp, ToonyLighting, 
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadowShift, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
         ShadeColor);
 }
 
@@ -141,6 +141,7 @@ void ToonLight_half(
     Color = float4(Diffuse, Alpha);
     ShadeColor = (SSS + Diffuse) * 0.5f;
 }
+
 
 #endif
 
