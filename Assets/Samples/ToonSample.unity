@@ -384,8 +384,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bc07c7ee13ce764b81116bda60d6797, type: 2}
   - {fileID: 11400000, guid: 9fe1c26a6d118d14781f968aabc007f5, type: 2}
   - {fileID: 11400000, guid: 88f9600b223d85b4b9163e1199d6a6c1, type: 2}
-  - {fileID: 11400000, guid: 88dd5d7cbed5f8e45b124955137c4ea3, type: 2}
-  - {fileID: 11400000, guid: 562d7ba6b39943f4ea44e7867707c8ab, type: 2}
   duration: 3
   cameraIndex: 0
   autoRotation: 1
