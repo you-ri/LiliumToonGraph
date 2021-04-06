@@ -4025,12 +4025,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d40cbeddc24dc47a686c374a85679f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentIndex: 2
+  currentIndex: 0
   _lightingEnvironments:
   - {fileID: 11400000, guid: 620d7d165a67b7b4685bd3accfab8c63, type: 2}
   - {fileID: 11400000, guid: 7af1f19bfa66498418e18aacc8ac937a, type: 2}
   - {fileID: 11400000, guid: 5bde051dcac5770409592d551151bb9f, type: 2}
-  - {fileID: 11400000, guid: e6ab43a191855764f936194239ca0d34, type: 2}
   duration: 3
   cameraIndex: 0
   autoRotation: 1
@@ -4360,7 +4359,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2085946746}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.026, y: 0.3, z: 0}
+  m_LocalPosition: {x: 0, y: 0.3, z: 0}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_Children:
   - {fileID: 210577045}
