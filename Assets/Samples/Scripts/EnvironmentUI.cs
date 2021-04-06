@@ -70,7 +70,7 @@ public class EnvironmentUI : MonoBehaviour
 
         lightingEnvironmentView.Add(_mainLightView);
 
-        // Camera
+        // Cameras
         _cameraGorup = new RadioButtonGroup ();
         _cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
         _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
@@ -79,7 +79,7 @@ public class EnvironmentUI : MonoBehaviour
 
         _cameraGorup.value = _model.cameraIndex;
 
-        // Object
+        // Objects
         foreach (var obj in _model.objects) {
             var objectsView = new VisualElement();
             var activationToggle = new Toggle(obj.name);
@@ -87,6 +87,7 @@ public class EnvironmentUI : MonoBehaviour
             activationToggle.RegisterValueChangedCallback(e => obj.SetActive(!obj.gameObject.activeSelf));
             objectsView.Add(activationToggle);
  
+            // Components
             var controlable = obj.GetComponent<ExposeBehaviour>();
             if (controlable != null) {
                 var componentsView = new VisualElement();
@@ -94,7 +95,7 @@ public class EnvironmentUI : MonoBehaviour
                 foreach (var eb in controlable.exposeBehaviours) {
                     if (eb.behaviour == null) continue;
                     var componentToggle = new Toggle(eb.name);
-                    componentToggle.SetValueWithoutNotify(obj.activeSelf);
+                    componentToggle.SetValueWithoutNotify(eb.behaviour.enabled);
                     componentToggle.RegisterValueChangedCallback(e => eb.behaviour.enabled = !eb.behaviour.enabled);
                     componentsView.Add(componentToggle);
                 }
