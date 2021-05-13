@@ -1,10 +1,11 @@
 # Change Log
 
 ## [0.6.0-preview.x] -
-- Unity2020.3.1f1
+- Unity2020.3.7f1
 - Occlusion周りの色計算を修正
 - Shadow Shiftを追加
 - Lighting Environment UIを追加
+- 追加ライトの距離減衰のトゥーン化
 - SSSの色計算を変更
 - 影内のSSSの影響を調整できるように
 - Toon Outline Transform Scaled Max Distance サブグラフの修正

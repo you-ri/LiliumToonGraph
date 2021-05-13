@@ -485,6 +485,22 @@ half4 UniversalFragmentToon(
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
+
+        // 追加ライトの距離減衰のトゥーン化
+        // TODO: 関連パラメーターを外に出す
+        // TODO: 高速化
+        // reference: lighting.hlsl GetAdditionalPerObjectLight()
+        // lightPositionWS.w == 0 ... directional light.
+        // lightPositionWS.w == 1 ... punctual lights.
+        int perObjectLightIndex = GetPerObjectLightIndex(i);
+#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
+    float4 lightPositionWS = _AdditionalLightsBuffer[perObjectLightIndex].position;
+#else
+    float4 lightPositionWS = _AdditionalLightsPosition[perObjectLightIndex];
+#endif
+        light.distanceAttenuation = lerp(light.distanceAttenuation, step(0.01f, light.distanceAttenuation) * 0.2f, lightPositionWS.w);
+
+
         #if defined(_SCREEN_SPACE_OCCLUSION)
             light.color *= aoFactor.directAmbientOcclusion;
         #endif
