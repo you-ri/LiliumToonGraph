@@ -498,7 +498,7 @@ half4 UniversalFragmentToon(
 #else
     float4 lightPositionWS = _AdditionalLightsPosition[perObjectLightIndex];
 #endif
-        light.distanceAttenuation = lerp(light.distanceAttenuation, step(0.01f, light.distanceAttenuation) * 0.2f, lightPositionWS.w);
+        light.distanceAttenuation = lerp(light.distanceAttenuation, step(0.01f, light.distanceAttenuation) * 0.2f, lightPositionWS.w * __ToonyLighting);
 
 
         #if defined(_SCREEN_SPACE_OCCLUSION)
