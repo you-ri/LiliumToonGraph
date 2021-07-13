@@ -482,6 +482,7 @@ half4 UniversalFragmentToon(
     color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
+
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
@@ -492,6 +493,7 @@ half4 UniversalFragmentToon(
         // reference: lighting.hlsl GetAdditionalPerObjectLight()
         // lightPositionWS.w == 0 ... directional light.
         // lightPositionWS.w == 1 ... punctual lights.
+        
         int perObjectLightIndex = GetPerObjectLightIndex(i);
 #if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
     float4 lightPositionWS = _AdditionalLightsBuffer[perObjectLightIndex].position;

@@ -183,7 +183,7 @@ namespace Lilium.ToonGraph.Editor
                                                             descs.Contains(BlockFields.VertexDescription.Normal) ||
                                                             descs.Contains(BlockFields.VertexDescription.Tangent));
             context.AddField(Fields.GraphPixel);
-            context.AddField(Fields.AlphaClip,              alphaClip);
+            context.AddField(Fields.AlphaTest,              alphaClip);
 
 
             context.AddField(UniversalFields.SurfaceOpaque,       surfaceType == SurfaceType.Opaque);
