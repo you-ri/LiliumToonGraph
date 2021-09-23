@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.unity.burst": {
-      "version": "1.6.0-pre.2",
+      "version": "1.6.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -10,19 +10,17 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.cinemachine": {
-      "version": "2.8.0-pre.1",
+      "version": "2.8.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "1.5.7",
+      "version": "1.9.0",
       "depth": 0,
       "source": "registry",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "2.0.0"
-      },
+      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
@@ -42,7 +40,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.9",
+      "version": "2.0.11",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -51,7 +49,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.vscode": {
-      "version": "1.2.3",
+      "version": "1.2.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -59,13 +57,6 @@
     },
     "com.unity.mathematics": {
       "version": "1.2.1",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "2.0.0",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
@@ -92,7 +83,7 @@
       }
     },
     "com.unity.searcher": {
-      "version": "4.3.2",
+      "version": "4.8.0",
       "depth": 2,
       "source": "registry",
       "dependencies": {},
@@ -104,11 +95,11 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.render-pipelines.core": "12.0.0",
-        "com.unity.searcher": "4.3.1"
+        "com.unity.searcher": "4.8.0"
       }
     },
     "com.unity.test-framework": {
-      "version": "1.1.26",
+      "version": "1.1.29",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -128,7 +119,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.timeline": {
-      "version": "1.6.0-pre.5",
+      "version": "1.6.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -149,7 +140,7 @@
       }
     },
     "jp.keijiro.danish-statues": {
-      "version": "0.0.4",
+      "version": "1.0.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},

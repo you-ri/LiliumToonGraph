@@ -6,10 +6,12 @@ namespace Lilium.ToonGraph.Editor
 {
     static class UniversalStructs
     {
+
         public static StructDescriptor Varyings = new StructDescriptor()
         {
             name = "Varyings",
             packFields = true,
+            populateWithCustomInterpolators = true,
             fields = new FieldDescriptor[]
             {
                 StructFields.Varyings.positionCS,
@@ -23,13 +25,14 @@ namespace Lilium.ToonGraph.Editor
                 StructFields.Varyings.color,
                 StructFields.Varyings.viewDirectionWS,
                 StructFields.Varyings.screenPosition,
-                UniversalStructFields.Varyings.lightmapUV,
-                UniversalStructFields.Varyings.sh,
-                UniversalStructFields.Varyings.fogFactorAndVertexLight,
-                UniversalStructFields.Varyings.shadowCoord,
+                ToonStructFields.Varyings.staticLightmapUV,
+                ToonStructFields.Varyings.dynamicLightmapUV,
+                ToonStructFields.Varyings.sh,
+                ToonStructFields.Varyings.fogFactorAndVertexLight,
+                ToonStructFields.Varyings.shadowCoord,
                 StructFields.Varyings.instanceID,
-                UniversalStructFields.Varyings.stereoTargetEyeIndexAsBlendIdx0,
-                UniversalStructFields.Varyings.stereoTargetEyeIndexAsRTArrayIdx,
+                ToonStructFields.Varyings.stereoTargetEyeIndexAsBlendIdx0,
+                ToonStructFields.Varyings.stereoTargetEyeIndexAsRTArrayIdx,
                 StructFields.Varyings.cullFace,
             }
         };

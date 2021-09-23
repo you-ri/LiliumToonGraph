@@ -14,7 +14,7 @@ namespace Lilium.ToonGraph.Editor
             public static BlockFieldDescriptor OutlineWidth    = new BlockFieldDescriptor(VertexDescription.name, "OutlineWidth", "Outline Width", "VERTEXDESCRIPTION_OUTLINEWIDTH",
                 new FloatControl(0.5f), ShaderStage.Vertex);
 
-           public static BlockFieldDescriptor OutlinePosition        = new BlockFieldDescriptor(VertexDescription.name, "OutlinePosition", "Outline Position", "VERTEXDESCRIPTION_OUTLINEPOSITION",
+            public static BlockFieldDescriptor OutlinePosition  = new BlockFieldDescriptor(VertexDescription.name, "OutlinePosition", "Outline Position", "VERTEXDESCRIPTION_OUTLINEPOSITION",
                 new PositionControl(CoordinateSpace.Object), ShaderStage.Vertex);
  
         }

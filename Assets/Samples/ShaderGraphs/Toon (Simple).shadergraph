@@ -747,7 +747,8 @@
         "serializedMesh": {
             "m_SerializedMesh": "{\"mesh\":{\"fileID\":10200,\"guid\":\"0000000000000000e000000000000000\",\"type\":0}}",
             "m_Guid": ""
-        }
+        },
+        "preventRotation": false
     },
     "m_Path": "Shader Graphs",
     "m_GraphPrecision": 0,
@@ -1283,7 +1284,7 @@
     },
     "m_TextureType": 0,
     "m_NormalMapSpace": 0,
-    "m_DisableGlobalMipBias": false
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -2061,7 +2062,7 @@
     },
     "m_TextureType": 1,
     "m_NormalMapSpace": 0,
-    "m_DisableGlobalMipBias": false
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -3348,7 +3349,7 @@
     },
     "m_TextureType": 0,
     "m_NormalMapSpace": 0,
-    "m_DisableGlobalMipBias": false
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -3588,14 +3589,21 @@
 }
 
 {
-    "m_SGVersion": 0,
+    "m_SGVersion": 1,
     "m_Type": "Lilium.ToonGraph.Editor.ToonTarget",
     "m_ObjectId": "97b9bef995c34c2787aedbe1a05fdb96",
+    "m_ActiveSubTarget": {
+        "m_Id": "e84e13ca8f1340e2bf176e2b70b3e301"
+    },
+    "m_AllowMaterialOverride": false,
     "m_SurfaceType": 0,
+    "m_ZTestMode": 4,
+    "m_ZWriteControl": 0,
     "m_AlphaMode": 2,
-    "m_WorkflowMode": 1,
-    "m_NormalDropOffSpace": 0,
+    "m_RenderFace": 2,
     "m_AlphaClip": true,
+    "m_CastShadows": true,
+    "m_ReceiveShadows": true,
     "m_CustomEditorGUI": ""
 }
 
@@ -3918,7 +3926,7 @@
     },
     "m_TextureType": 0,
     "m_NormalMapSpace": 0,
-    "m_DisableGlobalMipBias": false
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -5121,7 +5129,7 @@
     },
     "m_TextureType": 0,
     "m_NormalMapSpace": 0,
-    "m_DisableGlobalMipBias": false
+    "m_EnableGlobalMipBias": true
 }
 
 {
@@ -5207,6 +5215,15 @@
     "m_Property": {
         "m_Id": "37297097cc9d4a3f8c4a61e2c960708d"
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "Lilium.ToonGraph.Editor.UniversalLitSubTarget",
+    "m_ObjectId": "e84e13ca8f1340e2bf176e2b70b3e301",
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0,
+    "m_ClearCoat": false
 }
 
 {
