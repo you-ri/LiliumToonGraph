@@ -9,17 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a8fdda5b4c5f6544bbac8a17c59089c, type: 3}
+  m_Script: {fileID: 19001, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: LiberationSans SDF
   m_EditorClassIdentifier: 
   m_Version: 1.1.0
   m_Material: {fileID: 4683684913593235938}
   m_SourceFontFileGUID: 189c84d4bdcba6d449b66c25aad92981
-  m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 189c84d4bdcba6d449b66c25aad92981,
-    type: 3}
   m_SourceFontFile: {fileID: 12800000, guid: 189c84d4bdcba6d449b66c25aad92981, type: 3}
   m_AtlasPopulationMode: 1
+  InternalDynamicOS: 0
   m_FaceInfo:
+    m_FaceIndex: 0
     m_FamilyName: Liberation Sans
     m_StyleName: Regular
     m_PointSize: 90
@@ -82,6 +82,7 @@ MonoBehaviour:
   m_FallbackFontAssetTable: []
   m_fontAssetCreationEditorSettings:
     sourceFontFileGUID: 189c84d4bdcba6d449b66c25aad92981
+    faceIndex: 0
     pointSizeSamplingMode: 0
     pointSize: 90
     padding: 9
@@ -102,34 +103,6 @@ MonoBehaviour:
   m_BoldStyleSpacing: 7
   m_ItalicStyleSlant: 35
   m_TabMultiple: 10
-  m_fontInfo:
-    Name: 
-    PointSize: 0
-    Scale: 0
-    CharacterCount: 0
-    LineHeight: 0
-    Baseline: 0
-    Ascender: 0
-    CapHeight: 0
-    Descender: 0
-    CenterLine: 0
-    SuperscriptOffset: 0
-    SubscriptOffset: 0
-    SubSize: 0
-    Underline: 0
-    UnderlineThickness: 0
-    strikethrough: 0
-    strikethroughThickness: 0
-    TabWidth: 0
-    Padding: 0
-    AtlasWidth: 0
-    AtlasHeight: 0
-  fontWeights: []
-  atlas: {fileID: 0}
-  m_glyphInfoList: []
-  fallbackFontAssets: []
-  m_KerningTable:
-    kerningPairs: []
 --- !u!28 &1846935173530049853
 Texture2D:
   m_ObjectHideFlags: 0
@@ -185,7 +158,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: LiberationSans Atlas Material
-  m_Shader: {fileID: 4800000, guid: 62b6d79d475fb5147ab93c75dede1914, type: 3}
+  m_Shader: {fileID: 19011, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0

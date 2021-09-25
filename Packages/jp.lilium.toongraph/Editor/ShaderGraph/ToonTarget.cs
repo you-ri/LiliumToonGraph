@@ -312,6 +312,8 @@ namespace Lilium.ToonGraph.Editor
             context.AddBlock(BlockFields.VertexDescription.Normal);
             context.AddBlock(BlockFields.VertexDescription.Tangent);
             context.AddBlock(BlockFields.SurfaceDescription.BaseColor);
+            context.AddBlock(ToonBlockFields.VertexDescription.OutlinePosition);            
+            context.AddBlock(ToonBlockFields.SurfaceDescription.OutlineColor);            
 
             // SubTarget blocks
             m_ActiveSubTarget.value.GetActiveBlocks(ref context);
@@ -963,6 +965,7 @@ namespace Lilium.ToonGraph.Editor
             BlockFields.VertexDescription.Position,
             BlockFields.VertexDescription.Normal,
             BlockFields.VertexDescription.Tangent,
+            ToonBlockFields.VertexDescription.OutlinePosition,            
         };
 
         public static readonly BlockFieldDescriptor[] FragmentAlphaOnly = new BlockFieldDescriptor[]
@@ -1205,6 +1208,59 @@ namespace Lilium.ToonGraph.Editor
 
             return result;
         }
+
+        // used by lit/unlit targets
+        public static RenderStateCollection Outine(ToonTarget target)
+        {
+            if (target.allowMaterialOverride)
+                return MaterialControlledRenderState;
+            else
+            {
+                var result = new RenderStateCollection();
+
+                result.Add(RenderState.ZTest(target.zTestMode.ToString()));
+
+                if (target.zWriteControl == ZWriteControl.Auto)
+                {
+                    if (target.surfaceType == SurfaceType.Opaque)
+                        result.Add(RenderState.ZWrite(ZWrite.On));
+                    else
+                        result.Add(RenderState.ZWrite(ZWrite.Off));
+                }
+                else if (target.zWriteControl == ZWriteControl.ForceEnabled)
+                    result.Add(RenderState.ZWrite(ZWrite.On));
+                else
+                    result.Add(RenderState.ZWrite(ZWrite.Off));
+                
+                // Modified:
+                //result.Add(RenderState.Cull(RenderFaceToCull(target.renderFace)));
+                result.Add(RenderState.Cull(Cull.Front));
+
+                if (target.surfaceType == SurfaceType.Opaque)
+                {
+                    result.Add(RenderState.Blend(Blend.One, Blend.Zero));
+                }
+                else
+                    switch (target.alphaMode)
+                    {
+                        case AlphaMode.Alpha:
+                            result.Add(RenderState.Blend(Blend.SrcAlpha, Blend.OneMinusSrcAlpha, Blend.One, Blend.OneMinusSrcAlpha));
+                            break;
+                        case AlphaMode.Premultiply:
+                            result.Add(RenderState.Blend(Blend.One, Blend.OneMinusSrcAlpha, Blend.One, Blend.OneMinusSrcAlpha));
+                            break;
+                        case AlphaMode.Additive:
+                            result.Add(RenderState.Blend(Blend.SrcAlpha, Blend.One, Blend.One, Blend.One));
+                            break;
+                        case AlphaMode.Multiply:
+                            result.Add(RenderState.Blend(Blend.DstColor, Blend.Zero));
+                            break;
+                    }
+
+                return result;
+            }
+
+        }        
     }
     #endregion
 

@@ -15,6 +15,7 @@ using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEditor.Rendering.Universal;
 using UnityEditor.Rendering.Universal.ShaderGraph;
+using static Lilium.ToonGraph.Editor.SubShaderUtils;
 
 namespace Lilium.ToonGraph.Editor
 {
@@ -274,7 +275,8 @@ namespace Lilium.ToonGraph.Editor
 
         #region SubShader
         static class SubShaders
-        {
+        {     
+
             // SM 4.5, compute with dots instancing
             public static SubShaderDescriptor LitComputeDotsSubShader(ToonTarget target, WorkflowMode workflowMode, string renderType, string renderQueue, bool complexLit)
             {
@@ -293,10 +295,11 @@ namespace Lilium.ToonGraph.Editor
                 else
                     result.passes.Add(LitPasses.Forward(target, workflowMode, CorePragmas.DOTSForward));
 
+                result.passes.Add(LitPasses.Outline(target, workflowMode, CorePragmas.DOTSForward));
+
                 if (!complexLit)
                     result.passes.Add(LitPasses.GBuffer(target, workflowMode));
-// Modified:
-#if false
+
                 // cull the shadowcaster pass if we know it will never be used
                 if (target.castShadows || target.allowMaterialOverride)
                     result.passes.Add(PassVariant(CorePasses.ShadowCaster(target),   CorePragmas.DOTSInstanced));
@@ -308,11 +311,11 @@ namespace Lilium.ToonGraph.Editor
                     result.passes.Add(PassVariant(LitPasses.DepthNormalOnly(target), CorePragmas.DOTSInstanced));
                 else
                     result.passes.Add(PassVariant(LitPasses.DepthNormal(target), CorePragmas.DOTSInstanced));
+
                 result.passes.Add(PassVariant(LitPasses.Meta(target),            CorePragmas.DOTSDefault));
                 result.passes.Add(PassVariant(LitPasses._2D(target),             CorePragmas.DOTSDefault));
                 result.passes.Add(PassVariant(CorePasses.SceneSelection(target), CorePragmas.DOTSDefault));
                 result.passes.Add(PassVariant(CorePasses.ScenePicking(target),   CorePragmas.DOTSDefault));
-#endif
                 return result;
             }
 
@@ -661,6 +664,49 @@ namespace Lilium.ToonGraph.Editor
 
                 return result;
             }
+
+            public static PassDescriptor Outline(ToonTarget target, WorkflowMode workflowMode, PragmaCollection pragmas = null)
+            {
+                var result = new PassDescriptor()
+                {
+                    // Definition
+                    displayName = "Lilium Outline",
+                    referenceName = "SHADERPASS_FORWARD",
+                    //lightMode = "UniversalForward",
+                    useInPreview = true,
+
+                    // Template
+                    passTemplatePath = ToonTarget.kUberTemplatePath,
+                    sharedTemplateDirectories = ToonTarget.kSharedTemplateDirectories,
+
+                    // Port Mask
+                    validVertexBlocks = CoreBlockMasks.Vertex,
+                    validPixelBlocks = LitBlockMasks.FragmentLit,
+
+                    // Fields
+                    structs = CoreStructCollections.Default,
+                    requiredFields = LitRequiredFields.Forward,
+                    fieldDependencies = CoreFieldDependencies.Default,
+
+                    // Conditional State
+                    renderStates = CoreRenderStates.Outine(target),
+                    pragmas = pragmas ?? CorePragmas.Forward,     // NOTE: SM 2.0 only GL
+                    defines = new DefineCollection() { CoreDefines.UseFragmentFog },
+                    keywords = new KeywordCollection() { LitKeywords.Forward },
+                    includes = LitIncludes.Outline,
+
+                    // Custom Interpolator Support
+                    customInterpolators = CoreCustomInterpDescriptors.Common
+                };
+
+                CorePasses.AddTargetSurfaceControlsToPass(ref result, target);
+                AddWorkflowModeControlToPass(ref result, target, workflowMode);
+                AddReceiveShadowsControlToPass(ref result, target, target.receiveShadows);
+
+                return result;
+            }
+
+            
         }
         #endregion
 
@@ -680,6 +726,7 @@ namespace Lilium.ToonGraph.Editor
                 BlockFields.SurfaceDescription.Occlusion,
                 BlockFields.SurfaceDescription.Alpha,
                 BlockFields.SurfaceDescription.AlphaClipThreshold,
+                ToonBlockFields.SurfaceDescription.OutlineColor,                
             };
 
             public static readonly BlockFieldDescriptor[] FragmentComplexLit = new BlockFieldDescriptor[]
