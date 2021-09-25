@@ -8,7 +8,7 @@ namespace Lilium.ToonGraph.Editor
 {
     static class CreateToonShaderGraph
     {
-        [MenuItem("Assets/Create/Shader/Universal Render Pipeline/Lilium Toon Shader Graph", false, 208)]
+        [MenuItem("Assets/Create/Shader Graph/URP/Lilium Toon Shader Graph", false, 208)]
         public static void CreateToonGraph()
         {
             var target = (ToonTarget)Activator.CreateInstance(typeof(ToonTarget));
