@@ -1,7 +1,8 @@
 # Change Log
 
 ## [0.6.0-preview.x] -
-- Unity2020.3.7f1
+- Unity2021.2.0b14
+- UniversalRP v12.0.0
 - Occlusion周りの色計算を修正
 - Shadow Shiftを追加
 - Lighting Environment UIを追加

@@ -1,5 +1,5 @@
 {
-    "m_SGVersion": 2,
+    "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.GraphData",
     "m_ObjectId": "332fdbdbedc54a128f31613f458ee9e5",
     "m_Properties": [
@@ -8,9 +8,18 @@
         },
         {
             "m_Id": "ab616b7c22bf44b5b4372fbac9b15d35"
+        },
+        {
+            "m_Id": "6068aa641b604c82909f5318c6312c4b"
         }
     ],
     "m_Keywords": [],
+    "m_Dropdowns": [],
+    "m_CategoryData": [
+        {
+            "m_Id": "8212fbf0f8e04c46b86d6b1b6a40439b"
+        }
+    ],
     "m_Nodes": [
         {
             "m_Id": "a49c81fefe714ad38a3447f49a1a8eaf"
@@ -29,6 +38,9 @@
         },
         {
             "m_Id": "70b23f98a7874bfabb3a210beb264cb0"
+        },
+        {
+            "m_Id": "f1e6b96eaf764db1b6d00591b9e8d034"
         }
     ],
     "m_GroupDatas": [],
@@ -93,7 +105,7 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "afa670ddf504417eb3568ab0cfbc5da2"
+                    "m_Id": "f1e6b96eaf764db1b6d00591b9e8d034"
                 },
                 "m_SlotId": 0
             },
@@ -123,10 +135,11 @@
         "serializedMesh": {
             "m_SerializedMesh": "{\"mesh\":{\"instanceID\":0}}",
             "m_Guid": ""
-        }
+        },
+        "preventRotation": false
     },
     "m_Path": "Sub Graphs",
-    "m_ConcretePrecision": 0,
+    "m_GraphPrecision": 0,
     "m_PreviewMode": 2,
     "m_OutputNode": {
         "m_Id": "a49c81fefe714ad38a3447f49a1a8eaf"
@@ -266,6 +279,33 @@
 }
 
 {
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector3ShaderProperty",
+    "m_ObjectId": "6068aa641b604c82909f5318c6312c4b",
+    "m_Guid": {
+        "m_GuidSerialized": "9e200b1d-1699-4c52-ba8b-82a22a6198dd"
+    },
+    "m_Name": "Position",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "Position",
+    "m_DefaultReferenceName": "_Position",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 2,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "6b1752cae1644c16b59d1755ce42c610",
@@ -331,9 +371,13 @@
         "m_GuidSerialized": "23270065-899c-4110-9e17-9b60e6fb1e6d"
     },
     "m_Name": "Width",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_78aea86254144fde8d0e857fca6e921b",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -344,6 +388,24 @@
         "x": 0.0,
         "y": 1.0
     }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CategoryData",
+    "m_ObjectId": "8212fbf0f8e04c46b86d6b1b6a40439b",
+    "m_Name": "",
+    "m_ChildObjectList": [
+        {
+            "m_Id": "78aea86254144fde8d0e857fca6e921b"
+        },
+        {
+            "m_Id": "ab616b7c22bf44b5b4372fbac9b15d35"
+        },
+        {
+            "m_Id": "6068aa641b604c82909f5318c6312c4b"
+        }
+    ]
 }
 
 {
@@ -404,10 +466,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -115.0,
-            "y": -0.00000858306884765625,
-            "width": 135.0,
-            "height": 77.0
+            "x": 165.9999542236328,
+            "y": 19.999988555908204,
+            "width": 134.00010681152345,
+            "height": 77.00003051757813
         }
     },
     "m_Slots": [
@@ -448,9 +510,13 @@
         "m_GuidSerialized": "c9446583-b96e-4f84-a9a3-b0f9e5b40bba"
     },
     "m_Name": "Max Width Distance",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_ab616b7c22bf44b5b4372fbac9b15d35",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
     "m_Precision": 0,
     "overrideHLSLDeclaration": false,
     "hlslDeclarationOverride": 0,
@@ -493,7 +559,8 @@
     "m_CustomColors": {
         "m_SerializableColors": []
     },
-    "m_Space": 0
+    "m_Space": 0,
+    "m_PositionSource": 0
 }
 
 {
@@ -505,6 +572,29 @@
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "OutlinePosition",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "b58ad2a506694413902f2c7fe1a6718e",
+    "m_Id": 0,
+    "m_DisplayName": "Position",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
     "m_StageCapability": 3,
     "m_Value": {
         "x": 0.0,
@@ -593,5 +683,40 @@
         "z": 0.0
     },
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "f1e6b96eaf764db1b6d00591b9e8d034",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -922.0,
+            "y": -291.0000305175781,
+            "width": 119.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "b58ad2a506694413902f2c7fe1a6718e"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "6068aa641b604c82909f5318c6312c4b"
+    }
 }
 

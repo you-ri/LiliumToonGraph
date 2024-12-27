@@ -5,6 +5,8 @@
 #ifndef UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
 #define UNIVERSAL_TOONLIGHTING_SMOOSTHSTEP_INCLUDED
 
+#pragma multi_compile _ _TOON_OUTLINE 
+
 #ifndef SHADERGRAPH_PREVIEW
 
 #include "ToonLighting.hlsl"
@@ -19,9 +21,99 @@ void ToonLight_half(
 {
     InputData inputData = (InputData)0;
 
+    Varyings input = (Varyings)0;
+    input.positionWS = WorldPosition;
+    input.tangentWS = float4(WorldTangent.xyz, 1);
+    input.normalWS = WorldNormal;
+    //input.fogFactorAndVertexLight = float4(0, 0, 0, 0);
+    #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+        input.shadowCoord = float4(0, 0, 0, 0);
+    #endif
+    #if defined(DYNAMICLIGHTMAP_ON)    
+        input.staticLightmapUV = float4(0, 0, 0, 0);
+        input.sh = float3(0, 0, 0);
+    #endif
+
+    inputData.positionWS = input.positionWS;
+
+#if defined(_NORMALMAP) || defined(_DETAIL)
+
+    float sgn = 1;//WorldTangent.w;      // should be either +1 or -1 TODO: WorldTangent.w の値を取得できないため、１で固定する。
+    float3 bitangent = sgn * cross(WorldNormal.xyz, WorldTangent.xyz);
+    inputData.normalWS = TransformTangentToWorld(Normal, half3x3(WorldTangent.xyz, bitangent.xyz, WorldNormal.xyz));
+#else
+    inputData.normalWS = WorldNormal;
+#endif
+    inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
+    inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+//    inputData.viewDirectionWS = SafeNormalize(WorldView);
+
+    #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+        inputData.shadowCoord = input.shadowCoord;
+    #elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
+        inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
+    #else
+        inputData.shadowCoord = TransformWorldToShadowCoord(WorldPosition); 
+    #endif
+
+    //inputData.fogCoord = InitializeInputDataFog(float4(input.positionWS, 1.0), input.fogFactorAndVertexLight.x);
+    //inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
+    float3 vertexSH;
+    float3 cameraDirectionWS = mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
+    float3 normalWSBakedGI = lerp(inputData.normalWS, cameraDirectionWS, ToonyLighting);        
+    OUTPUT_SH(normalWSBakedGI, vertexSH);
+
+    inputData.vertexLighting = 0;
+#if defined(DYNAMICLIGHTMAP_ON)
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV.xy, input.sh, normalWSBakedGI);
+#else
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, vertexSH, normalWSBakedGI);
+#endif
+    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
+
+    #if defined(DEBUG_DISPLAY)
+    #if defined(DYNAMICLIGHTMAP_ON)
+    inputData.dynamicLightmapUV = input.dynamicLightmapUV.xy;
+    #endif
+    #if defined(LIGHTMAP_ON)
+    inputData.staticLightmapUV = input.staticLightmapUV;
+    #else
+    inputData.vertexSH = input.sh;
+    #endif
+    #endif
+
+#ifdef _SPECULAR_SETUP
+    float3 specular = Specular;
+    float metallic = 1;
+#else   
+    float3 specular = 0;
+    float metallic = Specular.r;
+#endif
+    TEXTURE2D(ShadeRamp);
+
+    Color = UniversalFragmentToon(
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, 
+        ShadowShift, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
+        ShadeColor);
+}
+
+
+
+/*
+void ToonLight_half(
+    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
+    half3 Diffuse, half4 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
+    half ShadowShift, half ShadeShift, half ShadeToony,
+    half Curvature,
+    half ToonyLighting, 
+    out half4 Color, out half3 ShadeColor)
+{
+    InputData inputData = (InputData)0;
+
     //half ShadowOffset = 0;
     half ShadowOffset = ShadowShift - 1;
-    ShadowShift = 1;
+
 
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = WorldPosition;
@@ -87,46 +179,7 @@ void ToonLight_half(
         ShadeColor);
 }
 
-
-/*
-
-void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
-{
-    inputData = (InputData)0;
-
-#if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
-    inputData.positionWS = input.positionWS;
-#endif
-
-    half3 viewDirWS = SafeNormalize(input.viewDirWS);
-#if defined(_NORMALMAP) || defined(_DETAIL)
-    float sgn = input.tangentWS.w;      // should be either +1 or -1
-    float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
-    inputData.normalWS = TransformTangentToWorld(normalTS, half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz));
-#else
-    inputData.normalWS = input.normalWS;
-#endif
-
-    inputData.normalWS = NormalizeNormalPerPixel(inputData.normalWS);
-    inputData.viewDirectionWS = viewDirWS;
-
-#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-    inputData.shadowCoord = input.shadowCoord;
-#elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
-    inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
-#else
-    inputData.shadowCoord = float4(0, 0, 0, 0);
-#endif
-
-    inputData.fogCoord = input.fogFactorAndVertexLight.x;
-    inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
-    inputData.bakedGI = SAMPLE_GI(input.lightmapUV, input.vertexSH, inputData.normalWS);
-    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-    inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
-}
 */
-
-
 
 #else
 

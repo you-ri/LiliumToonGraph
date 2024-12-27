@@ -10,13 +10,9 @@
 //TODO: obsolate
 float __ToonyLighting = 0;
 
+// ライティングが有効な最小輝度
+float __lightingMinimumIntensity = 1;
 
-SamplerState sampler_LinearClamp
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Clamp; // of Mirror of Clamp of Border
-    AddressV = Clamp; // of Mirror of Clamp of Border
-};
 
 
 inline half3 CameraDirectionWS()
@@ -86,6 +82,7 @@ struct ToonBRDFData
 #endif
 };
 
+
 inline void InitializeToonBRDFData(
     half3 albedo, half4 sss, half metallic, half3 specular, half smoothness, half alpha, half occlusion, 
     half shadowShift, half shade, half shadeToony, float toonyLighting, Texture2D shadeRamp, half curvature,
@@ -103,7 +100,7 @@ inline void InitializeToonBRDFData(
     half reflectivity = 1.0 - oneMinusReflectivity;
 
     outBRDFData.diffuse = albedo * oneMinusReflectivity;
-    outBRDFData.specular = lerp(kDieletricSpec.rgb, albedo, metallic);
+    outBRDFData.specular = lerp(kDielectricSpec.rgb, albedo, metallic);
 #endif
 
     outBRDFData.grazingTerm = saturate(smoothness + reflectivity);
@@ -175,7 +172,7 @@ inline half ToonyValue(ToonBRDFData brdfData, half value, half maxValue = 1, hal
 
 half3 EnvironmentToon(ToonBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular, half fresnelTerm)
 {
-    half3 c = indirectDiffuse * brdfData.diffuse;
+    half3 c = indirectDiffuse * brdfData.diffuse + indirectDiffuse * brdfData.sss;
 
     float surfaceReduction = 1.0 / (brdfData.roughness2 + 1.0);
     c += surfaceReduction * indirectSpecular * lerp(brdfData.specular, brdfData.grazingTerm, fresnelTerm);
@@ -198,7 +195,7 @@ half3 EnvironmentBRDF(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 // * NDF [Modified] GGX
 // * Modified Kelemen and Szirmay-​Kalos for Visibility term
 // * Fresnel approximated with 1/LdotH
-half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half3 radiance)
+half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half3 radiance, half lighting)
 {
 #ifndef _SPECULARHIGHLIGHTS_OFF
     float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(viewDirectionWS));
@@ -349,10 +346,10 @@ half LightingSubsurface(float NdotL, half subsurfaceRadius)
 half3 LightingToonyDirect(
     ToonBRDFData brdfData,
     half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half lightShadow, 
-    half3 normalWS, half3 viewDirectionWS)
+    half3 normalWS, half3 viewDirectionWS, half lighting)
 {
     half3 radiance = lightColor * lightAttenuation * lightShadow;
-    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance);
+    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, lighting);
 }
 
 #ifdef SHADEMODEL_RAMP
@@ -366,7 +363,7 @@ half3 LightingToonyDirectRamp(
     half u = saturate((NdotL + lightShadow) / 2); // -1 ~ 1 > 0 ~ 1
     half3 radiance = lightColor * lightAttenuation;
     half3 ramp = SAMPLE_TEXTURE2D(brdfData.shadeRamp, sampler_LinearClamp, half2(u, brdfData.curvature));
-    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance) * ramp;
+    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, 1) * ramp;
 }
 
 #else
@@ -388,30 +385,31 @@ half3 LightingToonySubsurface(
 #endif
 
 
-half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
+half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS, half lighting)
 {
     float NdotL = dot(normalWS, light.direction);
     float shadeNdotL = NdotL + brdfData.shadeShift;
+    half shadow = brdfData.shadow + light.shadowAttenuation;
 
 #ifdef SHADEMODEL_RAMP
     half directRadiance = light.distanceAttenuation;
-    half directShadow = brdfData.shadow + light.shadowAttenuation;
 
     half3 color = LightingToonyDirectRamp (brdfData, shadeNdotL, light.color, light.direction, light.distanceAttenuation, directShadow, normalWS, viewDirectionWS);
 #else
     half shadeSmooth = brdfData.oneMinusShadeToony;
     half directRadiance = smoothstep(0, 0 + shadeSmooth + HALF_MIN, shadeNdotL) * light.distanceAttenuation;
-    half directShadow = smoothstep(1.0f - shadeSmooth - HALF_MIN, 1.0f, brdfData.shadow + light.shadowAttenuation);
-    half3 directColor = LightingToonyDirect(brdfData, light.color, light.direction, directRadiance, directShadow, normalWS, viewDirectionWS);
-
-    half subsurfaceShadow = smoothstep(0.0f, 0.0f + shadeSmooth + HALF_MIN, brdfData.shadow + light.shadowAttenuation);
+    half directShadow = smoothstep(1.0h - shadeSmooth - HALF_MIN, 1.0h, shadow);
+    half3 directColor = LightingToonyDirect(brdfData, light.color, light.direction, directRadiance, directShadow, normalWS, viewDirectionWS, 1);
+    half subsurfaceShadow = smoothstep(0.0h, 0.0h + shadeSmooth + HALF_MIN, shadow);
     half subsurfaceRadiance = light.distanceAttenuation;
     half3 sssColor = LightingToonySubsurface(brdfData, shadeNdotL, light.color, light.direction, subsurfaceRadiance, subsurfaceShadow, directRadiance * directShadow, normalWS);
 
     half3 color = directColor + sssColor;
 #endif
 
-    return color;
+    half3 flatColor = (brdfData.diffuse + brdfData.sss) * (light.color * light.distanceAttenuation * shadow) * saturate(dot(viewDirectionWS, light.direction));
+
+    return lerp(flatColor, color, lighting);
 }
 
 
@@ -430,8 +428,11 @@ half3 LightingPhysicallyBased(BRDFData brdfData, Light light, half3 normalWS, ha
 */
 
 
-
-
+// ライティングが有効な最小輝度
+half StepEqual(half edge, half value)
+{
+    return step(edge, value);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //                      Fragment Functions                                   //
@@ -450,7 +451,7 @@ half4 UniversalFragmentToon(
 #else
     bool specularHighlightsOff = false;
 #endif
-    __ToonyLighting = toonyLighing; //TODO: LightingDataに埋め込む
+    __ToonyLighting = toonyLighing; //TODO: obsolate LightingDataに埋め込む
 
     ToonBRDFData brdfData;
     InitializeToonBRDFData(diffuse, sss, metallic, specular, smoothness, alpha, occlusion, shadowShift, shadeShift, shadeToony, toonyLighing, shadeRamp, curvature, brdfData);
@@ -464,25 +465,34 @@ half4 UniversalFragmentToon(
 #else
     half4 shadowMask = half4(1, 1, 1, 1);
 #endif
-
-
     Light mainLight = GetMainLight(inputData.shadowCoord);
+
+    half lightingMinIntensity = length(mainLight.color.rgb);// __lightingMinimumIntensity;
+    int pixelLightCount2 = GetAdditionalLightsCount();
+    for (int i = 0; i < pixelLightCount2; ++i)
+    {
+        Light light = GetAdditionalLight(i, inputData.positionWS);
+        lightingMinIntensity = max(length(light.color.rgb * light.distanceAttenuation), lightingMinIntensity);
+    }
+
     #if defined(_SCREEN_SPACE_OCCLUSION)
         AmbientOcclusionFactor aoFactor = GetScreenSpaceAmbientOcclusion(inputData.normalizedScreenSpaceUV);
         mainLight.color *= aoFactor.directAmbientOcclusion;
         occlusion = min(occlusion, aoFactor.indirectAmbientOcclusion);
     #endif
 
-
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, half4(0, 0, 0, 0));
 
     half3 indirectDiffuse = inputData.bakedGI * occlusion;
     half3 color = GlobalIlluminationToon(brdfData, inputData.bakedGI, brdfData.occlusion, inputData.normalWS, inputData.viewDirectionWS);
 
-    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, inputData.viewDirectionWS);
+    half lighting = StepEqual(lightingMinIntensity, length(mainLight.color.rgb));
+    lighting = 1;
+    half3 cameraDirectionWS = mul(UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
+    color += LightingToonyBased(brdfData, mainLight, inputData.normalWS, cameraDirectionWS, lighting);
+
 #ifdef _ADDITIONAL_LIGHTS
     int pixelLightCount = GetAdditionalLightsCount();
-
     for (int i = 0; i < pixelLightCount; ++i)
     {
         Light light = GetAdditionalLight(i, inputData.positionWS);
@@ -493,21 +503,20 @@ half4 UniversalFragmentToon(
         // reference: lighting.hlsl GetAdditionalPerObjectLight()
         // lightPositionWS.w == 0 ... directional light.
         // lightPositionWS.w == 1 ... punctual lights.
-        
-        int perObjectLightIndex = GetPerObjectLightIndex(i);
-#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
-    float4 lightPositionWS = _AdditionalLightsBuffer[perObjectLightIndex].position;
-#else
-    float4 lightPositionWS = _AdditionalLightsPosition[perObjectLightIndex];
-#endif
-        light.distanceAttenuation = lerp(light.distanceAttenuation, step(0.01f, light.distanceAttenuation) * 0.2f, lightPositionWS.w * __ToonyLighting);
-
+//        int perObjectLightIndex = GetPerObjectLightIndex(i);
+//#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
+//    float4 lightPositionWS = _AdditionalLightsBuffer[perObjectLightIndex].position;
+//#else
+//    float4 lightPositionWS = _AdditionalLightsPosition[perObjectLightIndex];
+//#endif
+        //light.distanceAttenuation = lerp(light.distanceAttenuation, step(0.01f, light.distanceAttenuation) * 0.1f, lightPositionWS.w * __ToonyLighting);
 
         #if defined(_SCREEN_SPACE_OCCLUSION)
             light.color *= aoFactor.directAmbientOcclusion;
         #endif
 
-        color += LightingToonyBased(brdfData, light, inputData.normalWS, inputData.viewDirectionWS);
+        lighting = StepEqual(lightingMinIntensity, length(light.color.rgb * light.distanceAttenuation) );
+        color += LightingToonyBased(brdfData, light, inputData.normalWS, cameraDirectionWS, max(lighting, 1 - toonyLighing));
     }
 #endif
 

@@ -48,8 +48,7 @@ void ToonLight_half(
     inputData.shadowCoord = float4(0, 0, 0, 0);
 #endif
 
-
-#if (SHADERPASS == SHADERPASS_FORWARD) || (SHADERPASS == SHADERPASS_GBUFFER)
+#if defined(DYNAMICLIGHTMAP_ON)
     float2 lightmapUV = float2(0, 0);
     float3 vertexSH;
     //TODO: lightmapUVを取得する方法を見つけ出して解決する。
