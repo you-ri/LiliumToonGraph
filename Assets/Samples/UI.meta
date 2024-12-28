@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< Updated upstream:Assets/Samples/UI.meta
 guid: 2660dcf649e52664282874cb6d2bb065
+========
+guid: 6baf1f0a8c94d13499fb9d44d6086eac
+>>>>>>>> Stashed changes:Assets/TextMesh Pro.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
