@@ -71,9 +71,12 @@ public class EnvironmentUI : MonoBehaviour
         lightingEnvironmentView.Add(_mainLightView);
 
         // Cameras
-        _cameraGorup = new RadioButtonGroup ();
-        _cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
-        _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
+        _cameraGorup = new RadioButtonGroup();
+        if (_model.cameras != null)
+        {
+            //_cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
+            //_cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
+        }
         doc.rootVisualElement.Q("camera-list-view").Add(_cameraGorup);
         doc.rootVisualElement.Q("camera-list-view").style.display = _cameraGorup.choices.Count() != 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -129,7 +132,9 @@ public class EnvironmentUI : MonoBehaviour
     void _UpdateLightingEnvironmentIndex()
     {
         var index = _lightingEnvironmentGorup.value;
-        var selectedRadioButton = _lightingEnvironmentGorup.Children().First().Children().Skip(index).First();
+        var selectedRadioButton = _lightingEnvironmentGorup.Children().FirstOrDefault().Children().Skip(index).FirstOrDefault();
+
+        if (selectedRadioButton == null) return;
 
         if (_prevSelectedRadioButton != null) {
             _prevSelectedRadioButton.RemoveFromClassList("selected");
