@@ -72,11 +72,8 @@ public class EnvironmentUI : MonoBehaviour
 
         // Cameras
         _cameraGorup = new RadioButtonGroup();
-        if (_model.cameras != null)
-        {
-            //_cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
-            //_cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
-        }
+        _cameraGorup.choices = _model.cameras.Select ( t => t.name.Replace("CM vcam", ""));
+        _cameraGorup.RegisterValueChangedCallback( e => CameraSelectionChanged(e.newValue));
         doc.rootVisualElement.Q("camera-list-view").Add(_cameraGorup);
         doc.rootVisualElement.Q("camera-list-view").style.display = _cameraGorup.choices.Count() != 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -107,8 +104,6 @@ public class EnvironmentUI : MonoBehaviour
             doc.rootVisualElement.Q("object-list-view").Add(objectsView);
         }
         doc.rootVisualElement.Q("object-list-view").style.display = _model.objects.Length != 0 ? DisplayStyle.Flex : DisplayStyle.None;
-
-
     }
 
     void Update()
@@ -131,8 +126,10 @@ public class EnvironmentUI : MonoBehaviour
 
     void _UpdateLightingEnvironmentIndex()
     {
+        if (_lightingEnvironmentGorup.choices.Count() == 0) return;
+
         var index = _lightingEnvironmentGorup.value;
-        var selectedRadioButton = _lightingEnvironmentGorup.Children().FirstOrDefault().Children().Skip(index).FirstOrDefault();
+        var selectedRadioButton = _lightingEnvironmentGorup.ElementAt(index);
 
         if (selectedRadioButton == null) return;
 
@@ -157,8 +154,8 @@ public class EnvironmentUI : MonoBehaviour
 
     void _UpdateCameraIndex(int index)
     {
-        if (_cameraGorup.Children().First().Children().Count() <= index) return;
-        var selectedRadioButton = _cameraGorup.Children().First().Children().Skip(index).First();
+        if (_cameraGorup.childCount <= index) return;
+        var selectedRadioButton = _cameraGorup.ElementAt(index);
 
         if (_prevCameraSectedRadioButton != null) {
             _prevCameraSectedRadioButton.RemoveFromClassList("selected");
