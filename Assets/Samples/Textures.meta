@@ -1,5 +1,9 @@
 fileFormatVersion: 2
-guid: a5349abf052c9014ab684c87059506ce
+<<<<<<<< Updated upstream:Assets/Samples/Textures.meta
+guid: 560fde8523b3bcb498ad3b447ef6d6ca
+========
+guid: b233f4233cc79144bba439c06bc2712b
+>>>>>>>> Stashed changes:Assets/TextMesh Pro/Examples & Extras.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using Cinemachine;
+using Unity.Cinemachine;
 using UnityEngine.Rendering;
 
 

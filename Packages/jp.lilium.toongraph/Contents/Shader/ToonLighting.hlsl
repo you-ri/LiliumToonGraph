@@ -363,6 +363,7 @@ half3 LightingToonyDirectRamp(
     half u = saturate((NdotL + lightShadow) / 2); // -1 ~ 1 > 0 ~ 1
     half3 radiance = lightColor * lightAttenuation;
     half3 ramp = SAMPLE_TEXTURE2D(brdfData.shadeRamp, sampler_LinearClamp, half2(u, brdfData.curvature));
+
     return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, 1) * ramp;
 }
 
@@ -390,15 +391,14 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
     float NdotL = dot(normalWS, light.direction);
     float shadeNdotL = NdotL + brdfData.shadeShift;
     half shadow = brdfData.shadow + light.shadowAttenuation;
+    half shadeSmooth = brdfData.oneMinusShadeToony;
+    half directShadow = smoothstep(1.0h - shadeSmooth - HALF_MIN, 1.0h, shadow);
 
 #ifdef SHADEMODEL_RAMP
     half directRadiance = light.distanceAttenuation;
-
-    half3 color = LightingToonyDirectRamp (brdfData, shadeNdotL, light.color, light.direction, light.distanceAttenuation, directShadow, normalWS, viewDirectionWS);
+    half3 color = LightingToonyDirectRamp(brdfData, shadeNdotL, light.color, light.direction, light.distanceAttenuation, directShadow, normalWS, viewDirectionWS);
 #else
-    half shadeSmooth = brdfData.oneMinusShadeToony;
     half directRadiance = smoothstep(0, 0 + shadeSmooth + HALF_MIN, shadeNdotL) * light.distanceAttenuation;
-    half directShadow = smoothstep(1.0h - shadeSmooth - HALF_MIN, 1.0h, shadow);
     half3 directColor = LightingToonyDirect(brdfData, light.color, light.direction, directRadiance, directShadow, normalWS, viewDirectionWS, 1);
     half subsurfaceShadow = smoothstep(0.0h, 0.0h + shadeSmooth + HALF_MIN, shadow);
     half subsurfaceRadiance = light.distanceAttenuation;

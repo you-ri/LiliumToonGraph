@@ -495,6 +495,7 @@
     "m_OutputNode": {
         "m_Id": "d10c88deb71a4226a15d61168fe396cb"
     },
+    "m_SubDatas": [],
     "m_ActiveTargets": []
 }
 
@@ -1091,7 +1092,7 @@
     "m_DefaultValue": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.0
+        "z": 1.0
     },
     "m_Labels": [
         "X",
@@ -1163,7 +1164,7 @@
     "m_DefaultValue": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.0
+        "z": 1.0
     },
     "m_Labels": [
         "X",
@@ -1311,6 +1312,7 @@
     "m_SourceType": 0,
     "m_FunctionName": "ToonLight",
     "m_FunctionSource": "6a10f552ab1c40344851bca06f493041",
+    "m_FunctionSourceUsePragmas": true,
     "m_FunctionBody": "Enter function body here..."
 }
 
@@ -2142,7 +2144,7 @@
     "m_DefaultValue": {
         "x": 0.0,
         "y": 0.0,
-        "z": 0.0
+        "z": 1.0
     },
     "m_Labels": [
         "X",
