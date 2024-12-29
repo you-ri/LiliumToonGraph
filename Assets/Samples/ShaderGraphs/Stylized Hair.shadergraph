@@ -273,6 +273,9 @@
         },
         {
             "m_Id": "8e64b55971af4ea28b8392fa358df522"
+        },
+        {
+            "m_Id": "414497d0e45c49e09c27bcaf7fb057f8"
         }
     ],
     "m_GroupDatas": [
@@ -1089,6 +1092,9 @@
             },
             {
                 "m_Id": "8e64b55971af4ea28b8392fa358df522"
+            },
+            {
+                "m_Id": "414497d0e45c49e09c27bcaf7fb057f8"
             }
         ]
     },
@@ -2906,6 +2912,40 @@
         "Z"
     ],
     "m_Space": 0
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
+    "m_ObjectId": "414497d0e45c49e09c27bcaf7fb057f8",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "SurfaceDescription.Metallic",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.0,
+            "height": 0.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "8e4d0612f3fc45b68443c3f37209a448"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_SerializedDescriptor": "SurfaceDescription.Metallic"
 }
 
 {
@@ -5179,6 +5219,21 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "8e4d0612f3fc45b68443c3f37209a448",
+    "m_Id": 0,
+    "m_DisplayName": "Metallic",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Metallic",
+    "m_StageCapability": 2,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.BlockNode",
     "m_ObjectId": "8e64b55971af4ea28b8392fa358df522",
     "m_Group": {
@@ -5474,7 +5529,7 @@
     "m_ObjectId": "98a5e09d0b18473fb99bd645e93374fb",
     "m_Title": "Hair Specular",
     "m_Position": {
-        "x": -1655.0001220703125,
+        "x": -1655.0,
         "y": 483.0
     }
 }
@@ -5725,7 +5780,7 @@
     "m_SGVersion": 2,
     "m_Type": "UnityEditor.Rendering.Universal.ShaderGraph.UniversalLitSubTarget",
     "m_ObjectId": "9fe363c1abd34a488d9b273e7097782a",
-    "m_WorkflowMode": 0,
+    "m_WorkflowMode": 1,
     "m_NormalDropOffSpace": 0,
     "m_ClearCoat": false,
     "m_BlendModePreserveSpecular": true
