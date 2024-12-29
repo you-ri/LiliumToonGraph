@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.7.0-preview.1] -
+- Unity6
+- 
+
 ## [0.6.0-preview.x] -
 - Unity2021.2.0b14
 - UniversalRP v12.0.0

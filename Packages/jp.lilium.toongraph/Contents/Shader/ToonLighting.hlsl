@@ -195,7 +195,7 @@ half3 EnvironmentBRDF(BRDFData brdfData, half3 indirectDiffuse, half3 indirectSp
 // * NDF [Modified] GGX
 // * Modified Kelemen and Szirmay-​Kalos for Visibility term
 // * Fresnel approximated with 1/LdotH
-half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half3 radiance, half lighting)
+half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half3 radiance, half lighting, half3 lightColor, half lightAttenuation, half lightShadow)
 {
 #ifndef _SPECULARHIGHLIGHTS_OFF
     float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(viewDirectionWS));
@@ -212,14 +212,17 @@ half3 DirectToonBDRF(ToonBRDFData brdfData, half3 normalWS, half3 lightDirection
     specularTerm = specularTerm - HALF_MIN;
     specularTerm = clamp(specularTerm, 0.0, 100.0); // Prevent FP16 overflow on mobiles
 #endif
-
     // Toony specular with radiance
     // TODO: 最適化
+    lightAttenuation = ToonyValue(lightAttenuation, brdfData.oneMinusShadeToony, 0.1h);
+    radiance = lightColor * lightAttenuation * lightShadow;
+
+
+    half radiancePower = length(radiance);
+
     float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
     half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
-    half radiancePower = length(radiance);
     half specularTermWithRadiance = ToonyValue(brdfData, specularTerm*radiancePower, maxSpecularTerm*radiancePower, 4); //TODO: 閾値を4に決め打ちしているが調整する方法が必要
-
     half3 color = (specularTermWithRadiance * SafeNormalize(radiance) * brdfData.specular) + (brdfData.diffuse * radiance);
     return color;
 #else
@@ -349,7 +352,7 @@ half3 LightingToonyDirect(
     half3 normalWS, half3 viewDirectionWS, half lighting)
 {
     half3 radiance = lightColor * lightAttenuation * lightShadow;
-    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, lighting);
+    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, lighting, lightColor, lightAttenuation, lightShadow);
 }
 
 #ifdef SHADEMODEL_RAMP
@@ -364,7 +367,7 @@ half3 LightingToonyDirectRamp(
     half3 radiance = lightColor * lightAttenuation;
     half3 ramp = SAMPLE_TEXTURE2D(brdfData.shadeRamp, sampler_LinearClamp, half2(u, brdfData.curvature));
 
-    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, 1) * ramp;
+    return DirectToonBDRF(brdfData, normalWS, lightDirectionWS, viewDirectionWS, radiance, 1, lightColor, lightAttenuation, lightShadow) * ramp;
 }
 
 #else
@@ -408,7 +411,6 @@ half3 LightingToonyBased(ToonBRDFData brdfData, Light light, half3 normalWS, hal
 #endif
 
     half3 flatColor = (brdfData.diffuse + brdfData.sss) * (light.color * light.distanceAttenuation * shadow) * saturate(dot(viewDirectionWS, light.direction));
-
     return lerp(flatColor, color, lighting);
 }
 
