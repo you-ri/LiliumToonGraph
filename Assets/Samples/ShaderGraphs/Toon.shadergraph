@@ -6952,6 +6952,15 @@
 }
 
 {
+    "m_SGVersion": 0,
+    "m_Type": "Lilium.ToonGraph.Editor.UniversalLitSubTarget",
+    "m_ObjectId": "d76a91b87d134028aed1af34ec329ae7",
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0,
+    "m_ClearCoat": false
+}
+
+{
     "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Vector1ShaderProperty",
     "m_ObjectId": "d7d53ec8bdb94dc0846fabc8c37b4ee2",
