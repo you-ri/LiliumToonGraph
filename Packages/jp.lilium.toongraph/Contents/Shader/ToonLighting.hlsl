@@ -1,6 +1,8 @@
+// referanced: Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl
+
+
 #ifndef LILIUM_TOON_LIGHTING_INCLUDED
 #define LILIUM_TOON_LIGHTING_INCLUDED
-
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/BRDF.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Debug/Debugging3D.hlsl"
@@ -8,6 +10,57 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RealtimeLights.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/AmbientOcclusion.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
+
+#include "ToonGlobalIllumination.hlsl"
+
+
+// Computes the scalar specular term for Minimalist CookTorrance BRDF
+// NOTE: needs to be multiplied with reflectance f0, i.e. specular color to complete
+half DirectBRDFSpecular_Toon(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+{
+    float3 lightDirectionWSFloat3 = float3(lightDirectionWS);
+    float3 halfDir = SafeNormalize(lightDirectionWSFloat3 + float3(viewDirectionWS));
+
+    float NoH = saturate(dot(float3(normalWS), halfDir));
+    half LoH = half(saturate(dot(lightDirectionWSFloat3, halfDir)));
+
+    // GGX Distribution multiplied by combined approximation of Visibility and Fresnel
+    // BRDFspec = (D * V * F) / 4.0
+    // D = roughness^2 / ( NoH^2 * (roughness^2 - 1) + 1 )^2
+    // V * F = 1.0 / ( LoH^2 * (roughness + 0.5) )
+    // See "Optimizing PBR for Mobile" from Siggraph 2015 moving mobile graphics course
+    // https://community.arm.com/events/1155
+
+    // Final BRDFspec = roughness^2 / ( NoH^2 * (roughness^2 - 1) + 1 )^2 * (LoH^2 * (roughness + 0.5) * 4.0)
+    // We further optimize a few light invariant terms
+    // brdfData.normalizationTerm = (roughness + 0.5) * 4.0 rewritten as roughness * 4.0 + 2.0 to a fit a MAD.
+    float d = NoH * NoH * brdfData.roughness2MinusOne + 1.00001f;
+
+    half LoH2 = LoH * LoH;
+    half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
+
+    // begin toonize
+    float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
+    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
+    specularTerm = Toonlize(specularTerm / maxSpecularTerm, 0.1, 0.05) * maxSpecularTerm;
+    // end toonize
+
+    // On platforms where half actually means something, the denominator has a risk of overflow
+    // clamp below was added specifically to "fix" that, but dx compiler (we convert bytecode to metal/gles)
+    // sees that specularTerm have only non-negative terms, so it skips max(0,..) in clamp (leaving only min(100,...))
+#if REAL_IS_HALF
+    specularTerm = specularTerm - HALF_MIN;
+    // Update: Conservative bump from 100.0 to 1000.0 to better match the full float specular look.
+    // Roughly 65504.0 / 32*2 == 1023.5,
+    // or HALF_MAX / ((mobile) MAX_VISIBLE_LIGHTS * 2),
+    // to reserve half of the per light range for specular and half for diffuse + indirect + emissive.
+    specularTerm = clamp(specularTerm, 0.0, 1000.0); // Prevent FP16 overflow on mobiles
+#endif
+
+    return specularTerm;
+}
+
+
 
 #if defined(LIGHTMAP_ON)
     #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) float2 lmName : TEXCOORD##index
@@ -52,18 +105,24 @@ half3 LightingPhysicallyBased_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat
     half clearCoatMask, bool specularHighlightsOff)
 {
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
+
+    // begin toonize
+    NdotL = Toonlize(NdotL, 0.1, 0.05); 
+    // end toonize
+
     half3 radiance = lightColor * (lightAttenuation * NdotL);
 
     half3 brdf = brdfData.diffuse;
 #ifndef _SPECULARHIGHLIGHTS_OFF
     [branch] if (!specularHighlightsOff)
     {
-        brdf += brdfData.specular * DirectBRDFSpecular(brdfData, normalWS, lightDirectionWS, viewDirectionWS);
+        half specularPower = DirectBRDFSpecular_Toon(brdfData, normalWS, lightDirectionWS, viewDirectionWS);
+        brdf += brdfData.specular * specularPower;
 
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
         // Clear coat evaluates the specular a second timw and has some common terms with the base specular.
         // We rely on the compiler to merge these and compute them only once.
-        half brdfCoat = kDielectricSpec.r * DirectBRDFSpecular(brdfDataClearCoat, normalWS, lightDirectionWS, viewDirectionWS);
+        half brdfCoat = kDielectricSpec.r * DirectBRDFSpecular_Toon(brdfDataClearCoat, normalWS, lightDirectionWS, viewDirectionWS);
 
             // Mix clear coat and base layer using khronos glTF recommended formula
             // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_clearcoat/README.md
@@ -294,16 +353,16 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
     // NOTE: We don't apply AO to the GI here because it's done in the lighting calculation below...
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
 
-    LightingData lightingData = CreateLightingData(inputData, surfaceData);
+    LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 
-    lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
+    lightingData.giColor = GlobalIllumination_Toon(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
 #endif
     {
-        lightingData.mainLightColor = LightingPhysicallyBased(brdfData, brdfDataClearCoat,
+        lightingData.mainLightColor = LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat,
                                                               mainLight,
                                                               inputData.normalWS, inputData.viewDirectionWS,
                                                               surfaceData.clearCoatMask, specularHighlightsOff);
@@ -323,7 +382,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
         if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
 #endif
         {
-            lightingData.additionalLightsColor += LightingPhysicallyBased(brdfData, brdfDataClearCoat, light,
+            lightingData.additionalLightsColor += LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light,
                                                                           inputData.normalWS, inputData.viewDirectionWS,
                                                                           surfaceData.clearCoatMask, specularHighlightsOff);
         }
@@ -337,7 +396,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
         if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
 #endif
         {
-            lightingData.additionalLightsColor += LightingPhysicallyBased(brdfData, brdfDataClearCoat, light,
+            lightingData.additionalLightsColor += LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light,
                                                                           inputData.normalWS, inputData.viewDirectionWS,
                                                                           surfaceData.clearCoatMask, specularHighlightsOff);
         }
@@ -399,12 +458,12 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceD
 
     inputData.bakedGI *= surfaceData.albedo;
 
-    LightingData lightingData = CreateLightingData(inputData, surfaceData);
+    LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
 #endif
     {
-        lightingData.mainLightColor += CalculateBlinnPhong(mainLight, inputData, surfaceData);
+        lightingData.mainLightColor += CalculateBlinnPhong_Toon(mainLight, inputData, surfaceData);
     }
 
     #if defined(_ADDITIONAL_LIGHTS)
@@ -420,7 +479,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceD
         if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
 #endif
         {
-            lightingData.additionalLightsColor += CalculateBlinnPhong(light, inputData, surfaceData);
+            lightingData.additionalLightsColor += CalculateBlinnPhong_Toon(light, inputData, surfaceData);
         }
     }
     #endif
@@ -459,7 +518,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, half3 diffuse, half4
     surfaceData.clearCoatSmoothness = 1;
     surfaceData.normalTS = normalTS;
 
-    return UniversalFragmentBlinnPhong(inputData, surfaceData);
+    return UniversalFragmentBlinnPhong_Toon(inputData, surfaceData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +562,7 @@ half4 UniversalFragmentBakedLit_Toon(InputData inputData, half3 color, half alph
     surfaceData.clearCoatSmoothness = 1;
     surfaceData.normalTS = normalTS;
 
-    return UniversalFragmentBakedLit(inputData, surfaceData);
+    return UniversalFragmentBakedLit_Toon(inputData, surfaceData);
 }
 
 
