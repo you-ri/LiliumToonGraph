@@ -89,7 +89,8 @@ void ToonLight_half(
     float metallic = Specular.r;
 #endif
     Color = UniversalFragmentToon(
-        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha, ShadowShift, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
+        inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha,
+        ShadowShift, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
         ShadeColor);
 }
 
