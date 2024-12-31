@@ -14,9 +14,114 @@
 #include "ToonGlobalIllumination.hlsl"
 
 
+
+///////////////////////////////////////////////////////////////////////////////
+// refarence: Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceData.hlsl
+///////////////////////////////////////////////////////////////////////////////
+
+struct SurfaceData_Toon
+{
+    half3 albedo;
+    half3 specular;
+    half  metallic;
+    half  smoothness;
+    half3 normalTS;
+    half3 emission;
+    half  occlusion;
+    half  alpha;
+    half  clearCoatMask;
+    half  clearCoatSmoothness;
+
+    half3 sss;
+    half subsurface;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// refarence: Packages/com.unity.render-pipelines.universal/ShaderLibrary/BRDF.hlsl
+///////////////////////////////////////////////////////////////////////////////
+
+struct BRDFData_Toon
+{
+    half3 albedo;
+    half3 diffuse;
+    half3 specular;
+    half reflectivity;
+    half perceptualRoughness;
+    half roughness;
+    half roughness2;
+    half grazingTerm;
+
+    // We save some light invariant BRDF terms so we don't have to recompute
+    // them in the light loop. Take a look at DirectBRDF function for detailed explaination.
+    half normalizationTerm;     // roughness * 4.0 + 2.0
+    half roughness2MinusOne;    // roughness^2 - 1.0
+
+    half3 sss;
+    half curvature;
+};
+
+
+inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half3 sss, inout half alpha, out BRDFData_Toon outBRDFData)
+{
+    outBRDFData = (BRDFData_Toon)0;
+    outBRDFData.albedo = albedo;
+    outBRDFData.diffuse = diffuse;
+    outBRDFData.specular = specular;
+    outBRDFData.reflectivity = reflectivity;
+
+    outBRDFData.perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(smoothness);
+    outBRDFData.roughness           = max(PerceptualRoughnessToRoughness(outBRDFData.perceptualRoughness), HALF_MIN_SQRT);
+    outBRDFData.roughness2          = max(outBRDFData.roughness * outBRDFData.roughness, HALF_MIN);
+    outBRDFData.grazingTerm         = saturate(smoothness + reflectivity);
+    outBRDFData.normalizationTerm   = outBRDFData.roughness * half(4.0) + half(2.0);
+    outBRDFData.roughness2MinusOne  = outBRDFData.roughness2 - half(1.0);
+
+    outBRDFData.sss = sss.rgb * outBRDFData.diffuse;
+    outBRDFData.curvature = 1;
+
+    // Input is expected to be non-alpha-premultiplied while ROP is set to pre-multiplied blend.
+    // We use input color for specular, but (pre-)multiply the diffuse with alpha to complete the standard alpha blend equation.
+    // In shader: Cs' = Cs * As, in ROP: Cs' + Cd(1-As);
+    // i.e. we only alpha blend the diffuse part to background (transmittance).
+    #if defined(_ALPHAPREMULTIPLY_ON)
+        // TODO: would be clearer to multiply this once to accumulated diffuse lighting at end instead of the surface property.
+        outBRDFData.diffuse *= alpha;
+    #endif
+}
+
+// Legacy: do not call, will not correctly initialize albedo property.
+inline void InitializeBRDFDataDirect_Toon(half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half3 sss, inout half alpha, out BRDFData_Toon outBRDFData)
+{
+    InitializeBRDFDataDirect_Toon(half3(0.0, 0.0, 0.0), diffuse, specular, reflectivity, oneMinusReflectivity, smoothness, sss, alpha, outBRDFData);
+}
+
+// Initialize BRDFData for material, managing both specular and metallic setup using shader keyword _SPECULAR_SETUP.
+inline void InitializeBRDFData_Toon(half3 albedo, half metallic, half3 specular, half smoothness, half3 sss, inout half alpha, out BRDFData_Toon outBRDFData)
+{
+#ifdef _SPECULAR_SETUP
+    half reflectivity = ReflectivitySpecular(specular);
+    half oneMinusReflectivity = half(1.0) - reflectivity;
+    half3 brdfDiffuse = albedo * oneMinusReflectivity;
+    half3 brdfSpecular = specular;
+#else
+    half oneMinusReflectivity = OneMinusReflectivityMetallic(metallic);
+    half reflectivity = half(1.0) - oneMinusReflectivity;
+    half3 brdfDiffuse = albedo * oneMinusReflectivity;
+    half3 brdfSpecular = lerp(kDielectricSpec.rgb, albedo, metallic);
+#endif
+
+    InitializeBRDFDataDirect_Toon(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, sss, alpha, outBRDFData);
+}
+
+inline void InitializeBRDFData_Toon(inout SurfaceData_Toon surfaceData, out BRDFData_Toon brdfData)
+{
+    InitializeBRDFData_Toon(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.sss, surfaceData.alpha, brdfData);
+}
+
 // Computes the scalar specular term for Minimalist CookTorrance BRDF
 // NOTE: needs to be multiplied with reflectance f0, i.e. specular color to complete
-half DirectBRDFSpecular_Toon(BRDFData brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
 {
     float3 lightDirectionWSFloat3 = float3(lightDirectionWS);
     float3 halfDir = SafeNormalize(lightDirectionWSFloat3 + float3(viewDirectionWS));
@@ -60,8 +165,6 @@ half DirectBRDFSpecular_Toon(BRDFData brdfData, half3 normalWS, half3 lightDirec
     return specularTerm;
 }
 
-
-
 #if defined(LIGHTMAP_ON)
     #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) float2 lmName : TEXCOORD##index
     #define OUTPUT_LIGHTMAP_UV(lightmapUV, lightmapScaleOffset, OUT) OUT.xy = lightmapUV.xy * lightmapScaleOffset.xy + lightmapScaleOffset.zw;
@@ -79,6 +182,37 @@ half DirectBRDFSpecular_Toon(BRDFData brdfData, half3 normalWS, half3 lightDirec
     // Kept to avoid breaking shaders still calling it (UUM-37723)
     #define OUTPUT_SH(normalWS, OUT) OUT.xyz = SampleSHVertex(normalWS)
 #endif
+
+
+half __ToonyLighting = 1;
+
+// TODO: obsolate
+inline half binarize(half value, half threshold = 0.5h, half thresholdWidth = 0, half minValue = 0, half maxValue = 1)
+{
+    half toonyValue = smoothstep(threshold - thresholdWidth/2, threshold + thresholdWidth/2 + HALF_MIN, value);
+    toonyValue = clamp(toonyValue, minValue, maxValue);
+
+    return lerp( value, toonyValue, __ToonyLighting);
+}
+
+
+// Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
+half LightingSubsurface(half NdotL, half subsurfaceRadius)
+{
+    half alpha = subsurfaceRadius + HALF_MIN;
+    //half theta_m = acos(-alpha); // boundary of the lighting function
+
+    float theta = max(0, NdotL + alpha) - alpha;
+    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
+    half wrapped_jgt = (pow(abs((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
+
+    wrapped_jgt = binarize(wrapped_jgt, 0, 0);
+
+    //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
+    //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+
+    return saturate(wrapped_jgt);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //                      Lighting Functions                                   //
@@ -99,18 +233,27 @@ half3 LightingSpecular_Toon(half3 lightColor, half3 lightDir, half3 normal, half
     return lightColor * specularReflection;
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat,
-    half3 lightColor, half3 lightDirectionWS, float lightAttenuation,
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat,
+    half3 lightColor, half3 lightDirectionWS, float distanceAttenuation, float shadowAttenuation,
     half3 normalWS, half3 viewDirectionWS,
     half clearCoatMask, bool specularHighlightsOff)
 {
+    half lightAttenuation = distanceAttenuation * shadowAttenuation;
+    half lightAttenuationSSS = distanceAttenuation;
+
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
 
     // begin toonize
-    NdotL = Toonlize(NdotL, 0.1, 0.05); 
+    half toonlizeNdotL = Toonlize(NdotL, 0.1, 0.05); 
     // end toonize
+    half3 radiance = lightColor * (lightAttenuation * toonlizeNdotL);
 
-    half3 radiance = lightColor * (lightAttenuation * NdotL);
+    // Subsurface scattering
+    half NdotLRaw = dot(normalWS, lightDirectionWS);
+    half subsurface = LightingSubsurface(NdotLRaw, brdfData.curvature);
+    half3 sss = brdfData.sss;
+    half sssRadiance = Toonlize(subsurface, 0.1, 0) * (1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
+
 
     half3 brdf = brdfData.diffuse;
 #ifndef _SPECULARHIGHLIGHTS_OFF
@@ -137,16 +280,16 @@ half3 LightingPhysicallyBased_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat
     }
 #endif // _SPECULARHIGHLIGHTS_OFF
 
-    return brdf * radiance;
+    return (brdf * radiance) + (sss * sssRadiance);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, Light light, half3 normalWS, half3 viewDirectionWS, half clearCoatMask, bool specularHighlightsOff)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, Light light, half3 normalWS, half3 viewDirectionWS, half clearCoatMask, bool specularHighlightsOff)
 {
-    return LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation, normalWS, viewDirectionWS, clearCoatMask, specularHighlightsOff);
+    return LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation, normalWS, viewDirectionWS, clearCoatMask, specularHighlightsOff);
 }
 
 // Backwards compatibility
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, Light light, half3 normalWS, half3 viewDirectionWS)
 {
     #ifdef _SPECULARHIGHLIGHTS_OFF
     bool specularHighlightsOff = true;
@@ -157,7 +300,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData brdfData, Light light, half3 normalW
     return LightingPhysicallyBased_Toon(brdfData, noClearCoat, light, normalWS, viewDirectionWS, 0.0, specularHighlightsOff);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
     Light light;
     light.color = lightColor;
@@ -167,13 +310,13 @@ half3 LightingPhysicallyBased_Toon(BRDFData brdfData, half3 lightColor, half3 li
     return LightingPhysicallyBased_Toon(brdfData, light, normalWS, viewDirectionWS);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, Light light, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, Light light, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
 {
     const BRDFData noClearCoat = (BRDFData)0;
     return LightingPhysicallyBased_Toon(brdfData, noClearCoat, light, normalWS, viewDirectionWS, 0.0, specularHighlightsOff);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
 {
     Light light;
     light.color = lightColor;
@@ -282,7 +425,7 @@ half4 CalculateFinalColor_Toon(LightingData lightingData, half3 albedo, half alp
     return half4(finalColor, alpha);
 }
 
-LightingData CreateLightingData_Toon(InputData inputData, SurfaceData surfaceData)
+LightingData CreateLightingData_Toon(InputData inputData, SurfaceData_Toon surfaceData)
 {
     LightingData lightingData;
 
@@ -295,7 +438,7 @@ LightingData CreateLightingData_Toon(InputData inputData, SurfaceData surfaceDat
     return lightingData;
 }
 
-half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData surfaceData)
+half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData_Toon surfaceData)
 {
     half3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
     half3 lightDiffuseColor = LightingLambert_Toon(attenuatedLightColor, light.direction, inputData.normalWS);
@@ -314,6 +457,11 @@ half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData sur
 #endif
 }
 
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //                      Fragment Functions                                   //
 //       Used by ShaderGraph and others builtin renderers                    //
@@ -322,17 +470,17 @@ half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData sur
 ////////////////////////////////////////////////////////////////////////////////
 /// PBR lighting...
 ////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
+half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceData)
 {
     #if defined(_SPECULARHIGHLIGHTS_OFF)
     bool specularHighlightsOff = true;
     #else
     bool specularHighlightsOff = false;
     #endif
-    BRDFData brdfData;
+    BRDFData_Toon brdfData;
 
     // NOTE: can modify "surfaceData"...
-    InitializeBRDFData(surfaceData, brdfData);
+    InitializeBRDFData_Toon(surfaceData, brdfData);
 
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
@@ -344,9 +492,9 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
     #endif
 
     // Clear-coat calculation...
-    BRDFData brdfDataClearCoat = CreateClearCoatBRDFData(surfaceData, brdfData);
+    BRDFData brdfDataClearCoat = CreateClearCoatBRDFData((SurfaceData)surfaceData, (BRDFData)brdfData);
     half4 shadowMask = CalculateShadowMask(inputData);
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
+    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, (SurfaceData)surfaceData);
     uint meshRenderingLayers = GetMeshRenderingLayer();
     Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
 
@@ -355,7 +503,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
 
     LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 
-    lightingData.giColor = GlobalIllumination_Toon(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
+    lightingData.giColor = GlobalIllumination_Toon((BRDFData)brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
 #ifdef _LIGHT_LAYERS
@@ -417,9 +565,9 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData surfaceData)
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
 half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic, half3 specular,
-    half smoothness, half occlusion, half3 emission, half alpha)
+    half smoothness, half occlusion, half3 emission, half alpha, half3 sss, half subsurface)
 {
-    SurfaceData surfaceData;
+    SurfaceData_Toon surfaceData;
 
     surfaceData.albedo = albedo;
     surfaceData.specular = specular;
@@ -432,13 +580,16 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic
     surfaceData.clearCoatMask = 0;
     surfaceData.clearCoatSmoothness = 1;
 
+    surfaceData.sss = sss.rgb * surfaceData.albedo;
+    surfaceData.subsurface = subsurface;
+
     return UniversalFragmentPBR_Toon(inputData, surfaceData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Phong lighting...
 ////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceData)
+half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData_Toon surfaceData)
 {
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
@@ -451,7 +602,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceD
 
     uint meshRenderingLayers = GetMeshRenderingLayer();
     half4 shadowMask = CalculateShadowMask(inputData);
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
+    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, (SurfaceData)surfaceData);
     Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
 
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, aoFactor);
@@ -490,7 +641,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceD
         if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
 #endif
         {
-            lightingData.additionalLightsColor += CalculateBlinnPhong(light, inputData, surfaceData);
+            lightingData.additionalLightsColor += CalculateBlinnPhong_Toon(light, inputData, surfaceData);
         }
     LIGHT_LOOP_END
     #endif
@@ -505,7 +656,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData surfaceD
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
 half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, half3 diffuse, half4 specularGloss, half smoothness, half3 emission, half alpha, half3 normalTS)
 {
-    SurfaceData surfaceData;
+    SurfaceData_Toon surfaceData;
 
     surfaceData.albedo = diffuse;
     surfaceData.alpha = alpha;
@@ -524,7 +675,7 @@ half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, half3 diffuse, half4
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlit
 ////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentBakedLit_Toon(InputData inputData, SurfaceData surfaceData)
+half4 UniversalFragmentBakedLit_Toon(InputData inputData, SurfaceData_Toon surfaceData)
 {
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
@@ -535,8 +686,8 @@ half4 UniversalFragmentBakedLit_Toon(InputData inputData, SurfaceData surfaceDat
     }
     #endif
 
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
-    LightingData lightingData = CreateLightingData(inputData, surfaceData);
+    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, (SurfaceData)surfaceData);
+    LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 
     if (IsLightingFeatureEnabled(DEBUGLIGHTINGFEATUREFLAGS_AMBIENT_OCCLUSION))
     {
@@ -549,7 +700,7 @@ half4 UniversalFragmentBakedLit_Toon(InputData inputData, SurfaceData surfaceDat
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
 half4 UniversalFragmentBakedLit_Toon(InputData inputData, half3 color, half alpha, half3 normalTS)
 {
-    SurfaceData surfaceData;
+    SurfaceData_Toon surfaceData;
 
     surfaceData.albedo = color;
     surfaceData.alpha = alpha;
@@ -578,7 +729,7 @@ half4 UniversalFragmentToon(
     half toonyLighing, 
     out half3 shadeColor)
 {
-    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha);
+    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha, sss.rgb, sss.a);
     shadeColor = color.rgb;
     return color;
 }
