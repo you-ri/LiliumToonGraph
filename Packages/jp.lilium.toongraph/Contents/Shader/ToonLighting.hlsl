@@ -188,18 +188,6 @@ half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 light
 #endif
 
 
-half __ToonyLighting = 1;
-
-// TODO: obsolate
-inline half binarize(half value, half threshold = 0.5h, half thresholdWidth = 0, half minValue = 0, half maxValue = 1)
-{
-    half toonyValue = smoothstep(threshold - thresholdWidth/2, threshold + thresholdWidth/2 + HALF_MIN, value);
-    toonyValue = clamp(toonyValue, minValue, maxValue);
-
-    return lerp( value, toonyValue, __ToonyLighting);
-}
-
-
 // Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
 half LightingSubsurface(half NdotL, half subsurfaceRadius)
 {
@@ -210,7 +198,7 @@ half LightingSubsurface(half NdotL, half subsurfaceRadius)
     half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
     half wrapped_jgt = (pow(abs((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
-    wrapped_jgt = binarize(wrapped_jgt, 0, 0);
+    //wrapped_jgt = binarize(wrapped_jgt, 0, 0);
 
     //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
     //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
@@ -248,9 +236,10 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
 
     // begin toonize
-    half toonlizeNdotL = Toonlize(NdotL, 0.01, brdfData.toonlize); 
-    // end toonize
+    half toonlizeNdotL = Toonlize(NdotL, 0.1, brdfData.toonlize); 
+
     half3 radiance = lightColor * (lightAttenuation * toonlizeNdotL);
+    // end toonize
 
     // Subsurface scattering
     half NdotLRaw = dot(normalWS, lightDirectionWS);
@@ -259,8 +248,6 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half subsurface = LightingSubsurface(toonlizeNdotLRaw, 1);
     half3 sss = brdfData.sss;
     half sssRadiance = subsurface * (1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
-
-
 
     half3 brdf = brdfData.diffuse;
 #ifndef _SPECULARHIGHLIGHTS_OFF

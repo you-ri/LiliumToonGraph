@@ -22,8 +22,8 @@
 inline half3 Toonlize(half value, half threshold, half oneMinusToonyShade = 0)
 {
     return smoothstep(
-        threshold - (oneMinusToonyShade/2), 
-        threshold + (oneMinusToonyShade/2), 
+        saturate(threshold - (oneMinusToonyShade/2)), 
+        saturate(threshold + (oneMinusToonyShade/2)), 
         value);
 }
 

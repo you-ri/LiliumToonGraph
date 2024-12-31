@@ -5979,7 +5979,7 @@
     "m_RefNameGeneratedByDisplayName": "TOON_OUTLINE",
     "m_DefaultReferenceName": "_TOON_OUTLINE",
     "m_OverrideReferenceName": "_TOON_OUTLINE",
-    "m_GeneratePropertyBlock": true,
+    "m_GeneratePropertyBlock": false,
     "m_UseCustomSlotLabel": false,
     "m_CustomSlotLabel": "",
     "m_DismissedVersion": 0,
