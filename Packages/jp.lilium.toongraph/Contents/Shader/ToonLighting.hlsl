@@ -232,7 +232,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half3 normalWS, half3 viewDirectionWS,
     half clearCoatMask, bool specularHighlightsOff)
 {
-    distanceAttenuation = Toonlize(distanceAttenuation, 0.5, brdfData.toonlize);
+    distanceAttenuation = Toonlize(distanceAttenuation, 0.1, brdfData.toonlize);
     half lightAttenuation = distanceAttenuation * shadowAttenuation;
     half lightAttenuationSSS = distanceAttenuation;
 
