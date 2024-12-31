@@ -62,10 +62,11 @@ struct BRDFData_Toon
     half3 sss;
     half curvature;
     half toonlize;
+    half occlusion;
 };
 
 
-inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
+inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half occlusion, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
 {
     outBRDFData = (BRDFData_Toon)0;
     outBRDFData.albedo = albedo;
@@ -83,6 +84,7 @@ inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 spe
     outBRDFData.toonlize = half(1.0) - toonlize;
     outBRDFData.sss = sss.rgb * outBRDFData.diffuse;
     outBRDFData.curvature = half(1.0) - subsurface;
+    outBRDFData.occlusion = occlusion;
 
     // Input is expected to be non-alpha-premultiplied while ROP is set to pre-multiplied blend.
     // We use input color for specular, but (pre-)multiply the diffuse with alpha to complete the standard alpha blend equation.
@@ -95,13 +97,13 @@ inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 spe
 }
 
 // Legacy: do not call, will not correctly initialize albedo property.
-inline void InitializeBRDFDataDirect_Toon(half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
+inline void InitializeBRDFDataDirect_Toon(half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half occlusion, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
 {
-    InitializeBRDFDataDirect_Toon(half3(0.0, 0.0, 0.0), diffuse, specular, reflectivity, oneMinusReflectivity, smoothness, sss, subsurface, toonlize, alpha, outBRDFData);
+    InitializeBRDFDataDirect_Toon(half3(0.0, 0.0, 0.0), diffuse, specular, reflectivity, oneMinusReflectivity, smoothness, occlusion, sss, subsurface, toonlize, alpha, outBRDFData);
 }
 
 // Initialize BRDFData for material, managing both specular and metallic setup using shader keyword _SPECULAR_SETUP.
-inline void InitializeBRDFData_Toon(half3 albedo, half metallic, half3 specular, half smoothness, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
+inline void InitializeBRDFData_Toon(half3 albedo, half metallic, half3 specular, half smoothness, half occlusion, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
 {
 #ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(specular);
@@ -115,12 +117,12 @@ inline void InitializeBRDFData_Toon(half3 albedo, half metallic, half3 specular,
     half3 brdfSpecular = lerp(kDielectricSpec.rgb, albedo, metallic);
 #endif
 
-    InitializeBRDFDataDirect_Toon(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, sss, subsurface, toonlize, alpha, outBRDFData);
+    InitializeBRDFDataDirect_Toon(albedo, brdfDiffuse, brdfSpecular, reflectivity, oneMinusReflectivity, smoothness, occlusion, sss, subsurface, toonlize, alpha, outBRDFData);
 }
 
 inline void InitializeBRDFData_Toon(inout SurfaceData_Toon surfaceData, out BRDFData_Toon brdfData)
 {
-    InitializeBRDFData_Toon(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.sss, surfaceData.subsurface, surfaceData.toonlize, surfaceData.alpha, brdfData);
+    InitializeBRDFData_Toon(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.sss, surfaceData.subsurface, surfaceData.toonlize, surfaceData.alpha, brdfData);
 }
 
 // Computes the scalar specular term for Minimalist CookTorrance BRDF
@@ -226,19 +228,19 @@ half3 LightingSpecular_Toon(half3 lightColor, half3 lightDir, half3 normal, half
 }
 
 half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat,
-    half3 lightColor, half3 lightDirectionWS, float distanceAttenuation, float shadowAttenuation,
+    half3 lightColor, half3 lightDirectionWS, half distanceAttenuation, half shadowAttenuation,
     half3 normalWS, half3 viewDirectionWS,
     half clearCoatMask, bool specularHighlightsOff)
 {
+    distanceAttenuation = Toonlize(distanceAttenuation, 0.5, brdfData.toonlize);
     half lightAttenuation = distanceAttenuation * shadowAttenuation;
     half lightAttenuationSSS = distanceAttenuation;
 
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
 
     // begin toonize
-    half toonlizeNdotL = Toonlize(NdotL, 0.1, brdfData.toonlize); 
-
-    half3 radiance = lightColor * (lightAttenuation * toonlizeNdotL);
+    half toonlizeNdotL = Toonlize(NdotL, 0.1, brdfData.toonlize);
+    half3 radiance = lightColor * (lightAttenuation * toonlizeNdotL) * brdfData.occlusion;
     // end toonize
 
     // Subsurface scattering
@@ -247,7 +249,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
 
     half subsurface = LightingSubsurface(toonlizeNdotLRaw, 1);
     half3 sss = brdfData.sss;
-    half sssRadiance = subsurface * (1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
+    half3 sssRadiance = lightColor * subsurface * (1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
 
     half3 brdf = brdfData.diffuse;
 #ifndef _SPECULARHIGHLIGHTS_OFF
@@ -294,7 +296,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, Light light, half3 no
     return LightingPhysicallyBased_Toon(brdfData, noClearCoat, light, normalWS, viewDirectionWS, 0.0, specularHighlightsOff);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS)
 {
     Light light;
     light.color = lightColor;
@@ -310,7 +312,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, Light light, half3 no
     return LightingPhysicallyBased_Toon(brdfData, noClearCoat, light, normalWS, viewDirectionWS, 0.0, specularHighlightsOff);
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, float lightAttenuation, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation, half3 normalWS, half3 viewDirectionWS, bool specularHighlightsOff)
 {
     Light light;
     light.color = lightColor;
