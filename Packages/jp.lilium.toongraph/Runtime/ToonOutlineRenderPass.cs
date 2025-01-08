@@ -1,154 +1,97 @@
 using System.Collections.Generic;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.Rendering;
-
 using UnityEngine;
-
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Rendering.Universal;
+using ProfilingScope = UnityEngine.Rendering.ProfilingScope;
 
 namespace Lilium.ToonGraph.Runtime
 {
     public class ToonOutlineRenderPass : ScriptableRenderPass
     {
-        public static float alpha = 1;
-
-        public static float fieldOfView = 2;
-
-        RenderQueueType _renderQueueType;
-
-        FilteringSettings _filteringSettings;
-
-        string _profilerTag;
+        readonly string profilerTag;
         
-        ProfilingSampler _profilingSampler;
+        LayerMask layerMask;
+        RenderQueueType renderQueueType;
+        List<ShaderTagId> shaderTagIds = new();
 
-        List<ShaderTagId> _shaderTagIdList = new List<ShaderTagId>();
-
-        RenderStateBlock _renderStateBlock;
-
-        readonly GlobalKeyword _toonOutlineKeyword = GlobalKeyword.Create("_TOON_OUTLINE");
-
-        readonly int _projectionParamsId = Shader.PropertyToID("_ProjectionParams");
-
-        public ToonOutlineRenderPass (string profilerTag, RenderPassEvent renderPassEvent, string[] shaderTags, RenderQueueType renderQueueType, int layerMask)
+        public ToonOutlineRenderPass(RenderPassEvent renderPassEvent, string profilerTag, LayerMask layerMask, RenderQueueType renderQueueType, List<string> shaderTagList)
         {
-            base.profilingSampler = new ProfilingSampler(nameof(RenderObjectsPass));
-
-            _profilerTag = profilerTag;
             this.renderPassEvent = renderPassEvent;
-            this._renderQueueType = renderQueueType;
-            RenderQueueRange renderQueueRange = (renderQueueType == RenderQueueType.Transparent)
-                ? RenderQueueRange.transparent
-                : RenderQueueRange.opaque;
-            _filteringSettings = new FilteringSettings(renderQueueRange, layerMask);
-
-            if (shaderTags != null && shaderTags.Length > 0)
+            this.profilerTag     = profilerTag;
+            profilingSampler     = new ProfilingSampler(profilerTag);
+            this.renderQueueType = renderQueueType;
+            foreach (var tag in shaderTagList)
             {
-                foreach (var passName in shaderTags)
-                    _shaderTagIdList.Add(new ShaderTagId(passName));
+                shaderTagIds.Add(new ShaderTagId(tag));
             }
-            else
-            {
-                _shaderTagIdList.Add(new ShaderTagId("SRPDefaultUnlit"));
-                _shaderTagIdList.Add(new ShaderTagId("UniversalForward"));
-                _shaderTagIdList.Add(new ShaderTagId("UniversalForwardOnly"));
-                _shaderTagIdList.Add(new ShaderTagId("LightweightForward"));
-            }
-
-            _renderStateBlock = new RenderStateBlock(RenderStateMask.Raster);
-            _renderStateBlock.rasterState = new RasterState { cullingMode = CullMode.Front };
         }
 
-
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+        // Passで使うデータを定義しておく
+        internal class PassData
         {
+            internal TextureHandle colorHandle;
+            internal TextureHandle depthHandle;
+            // このHandleをCommandBuffer.DrawRendererに渡す
+            internal RendererListHandle rendererList;
+        }
 
-            bool isSceneViewCamera = renderingData.cameraData.isSceneViewCamera;
-
-            SortingCriteria sortingCriteria = (_renderQueueType == RenderQueueType.Transparent)
-                ? SortingCriteria.CommonTransparent
-                : renderingData.cameraData.defaultOpaqueSortFlags;
-
-            DrawingSettings drawingSettings = CreateDrawingSettings(_shaderTagIdList, ref renderingData, sortingCriteria);
-
-            ref CameraData cameraData = ref renderingData.cameraData;
-            Camera camera = cameraData.camera;
-            var viewMatrixPrev = camera.worldToCameraMatrix;
-            var projectionMatrixPrev = camera.projectionMatrix;
-
-            // In case of camera stacking we need to take the viewport rect from base camera
-            Rect pixelRect = camera.pixelRect; // = renderingData.cameraData.pixelRect;
-            float cameraAspect = (float) pixelRect.width / (float) pixelRect.height;
-
-            CommandBuffer cmd = CommandBufferPool.Get(_profilerTag);
-
-            // メッシュ描画
-            using (new ProfilingScope(cmd, _profilingSampler))
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            //  RenderingDataでなく、ContextContainerから自分で必要なデータを撮るようになった
+            UniversalCameraData    cameraData    = frameData.Get<UniversalCameraData>();
+            UniversalRenderingData renderingData = frameData.Get<UniversalRenderingData>();
+            UniversalLightData     lightData     = frameData.Get<UniversalLightData>();
+            UniversalResourceData  resourceData  = frameData.Get<UniversalResourceData>();
+            
+            // 今回はRasterRenderPassで作成
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(profilerTag, out var passData))
             {
-                // メッシュ描画前
-                if (!isSceneViewCamera)
+                // ShaderなどでGlobalにアクセスする可能性がある場合は、Trueにしておく
+                builder.UseAllGlobalTextures(true);
+                
+                // 特にターゲットを切り替える訳ではなくても、ターゲット設定をしないと怒られます。
+                passData.colorHandle = resourceData.activeColorTexture;
+                builder.SetRenderAttachment(passData.colorHandle,0);
+
+                passData.depthHandle = resourceData.activeDepthTexture;
+                builder.SetRenderAttachmentDepth(passData.depthHandle);
+                
+                // Render時のソート条件
+                SortingCriteria sortingCriteria = (renderQueueType == RenderQueueType.Transparent)
+                                                      ? SortingCriteria.CommonTransparent
+                                                      : cameraData.defaultOpaqueSortFlags;
+                
+                // 描画設定、今回はマテリアルのoverrideなどを行わないのでShaderTagとソート条件のみ。
+                // context.DrawRenderersを使用していた時とことなり、RenderStaeBlockのオーバーライドが不要なら用意しなくてよくなった。
+                // RenderStaeteBlockを指定したい場合は、下記のRenderListParamに設定します。今回は無し。
+                DrawingSettings  drawSettings     = RenderingUtils.CreateDrawingSettings(shaderTagIds, renderingData, cameraData, lightData, sortingCriteria);
+                
+                RenderQueueRange renderQueueRange = (renderQueueType == RenderQueueType.Transparent)
+                                                        ? RenderQueueRange.transparent
+                                                        : RenderQueueRange.opaque;
+                FilteringSettings filteringSettings = new FilteringSettings(renderQueueRange, layerMask);
+               
+                // RenderListHandleの取得
+                // AssempblyReferenceでURPパッケージ参照いれてたり、直接URPパッケージ内にカスタム作成する場合 or URPパッケージのAssemblyInfoでInternalアクセスを許可している場合はm、RenderingUtils.CreateRendererList()が使えるので楽
+                // URP使用しない場合もあるのでCore RPのみ利用パターンはこれ(URP17といいつつ)
+                RendererListParams rendererListParams = new RendererListParams(renderingData.cullResults, drawSettings, filteringSettings);
+                passData.rendererList          = renderGraph.CreateRendererList(rendererListParams);
+                
+                // このPassで使用するリソースとして宣言する
+                builder.UseRendererList(passData.rendererList);
+                
+                
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
                 {
-                    float fov = Mathf.Lerp( camera.fieldOfView, fieldOfView, alpha == 1 ? 1 : 0);
-                    Matrix4x4 newProjectionMatrix = Matrix4x4.Perspective (fov, cameraAspect, camera.nearClipPlane, camera.farClipPlane);
-                    Matrix4x4 viewMatrix = camera.worldToCameraMatrix;
-                    Vector4 cameraTranslation = viewMatrix.GetColumn (3);
-                    Vector3 cameraPosition = cameraTranslation;
-
-                    float ratio = newProjectionMatrix[1, 1] / camera.projectionMatrix[1, 1];
-
-                    Vector3 lookAtDirection = camera.transform.forward;
-                    lookAtDirection.y = 0;
-                    //  Debug.Log (lookAtDirection*100 + "  " + Vector3.forward*100);
-                    Plane lookAtPlane = new Plane (Vector3.forward, Vector3.zero);
-                    float lookAtLength = lookAtPlane.GetDistanceToPoint (cameraPosition);
-                    Vector3 lookAtPosition = cameraPosition - (lookAtDirection * lookAtLength);
-
-                    //Debug.Log (camera.projectionMatrix[1, 1] + " " + projectionMatrix[1, 1]);
-                    Vector3 newCameraPosition = lookAtPosition + (lookAtDirection * lookAtLength * (ratio));
-
-                    var depthShiftLength = (cameraPosition - newCameraPosition).magnitude;
-
-                    viewMatrix.SetColumn(3, new Vector4(newCameraPosition.x, newCameraPosition.y, newCameraPosition.z, ratio) );
-
-                    newProjectionMatrix = Matrix4x4.Perspective (fov, cameraAspect, camera.nearClipPlane, camera.farClipPlane);
-                    newProjectionMatrix = GL.GetGPUProjectionMatrix(newProjectionMatrix, cameraData.IsCameraProjectionMatrixFlipped());
-                    //RenderingUtils.SetViewAndProjectionMatrices(cmd, viewMatrix, newProjectionMatrix, true);
-                    cmd.SetGlobalVector(_projectionParamsId, new Vector4(1, camera.nearClipPlane+depthShiftLength, camera.farClipPlane+depthShiftLength, 1.0f / (camera.farClipPlane+depthShiftLength)));
-
-                    context.ExecuteCommandBuffer(cmd);
-                    cmd.Clear();
-                }
-
-                // keyword "_TOON_OUTLINE" 有効化
-                cmd.SetKeyword(_toonOutlineKeyword, true);
-                context.ExecuteCommandBuffer(cmd);
-                cmd.Clear();
-
-                // メッシュ描画
-                context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref _filteringSettings, ref _renderStateBlock);
-
-                // keyword "_TOON_OUTLINE" 無効化
-                cmd.SetKeyword(_toonOutlineKeyword, false);
-                context.ExecuteCommandBuffer(cmd);
-                cmd.Clear();
-
-                // メッシュ描画後
-                if (!isSceneViewCamera) {
-                    // カメラをもとに戻す
-                    RenderingUtils.SetViewAndProjectionMatrices(cmd, cameraData.GetViewMatrix(), cameraData.GetGPUProjectionMatrix(), false);          
-                    context.ExecuteCommandBuffer(cmd);
-                    cmd.Clear();
-
-                }
+                    using (new ProfilingScope(context.cmd, profilingSampler))
+                    {
+                        // 描画
+                        context.cmd.DrawRendererList(data.rendererList);
+                    }
+                });
             }
-
-            CommandBufferPool.Release(cmd);
         }
 
-        // レンダリング処理後に呼ばれる
-        // レンダリング処理に使用したリソースを片づけたりする
-        public override void FrameCleanup(CommandBuffer cmd)
-        {
-
-        }        
     }
 }

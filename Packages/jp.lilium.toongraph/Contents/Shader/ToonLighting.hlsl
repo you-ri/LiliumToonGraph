@@ -232,8 +232,9 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half3 normalWS, half3 viewDirectionWS,
     half clearCoatMask, bool specularHighlightsOff)
 {
-    distanceAttenuation = Toonlize(distanceAttenuation, 0.1, brdfData.toonlize);
-    half lightAttenuation = distanceAttenuation * shadowAttenuation;
+    half lightThreshold = 0.01 - HALF_MIN;
+    //distanceAttenuation = Toonlize(distanceAttenuation, lightThreshold, brdfData.toonlize);
+    half lightAttenuation =  distanceAttenuation * shadowAttenuation;
     half lightAttenuationSSS = distanceAttenuation;
 
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
@@ -249,7 +250,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
 
     half subsurface = LightingSubsurface(toonlizeNdotLRaw, 1);
     half3 sss = brdfData.sss;
-    half3 sssRadiance = lightColor * subsurface * (1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
+    half3 sssRadiance = lightColor * subsurface * saturate(1 - (lightAttenuation * toonlizeNdotL)) * lightAttenuationSSS;
 
     half3 brdf = brdfData.diffuse;
 #ifndef _SPECULARHIGHLIGHTS_OFF
@@ -553,10 +554,11 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
 #if REAL_IS_HALF
     // Clamp any half.inf+ to HALF_MAX
-    return min(CalculateFinalColor(lightingData, surfaceData.alpha), HALF_MAX);
+    return min(CalculateFinalColor_Toon(lightingData, surfaceData.alpha), HALF_MAX);
 #else
-    return CalculateFinalColor(lightingData, surfaceData.alpha);
+    return CalculateFinalColor_Toon(lightingData, surfaceData.alpha);
 #endif
+    
 }
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...

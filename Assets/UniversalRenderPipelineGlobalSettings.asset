@@ -150,7 +150,7 @@ MonoBehaviour:
         asm: Unity.RenderPipelines.Universal.Runtime}
       data:
         m_Version: 0
-        m_VolumeProfile: {fileID: 11400000, guid: 72743ac472404ff48b8f945db4e81346,
+        m_VolumeProfile: {fileID: 11400000, guid: bf36f4444c7c27543995a1e31e67b760,
           type: 2}
     - rid: 7432821288380399813
       type: {class: UniversalRenderPipelineEditorMaterials, ns: UnityEngine.Rendering.Universal,
