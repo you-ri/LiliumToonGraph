@@ -11,7 +11,6 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/AmbientOcclusion.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 
-#include "ToonGlobalIllumination.hlsl"
 
 
 
@@ -64,6 +63,9 @@ struct BRDFData_Toon
     half toonlize;
     half occlusion;
 };
+
+#include "ToonGlobalIllumination.hlsl"
+
 
 
 inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 specular, half reflectivity, half oneMinusReflectivity, half smoothness, half occlusion, half3 sss, half subsurface, half toonlize, inout half alpha, out BRDFData_Toon outBRDFData)
@@ -500,7 +502,8 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
     LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 
-    lightingData.giColor = GlobalIllumination_Toon((BRDFData)brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
+
+    lightingData.giColor = GlobalIllumination_Toon(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
 #ifdef _LIGHT_LAYERS

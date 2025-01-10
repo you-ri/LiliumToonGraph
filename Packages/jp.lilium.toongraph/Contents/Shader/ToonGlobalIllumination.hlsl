@@ -430,11 +430,11 @@ half3 SubtractDirectMainLightFromLightmap_Toon(Light mainLight, half3 normalWS, 
     return min(bakedGI, realtimeShadow);
 }
 
-half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
+half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
     half3 bakedGI, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS, float2 normalizedScreenSpaceUV)
 {
-    half3 reflectVector = viewDirectionWS;// reflect(-viewDirectionWS, normalWS);
+    half3 reflectVector = lerp(viewDirectionWS, reflect(-viewDirectionWS, normalWS), brdfData.toonlize);
     half NoV = saturate(dot(normalWS, viewDirectionWS));
 
     half fresnelTerm = Pow4(1.0 - NoV);
@@ -446,7 +446,7 @@ half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, flo
     half3 indirectDiffuse = bakedGI;
     half3 indirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, positionWS, brdfData.perceptualRoughness, 1.0h, normalizedScreenSpaceUV);
 
-    half3 color = EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+    half3 color = EnvironmentBRDF((BRDFData)brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 
     if (IsOnlyAOLightingFeatureEnabled())
     {
@@ -469,7 +469,7 @@ half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, flo
 }
 
 #if !USE_FORWARD_PLUS
-half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
+half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
     half3 bakedGI, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS)
 {
@@ -478,13 +478,13 @@ half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, flo
 #endif
 
 // Backwards compatiblity
-half3 GlobalIllumination_Toon(BRDFData brdfData, half3 bakedGI, half occlusion, float3 positionWS, half3 normalWS, half3 viewDirectionWS)
+half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, half3 bakedGI, half occlusion, float3 positionWS, half3 normalWS, half3 viewDirectionWS)
 {
     const BRDFData noClearCoat = (BRDFData)0;
     return GlobalIllumination_Toon(brdfData, noClearCoat, 0.0, bakedGI, occlusion, positionWS, normalWS, viewDirectionWS, 0);
 }
 
-half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
+half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
     half3 bakedGI, half occlusion,
     half3 normalWS, half3 viewDirectionWS)
 {
@@ -495,7 +495,7 @@ half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, flo
     half3 indirectDiffuse = bakedGI;
     half3 indirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, brdfData.perceptualRoughness, half(1.0));
 
-    half3 color = EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
+    half3 color = EnvironmentBRDF((BRDFData)brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
     half3 coatIndirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, brdfDataClearCoat.perceptualRoughness, half(1.0));
@@ -513,7 +513,7 @@ half3 GlobalIllumination_Toon(BRDFData brdfData, BRDFData brdfDataClearCoat, flo
 }
 
 
-half3 GlobalIllumination_Toon(BRDFData brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
+half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, half3 bakedGI, half occlusion, half3 normalWS, half3 viewDirectionWS)
 {
     const BRDFData noClearCoat = (BRDFData)0;
     return GlobalIllumination_Toon(brdfData, noClearCoat, 0.0, bakedGI, occlusion, normalWS, viewDirectionWS);
