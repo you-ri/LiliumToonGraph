@@ -17,13 +17,12 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 #endif
 
-
-// Toonlize value
-inline half3 Toonlize(half value, half threshold, half oneMinusToonyShade = 0)
+// toonize value
+inline half3 Toonize(half value, half threshold, half untoonizeRatio = 0)
 {
     return smoothstep(
-        saturate(threshold - (oneMinusToonyShade/2)), 
-        saturate(threshold + (oneMinusToonyShade/2)), 
+        saturate(threshold - ((threshold) * untoonizeRatio)), 
+        saturate(threshold + ((1-threshold) * untoonizeRatio)), 
         value);
 }
 
@@ -434,14 +433,14 @@ half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat
     half3 bakedGI, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS, float2 normalizedScreenSpaceUV)
 {
-    half3 reflectVector = lerp(viewDirectionWS, reflect(-viewDirectionWS, normalWS), brdfData.toonlize);
+    half3 reflectVector = lerp(viewDirectionWS, reflect(-viewDirectionWS, normalWS), brdfData.toonize);
     half NoV = saturate(dot(normalWS, viewDirectionWS));
 
     half fresnelTerm = Pow4(1.0 - NoV);
 
-    // begin toonlize
-    fresnelTerm = Toonlize(fresnelTerm, 0.5, 0.1);
-    // end toonlize
+    // begin toonize
+    fresnelTerm = Toonize(fresnelTerm, 0.5, 0.1);
+    // end toonize
 
     half3 indirectDiffuse = bakedGI;
     half3 indirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, positionWS, brdfData.perceptualRoughness, 1.0h, normalizedScreenSpaceUV);

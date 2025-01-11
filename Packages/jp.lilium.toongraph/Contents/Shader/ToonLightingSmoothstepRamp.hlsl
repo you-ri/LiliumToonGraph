@@ -114,7 +114,7 @@ void ToonLight_half(
     #if defined(USE_APV_PROBE_OCCLUSION)
     inputData.probeOcclusion = input.probeOcclusion;
     #endif
-    #endif    
+    #endif
 
     inputData.positionCS = input.positionCS;
     // -- InitializeInputData() -- 
@@ -125,7 +125,8 @@ void ToonLight_half(
     OUTPUT_SH(normalWSBakedGI, vertexSH);
     //OUTPUT_SH4(vertexInput.positionWS, normalWS.xyz, GetWorldSpaceNormalizeViewDir(vertexInput.positionWS), output.sh, output.probeOcclusion);
 
-    input.sh = vertexSH;
+    
+    //input.sh = vertexSH;
 
 #ifdef _SPECULAR_SETUP
     float3 specular = Specular;
@@ -138,10 +139,10 @@ void ToonLight_half(
 
     // -- InitializeBakedGIData() --
     #if defined(DYNAMICLIGHTMAP_ON)
-    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV.xy, input.sh, normalWSBakedGI);
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV.xy, vertexSH, normalWSBakedGI);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
     #elif !defined(LIGHTMAP_ON) && (defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2))
-    inputData.bakedGI = SAMPLE_GI(input.sh,
+    inputData.bakedGI = SAMPLE_GI(vertexSH,
         GetAbsolutePositionWS(inputData.positionWS),
         normalWSBakedGI,
         inputData.viewDirectionWS,
@@ -149,7 +150,7 @@ void ToonLight_half(
         input.probeOcclusion,
         inputData.shadowMask);
     #else
-    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.sh, normalWSBakedGI);
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, vertexSH, normalWSBakedGI);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
     #endif
     // -- InitializeBakedGIData() --
@@ -168,9 +169,9 @@ void ToonLight_half(
     surfaceData.clearCoatMask = 0;
     surfaceData.clearCoatSmoothness = 1;
 
-    surfaceData.toonlize = ToonyLighting;
+    surfaceData.toonize = ToonyLighting;
     surfaceData.sss = SSS.rgb * surfaceData.albedo;
-    surfaceData.subsurface = Curvature;
+    surfaceData.subsurface = SSS.a;
 
     Color = UniversalFragmentPBR_Toon(inputData, surfaceData);
     ShadeColor = Color.rgb;
