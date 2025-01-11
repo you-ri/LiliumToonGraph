@@ -433,17 +433,19 @@ half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat
     half3 bakedGI, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS, float2 normalizedScreenSpaceUV)
 {
-    half3 reflectVector = lerp(viewDirectionWS, reflect(-viewDirectionWS, normalWS), brdfData.toonize);
+    half3 reflectVector = reflect(-viewDirectionWS, normalWS);
     half NoV = saturate(dot(normalWS, viewDirectionWS));
 
     half fresnelTerm = Pow4(1.0 - NoV);
 
     // begin toonize
-    fresnelTerm = Toonize(fresnelTerm, 0.5, 0.1);
+    half3 toonizeReflectVector = lerp(viewDirectionWS, reflectVector, brdfData.toonize);
+    fresnelTerm = lerp(fresnelTerm, Toonize(fresnelTerm, 0.5, 0.1), 1-brdfData.toonize);
+    half toonizePerceptualRoughness = lerp(brdfData.perceptualRoughness, 1,  1-brdfData.toonize);
     // end toonize
 
     half3 indirectDiffuse = bakedGI;
-    half3 indirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, positionWS, brdfData.perceptualRoughness, 1.0h, normalizedScreenSpaceUV);
+    half3 indirectSpecular = GlossyEnvironmentReflection_Toon(toonizeReflectVector, positionWS, toonizePerceptualRoughness, 1.0h, normalizedScreenSpaceUV);
 
     half3 color = EnvironmentBRDF((BRDFData)brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 
@@ -453,7 +455,7 @@ half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat
     }
 
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
-    half3 coatIndirectSpecular = GlossyEnvironmentReflection_Toon(reflectVector, positionWS, brdfDataClearCoat.perceptualRoughness, 1.0h, normalizedScreenSpaceUV);
+    half3 coatIndirectSpecular = GlossyEnvironmentReflection_Toon(toonizeReflectVector, positionWS, brdfDataClearCoat.perceptualRoughness, 1.0h, normalizedScreenSpaceUV);
     // TODO: "grazing term" causes problems on full roughness
     half3 coatColor = EnvironmentBRDFClearCoat(brdfDataClearCoat, clearCoatMask, coatIndirectSpecular, fresnelTerm);
 

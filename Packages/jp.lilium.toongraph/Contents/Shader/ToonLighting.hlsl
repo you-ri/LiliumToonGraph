@@ -169,7 +169,6 @@ half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 light
     // to reserve half of the per light range for specular and half for diffuse + indirect + emissive.
     specularTerm = clamp(specularTerm, 0.0, 1000.0); // Prevent FP16 overflow on mobiles
 #endif
-
     return specularTerm;
 }
 
@@ -516,7 +515,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
                                                               surfaceData.clearCoatMask, specularHighlightsOff);
     }
 
-    #if defined(_ADDITIONAL_LIGHTS)
+    //#if defined(_ADDITIONAL_LIGHTS)  // support defferd rendering
     uint pixelLightCount = GetAdditionalLightsCount();
 
     #if USE_FORWARD_PLUS
@@ -549,7 +548,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
                                                                           surfaceData.clearCoatMask, specularHighlightsOff);
         }
     LIGHT_LOOP_END
-    #endif
+    //#endif
 
     #if defined(_ADDITIONAL_LIGHTS_VERTEX)
     lightingData.vertexLightingColor += inputData.vertexLighting * brdfData.diffuse;

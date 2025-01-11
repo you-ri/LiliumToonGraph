@@ -1491,9 +1491,9 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -925.0,
-            "y": -411.9999694824219,
-            "width": 55.999996185302737,
+            "x": -811.0000610351563,
+            "y": -669.0000610351563,
+            "width": 56.00006103515625,
             "height": 24.0
         }
     },
@@ -2401,7 +2401,7 @@
     "m_RefNameGeneratedByDisplayName": "_FORWARD_PLUS",
     "m_DefaultReferenceName": "_FORWARD_PLUS",
     "m_OverrideReferenceName": "",
-    "m_GeneratePropertyBlock": true,
+    "m_GeneratePropertyBlock": false,
     "m_UseCustomSlotLabel": false,
     "m_CustomSlotLabel": "",
     "m_DismissedVersion": 0,
@@ -2438,7 +2438,7 @@
     "m_Guid": {
         "m_GuidSerialized": "394ab2cc-1832-4876-9796-69fa9073a9e2"
     },
-    "m_Name": "Toony Lighting",
+    "m_Name": "Toonized Lighting",
     "m_DefaultRefNameVersion": 0,
     "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_D9A6FB2A",
@@ -5420,9 +5420,9 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -728.0,
-            "y": -740.0,
-            "width": 210.99993896484376,
+            "x": -727.9999389648438,
+            "y": -739.9999389648438,
+            "width": 211.0001220703125,
             "height": 95.0
         }
     },
@@ -5625,7 +5625,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "9fe01ec192b9438eb179415e119f0e2a",
     "m_Id": 0,
-    "m_DisplayName": "Toony Lighting",
+    "m_DisplayName": "Toonized Lighting",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

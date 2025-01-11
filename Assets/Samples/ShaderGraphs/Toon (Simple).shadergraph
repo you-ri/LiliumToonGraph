@@ -2215,7 +2215,7 @@
     "m_Guid": {
         "m_GuidSerialized": "14565270-4797-446a-935c-4cf9d54a8491"
     },
-    "m_Name": "Toony Lighting",
+    "m_Name": "Toonized Lighting",
     "m_DefaultRefNameVersion": 0,
     "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_49E9B1A1",
@@ -3205,7 +3205,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "7f5ec91d968441119a4e979ea868defe",
     "m_Id": -730052683,
-    "m_DisplayName": "Toony Lighting",
+    "m_DisplayName": "ToonizedLighting",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector1_8507BB4B",
@@ -3978,7 +3978,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "a2aa8fda773a418999ff5b149b0102bf",
     "m_Id": 0,
-    "m_DisplayName": "Toony Lighting",
+    "m_DisplayName": "Toonized Lighting",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",

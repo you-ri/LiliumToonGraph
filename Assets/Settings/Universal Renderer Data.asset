@@ -76,7 +76,7 @@ MonoBehaviour:
     failOperation: 0
     zFailOperation: 0
   m_ShadowTransparentReceive: 1
-  m_RenderingMode: 2
+  m_RenderingMode: 1
   m_DepthPrimingMode: 2
   m_CopyDepthMode: 1
   m_DepthAttachmentFormat: 0

@@ -63,7 +63,7 @@ void ToonLight_half(
     input.positionCS = half4(ScreenPosition.xyz, 1);
     input.tangentWS = float4(WorldTangent.xyz, 1);
     input.normalWS = WorldNormal;
-    inputData.tangentToWorld = half3x3(input.tangentWS.xyz, WorldBitangent.xyz, input.normalWS.xyz);
+    inputData.tangentToWorld = half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz);
 
     inputData.positionWS = input.positionWS;
 
@@ -74,7 +74,6 @@ void ToonLight_half(
         float crossSign = (input.tangentWS.w > 0.0 ? 1.0 : -1.0) * GetOddNegativeScale();
         float3 bitangent = crossSign * cross(input.normalWS.xyz, input.tangentWS.xyz);
 
-        inputData.tangentToWorld = half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz);
         #if _NORMAL_DROPOFF_TS
             inputData.normalWS = TransformTangentToWorld(Normal, inputData.tangentToWorld);
             // TransformTangentToWorld(surfaceDescription.NormalTS, inputData.tangentToWorld);

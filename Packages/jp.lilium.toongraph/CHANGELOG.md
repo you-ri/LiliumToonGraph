@@ -2,6 +2,8 @@
 
 ## [0.7.0-preview.1] -
 - Unity6
+- UniversalRP v17
+- Forward Plus
 - 
 
 ## [0.6.0-preview.x] -

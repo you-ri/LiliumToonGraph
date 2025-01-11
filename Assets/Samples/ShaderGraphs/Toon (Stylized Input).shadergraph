@@ -2613,7 +2613,7 @@
     "m_Guid": {
         "m_GuidSerialized": "394ab2cc-1832-4876-9796-69fa9073a9e2"
     },
-    "m_Name": "Toony Lighting",
+    "m_Name": "Toonized Lighting",
     "m_DefaultRefNameVersion": 0,
     "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_D9A6FB2A",
@@ -4294,6 +4294,15 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "Lilium.ToonGraph.Editor.UniversalLitSubTarget",
+    "m_ObjectId": "73181d2fdcac4e788398f9f6c1a6ea22",
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0,
+    "m_ClearCoat": false
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "7326edb851c74b8194895dff4e07819a",
     "m_Id": 3,
@@ -5573,7 +5582,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "9fe01ec192b9438eb179415e119f0e2a",
     "m_Id": 0,
-    "m_DisplayName": "Toony Lighting",
+    "m_DisplayName": "Toonized Lighting",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
@@ -5875,7 +5884,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "b238559d54f244cda0cf6de114690682",
     "m_Id": -730052683,
-    "m_DisplayName": "Toony Lighting",
+    "m_DisplayName": "ToonizedLighting",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector1_8507BB4B",
