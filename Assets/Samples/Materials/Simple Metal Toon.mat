@@ -197,7 +197,7 @@ Material:
     - _Shade: 1
     - _ShadeToony: 1
     - _Shadow: 1
-    - _Smoothness: 0.6
+    - _Smoothness: 0.503
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

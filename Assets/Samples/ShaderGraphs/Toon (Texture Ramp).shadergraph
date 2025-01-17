@@ -4154,7 +4154,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "959e0f48b06b49d1a5124cddac7da269",
     "m_Id": 1459030740,
-    "m_DisplayName": "ToonyLighting",
+    "m_DisplayName": "ToonizedLighting",
     "m_SlotType": 0,
     "m_Hidden": false,
     "m_ShaderOutputName": "Vector1_89971EC3",

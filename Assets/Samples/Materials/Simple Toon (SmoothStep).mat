@@ -217,6 +217,6 @@ Material:
     - _ShadeEnvironmentalColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
     - _ShdeEnvironmentalColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
-    - _SssColor: {r: 1, g: 0, b: 0, a: 0.6392157}
+    - _SssColor: {r: 1, g: 0, b: 0, a: 0.7019608}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

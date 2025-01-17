@@ -307,6 +307,7 @@ RectTransform:
   m_Pivot: {x: -0.000000046100467, y: 1}
 --- !u!114 &454260782
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -380,9 +381,9 @@ MonoBehaviour:
   m_isAlignmentEnumConverted: 0
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: -5
+  m_lineSpacing: -5.813953
   m_lineSpacingMax: 0
-  m_paragraphSpacing: -10
+  m_paragraphSpacing: -11.62791
   m_charWidthMaxAdj: 0
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
@@ -615,6 +616,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1205717532
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -753,6 +755,7 @@ GameObject:
   m_IsActive: 0
 --- !u!114 &1562965275
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -826,9 +829,9 @@ MonoBehaviour:
   m_isAlignmentEnumConverted: 0
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: -5
+  m_lineSpacing: -5.813953
   m_lineSpacingMax: 0
-  m_paragraphSpacing: -10
+  m_paragraphSpacing: -11.62791
   m_charWidthMaxAdj: 0
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4

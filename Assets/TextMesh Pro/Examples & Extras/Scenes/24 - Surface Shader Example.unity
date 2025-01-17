@@ -415,6 +415,7 @@ GameObject:
   m_IsActive: 1
 --- !u!114 &151148668
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -470,7 +471,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
-  m_characterSpacing: 2.7
+  m_characterSpacing: 3
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: -10
@@ -2502,6 +2503,7 @@ GameObject:
   m_IsActive: 1
 --- !u!114 &1746165347
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2557,7 +2559,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
-  m_characterSpacing: 7
+  m_characterSpacing: 4.861111
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: -10

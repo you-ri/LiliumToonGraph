@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 1
+  version: 9
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -199,7 +199,7 @@ Material:
     - _Shade: 1
     - _ShadeToony: 1
     - _Shadow: 1
-    - _Smoothness: 0
+    - _Smoothness: 0.713
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

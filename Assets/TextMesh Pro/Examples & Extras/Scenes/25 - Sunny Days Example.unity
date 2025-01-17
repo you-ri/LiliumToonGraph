@@ -235,6 +235,7 @@ RectTransform:
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1027572111
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -294,9 +295,9 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_isAlignmentEnumConverted: 0
-  m_characterSpacing: 0.57
+  m_characterSpacing: 0.6333333
   m_wordSpacing: 0
-  m_lineSpacing: -34.82
+  m_lineSpacing: -38.68889
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0

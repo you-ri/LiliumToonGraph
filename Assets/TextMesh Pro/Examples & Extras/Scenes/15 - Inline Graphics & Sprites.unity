@@ -133,6 +133,7 @@ GameObject:
   m_IsActive: 1
 --- !u!114 &323282591
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -196,7 +197,7 @@ MonoBehaviour:
   m_isAlignmentEnumConverted: 1
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: 18.2
+  m_lineSpacing: 20.22222
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0

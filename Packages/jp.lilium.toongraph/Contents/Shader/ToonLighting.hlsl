@@ -85,7 +85,7 @@ inline void InitializeBRDFDataDirect_Toon(half3 albedo, half3 diffuse, half3 spe
 
     outBRDFData.toonize = half(1.0) - toonize;
     outBRDFData.sss = sss.rgb * outBRDFData.diffuse;
-    outBRDFData.curvature = half(1.0) - subsurface;
+    outBRDFData.curvature = subsurface;
     outBRDFData.occlusion = occlusion;
 
     // Input is expected to be non-alpha-premultiplied while ROP is set to pre-multiplied blend.
@@ -194,19 +194,16 @@ half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 light
 // Referenced: https://johnaustin.io/articles/2020/fast-subsurface-scattering-for-the-unity-urp
 half LightingSubsurface(half NdotL, half subsurfaceRadius)
 {
-    half alpha = subsurfaceRadius + HALF_MIN;
-    //half theta_m = acos(-alpha); // boundary of the lighting function
-
-    float theta = max(0, NdotL + alpha) - alpha;
-    half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
-    half wrapped_jgt = (pow(abs((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
-
-    //wrapped_jgt = binarize(wrapped_jgt, 0, 0);
+    half alpha = subsurfaceRadius;
+    //float theta = max(0, NdotL + alpha) - alpha;
+    //half normalization_jgt = (2 + alpha) / (2 * (1 + alpha));
+    //half wrapped_jgt = (pow(abs((theta + alpha) / (1 + alpha)), 1 + alpha)) * normalization_jgt;
 
     //half wrapped_valve = 0.25 * (NdotL + 1) * (NdotL + 1);
-    //half wrapped_simple = (NdotL + alpha) / (1 + alpha);
+    half wrapped_simple = (NdotL + alpha) / (1 + alpha);
 
-    return saturate(wrapped_jgt);
+
+    return saturate(wrapped_simple);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -247,9 +244,8 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
 
     // Subsurface scattering
     half NdotLRaw = dot(normalWS, lightDirectionWS);
-    half toonizeNdotLRaw = Toonize((NdotLRaw + 1) * 0.5, brdfData.curvature, brdfData.toonize) * 2 - 1;
 
-    half subsurface = LightingSubsurface(toonizeNdotLRaw, 1);
+    half subsurface = Toonize(LightingSubsurface(NdotLRaw, brdfData.curvature*2), 0.3333f, brdfData.toonize);
     half3 sss = brdfData.sss;
     half3 sssRadiance = lightColor * subsurface * saturate(1 - (lightAttenuation * toonizeNdotL)) * lightAttenuationSSS;
 
@@ -454,9 +450,6 @@ half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData_Too
     return lightDiffuseColor * surfaceData.albedo + lightSpecularColor;
 #endif
 }
-
-
-
 
 
 

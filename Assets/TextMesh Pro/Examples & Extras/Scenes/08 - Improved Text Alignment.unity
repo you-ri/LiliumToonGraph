@@ -228,6 +228,7 @@ RectTransform:
   m_Pivot: {x: 0.00000006123446, y: -9.313226e-10}
 --- !u!114 &1063675291
 MonoBehaviour:
+  m_SerializedVersion: 1
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -306,7 +307,7 @@ MonoBehaviour:
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
-  m_paragraphSpacing: -18
+  m_paragraphSpacing: -20.93023
   m_charWidthMaxAdj: 0
   m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4

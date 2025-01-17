@@ -29,7 +29,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "2.5.2",
+      "version": "2.6.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -161,11 +161,10 @@
       }
     },
     "com.unity.splines": {
-      "version": "2.6.1",
+      "version": "2.7.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {
-        "com.unity.ugui": "1.0.0",
         "com.unity.mathematics": "1.2.1",
         "com.unity.settings-manager": "1.0.3"
       },
