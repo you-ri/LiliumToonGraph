@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Lilium.ToonGraph.Runtime.csproj" />
+</Solution>
