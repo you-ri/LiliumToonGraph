@@ -29,6 +29,14 @@ public class LiliumToonSettings : IRenderPipelineGraphicsSettings
     [Tooltip("SSS（表面下散乱）が出る境目。大きいほど SSS の出る範囲が狭くなる")]
     float m_SubsurfaceThreshold = 0.5f;
 
+    [SerializeField]
+    [Tooltip("点光源・スポットライトを半径のある球として扱い、近づいても明るさが頭打ちになるようにする。切ると全ライトが URP のまま 1/d²（Toon Light Source Radius を付けたライトも）")]
+    bool m_LightSourceRadiusEnabled = true;
+
+    [SerializeField, Min(0f)]
+    [Tooltip("点光源・スポットライトの光源の半径（メートル）の既定。これより近づいても明るさは増えない（0 で URP のまま 1/d²）。ライトごとに変えるには Toon Light Source Radius を付ける")]
+    float m_DefaultLightSourceRadius = 0.5f;
+
     /// <summary>直接光の影の境目（ToonLighting.hlsl の _ToonShadeThreshold）</summary>
     public float shadeThreshold
     {
@@ -41,6 +49,20 @@ public class LiliumToonSettings : IRenderPipelineGraphicsSettings
     {
         get => m_SubsurfaceThreshold;
         set => this.SetValueAndNotify(ref m_SubsurfaceThreshold, value, nameof(m_SubsurfaceThreshold));
+    }
+
+    /// <summary>点光源・スポットライトの光源の半径を使うか</summary>
+    public bool lightSourceRadiusEnabled
+    {
+        get => m_LightSourceRadiusEnabled;
+        set => this.SetValueAndNotify(ref m_LightSourceRadiusEnabled, value, nameof(m_LightSourceRadiusEnabled));
+    }
+
+    /// <summary>点光源・スポットライトの光源の半径の既定（Toon Light Source Radius が無いライトに使う）</summary>
+    public float defaultLightSourceRadius
+    {
+        get => m_DefaultLightSourceRadius;
+        set => this.SetValueAndNotify(ref m_DefaultLightSourceRadius, Mathf.Max(0f, value), nameof(m_DefaultLightSourceRadius));
     }
 }
 

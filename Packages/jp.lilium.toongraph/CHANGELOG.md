@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - URP のデカール（Decal Projector・DBuffer 方式）に対応。トゥーンの陰影を計算する前に、デカールの色・法線・金属/AO/滑らかさを塗り込む（Toon Lighting の両方のランプ）。URP Lit ターゲットが自分でもデカールを塗って PBR で照らし、Emission のトゥーン結果に足されてしまうので、ランプのファイルの末尾で `_DBUFFER` を消して止めている。使うにはレンダラーに Decal Renderer Feature（Technique = DBuffer）を足す。半透明（Toon (Transparent)）は URP の仕様でデカールを受けない。アウトラインには塗らない
+- 点光源・スポットライトを半径のある球として扱うようにした。減衰を 1/d² から 1/(d²+r²) にし、光源の中心が面に近づいても明るさが 1/r² で頭打ちになる（半径と同じ距離で元の半分）。プロジェクト設定（Lilium Toon）の Light Source Radius Enabled で有効にし（既定オン）、Default Light Source Radius（既定 0.5m）が全ライトに効く。ライトごとに変えるには `ToonLightSourceRadius` を付ける（0 でそのライトだけ URP のまま）。半径の配列は ToonOutlineRenderFeature のパスが URP の追加ライトと同じ番号で並べてカメラごとに `_ToonLightSourceRadius` へ入れる
 
 ## [0.8.0-pre.1] - 2026-10-02
 - Forward+ で点光源・スポットライト（と反射プローブ）がカメラの位置によって当たったり消えたりしていたのを修正。Toon Lighting サブグラフが渡す Screen Position（0〜1 に正規化済み）を画素の座標とみなしてさらに画面サイズで割っていた（TextureRamp は未設定の値から作っていた）ため、どの画素も画面の隅の区画の光の一覧を引いていた。正規化済みの値をそのまま使うようにした

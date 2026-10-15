@@ -17,6 +17,30 @@
 half _ToonShadeThreshold;
 half _ToonSubsurfaceThreshold;
 
+// 追加ライトの光源の半径（メートル）。URP の追加ライトと同じ番号で並ぶ。ToonLightSourceRadius の付いた点光源・スポットライトだけ 0 以外。
+// ToonOutlineRenderFeature のパスがカメラごとに入れる
+float _ToonLightSourceRadius[MAX_VISIBLE_LIGHTS];
+
+// 光源を半径 r の球として扱い、減衰を 1/d² から 1/(d²+r²) にする係数 d²/(d²+r²)。
+// 光源の中心が面に近づいても明るさが 1/r² で頭打ちになる。r が 0 なら 1（今のまま）
+float ToonLightSourceRadiusFactor(uint i, float3 positionWS)
+{
+#if USE_CLUSTER_LIGHT_LOOP
+    int lightIndex = i;
+#else
+    int lightIndex = GetPerObjectLightIndex(i);
+#endif
+    float radius = _ToonLightSourceRadius[lightIndex];
+#if USE_STRUCTURED_BUFFER_FOR_LIGHT_DATA
+    float4 lightPositionWS = _AdditionalLightsBuffer[lightIndex].position;
+#else
+    float4 lightPositionWS = _AdditionalLightsPosition[lightIndex];
+#endif
+    float3 lightVector = lightPositionWS.xyz - positionWS * lightPositionWS.w;
+    float distanceSqr = max(dot(lightVector, lightVector), HALF_MIN);
+    return distanceSqr / (distanceSqr + radius * radius);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // デカール(URP の Decal Projector・DBuffer 方式)
@@ -364,6 +388,7 @@ half3 VertexLighting_Toon(float3 positionWS, half3 normalWS)
 
     LIGHT_LOOP_BEGIN(lightsCount)
         Light light = GetAdditionalLight(lightIndex, positionWS);
+        light.distanceAttenuation *= ToonLightSourceRadiusFactor(lightIndex, positionWS);
 
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
@@ -530,6 +555,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
     LIGHT_LOOP_BEGIN(pixelLightCount)
         Light light = GetAdditionalLight(lightIndex, inputData, shadowMask, aoFactor);
+        light.distanceAttenuation *= ToonLightSourceRadiusFactor(lightIndex, inputData.positionWS);
 
 #ifdef _LIGHT_LAYERS
         if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))

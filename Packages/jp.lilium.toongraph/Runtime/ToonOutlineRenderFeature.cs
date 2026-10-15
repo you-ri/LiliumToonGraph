@@ -3,7 +3,11 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
 using Unity.Collections;
+using Lilium.ToonGraph.Runtime;
 
+/// <summary>
+/// Lilium Toon のアウトラインを描く。あわせて点光源・スポットライトの光源の半径（プロジェクト設定の既定と <see cref="ToonLightSourceRadius"/>）をシェーダーへ送る。
+/// </summary>
 public class ToonOutlineRenderFeature : ScriptableRendererFeature
 {
     [Tooltip("アウトラインの太さの倍率。マテリアルの Outline Width に掛かる（1 でマテリアルのまま）")]
@@ -11,6 +15,7 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
     public float widthScale = 1f;
 
     DrawObjectsPass drawObjectsPass;
+    LightSourceRadiusPass lightSourceRadiusPass;
 
     public override void Create()
     {
@@ -21,6 +26,10 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
 
         // Insert render passes after URP's post-processing render pass
         drawObjectsPass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+
+        // トゥーンのマテリアルを描く前に半径を入れておく
+        lightSourceRadiusPass = new LightSourceRadiusPass();
+        lightSourceRadiusPass.renderPassEvent = RenderPassEvent.BeforeRenderingPrePasses;
     }
  
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -28,7 +37,66 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
         // Add the render pass to the URP rendering loop
         // インスペクタで変えた太さをそのフレームから効かせる
         drawObjectsPass.widthScale = widthScale;
+        renderer.EnqueuePass(lightSourceRadiusPass);
         renderer.EnqueuePass(drawObjectsPass);
+    }
+
+    /// <summary>
+    /// 追加ライトの半径の配列をグローバル _ToonLightSourceRadius へ入れる（ToonLighting.hlsl が読む）。
+    /// 画面に映るライトはカリングの後にしか分からないので、カメラごとにここで並べる。
+    /// </summary>
+    class LightSourceRadiusPass : ScriptableRenderPass
+    {
+        static readonly int s_RadiusId = Shader.PropertyToID("_ToonLightSourceRadius");
+
+        // 配列のグローバルは最初に入れた長さで固定されるので、URP の追加ライトの上限と同じ長さで毎回送る
+        float[] _radii;
+
+        class PassData
+        {
+            public float[] radii;
+        }
+
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameContext)
+        {
+            UniversalLightData lightData = frameContext.Get<UniversalLightData>();
+            int count = UniversalRenderPipeline.maxVisibleAdditionalLights;
+            if (_radii == null || _radii.Length != count)
+                _radii = new float[count];
+            // 設定が無い（URP のグローバル設定アセットが古い）ときも既定値を使う
+            bool enabled = true;
+            float defaultRadius = 0.5f;
+            if (GraphicsSettings.TryGetRenderPipelineSettings<LiliumToonSettings>(out var settings))
+            {
+                enabled = settings.lightSourceRadiusEnabled;
+                defaultRadius = settings.defaultLightSourceRadius;
+            }
+            // 切っているときは全部 0（URP のまま 1/d²）。前のカメラの値を残さないように送ること自体は続ける
+            if (enabled)
+                ToonLightSourceRadius.FillAdditionalLightRadii(new VisibleLightList(lightData.visibleLights), lightData.mainLightIndex, defaultRadius, _radii);
+            else
+                System.Array.Clear(_radii, 0, _radii.Length);
+
+            using (var builder = renderGraph.AddUnsafePass<PassData>("LiliumToonLightSourceRadius", out var passData))
+            {
+                passData.radii = _radii;
+                builder.AllowPassCulling(false);
+                builder.AllowGlobalStateModification(true);
+                builder.SetRenderFunc(static (PassData data, UnsafeGraphContext context) =>
+                    context.cmd.SetGlobalFloatArray(s_RadiusId, data.radii));
+            }
+        }
+
+        readonly struct VisibleLightList : ToonLightSourceRadius.IVisibleLightList
+        {
+            readonly NativeArray<VisibleLight> _lights;
+
+            public VisibleLightList(NativeArray<VisibleLight> lights) => _lights = lights;
+
+            public int Count => _lights.IsCreated ? _lights.Length : 0;
+            public LightType GetLightType(int index) => _lights[index].lightType;
+            public Light GetLight(int index) => _lights[index].light;
+        }
     }
 
     class DrawObjectsPass : ScriptableRenderPass
