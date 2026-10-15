@@ -12,7 +12,7 @@
 #include "ToonLighting.hlsl"
 
 void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
+    half3 ScreenPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half4 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadowShift, half ShadeShift, half ShadeToony, TEXTURE2D(ShadeRamp), half Curvature, half ToonyLighting,
     out half4 Color, out half3 ShadeColor)
@@ -67,7 +67,10 @@ void ToonLight_half(
 #else
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, vertexSH, normalWSBakedGI);
 #endif
-    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    // ScreenPosition はシェーダーグラフの Screen Position(Default)= 0〜1 に正規化済みの画面座標。
+    // Forward+ はこの値で画面の区画を引いて、届く光と反射プローブの一覧を得る
+    // (以前は未設定の positionCS から作っていて 0 になり、どの画素も画面の隅の区画を引いていた)
+    inputData.normalizedScreenSpaceUV = ScreenPosition.xy;
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
 
     #if defined(DEBUG_DISPLAY)
@@ -88,6 +91,18 @@ void ToonLight_half(
     float3 specular = 0;
     float metallic = Specular.r;
 #endif
+
+    // デカールを塗り込む(陰影の前)
+    {
+        half3 decalNormal = inputData.normalWS;
+        half3 decalSpecular = specular;
+        half decalMetallic = metallic;
+        ApplyDecal_Toon(ScreenPosition.xy, Diffuse, decalSpecular, decalNormal, decalMetallic, Occlusion, Smoothness);
+        inputData.normalWS = decalNormal;
+        specular = decalSpecular;
+        metallic = decalMetallic;
+    }
+
     Color = UniversalFragmentToon(
         inputData, Diffuse, SSS, metallic, Specular, Occlusion, Smoothness, Emmision, Alpha,
         ShadowShift, ShadeShift, ShadeToony, Curvature, ShadeRamp, ToonyLighting, 
@@ -97,7 +112,7 @@ void ToonLight_half(
 #else
 
 void ToonLight_half(
-    half3 ObjectPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
+    half3 ScreenPosition, half3 WorldPosition, half3 WorldNormal, half3 WorldTangent, half3 WorldBitangent, half3 WorldView,
     half3 Diffuse, half3 SSS, half3 Normal, half3 Specular, half Smoothness, half Occlusion, half3 Emmision, half Alpha,
     half ShadowShift, half ShadeShift, half ShadeToony, Texture2D ShadeRamp,
     half Curvature, half ToonyLighting,
@@ -109,5 +124,10 @@ void ToonLight_half(
 }
 
 #endif
+
+// URP Lit ターゲットが自分でデカールを塗るのを止める(塗るのは上の ToonLight_half の中だけ。理由は ToonLighting.hlsl の ApplyDecal_Toon)。
+// カスタム関数のファイルはグラフの前に、URP の PBRForwardPass.hlsl(#if defined(_DBUFFER) でデカールを塗る)はグラフの後に読まれる
+#undef _DBUFFER
+
 
 #endif

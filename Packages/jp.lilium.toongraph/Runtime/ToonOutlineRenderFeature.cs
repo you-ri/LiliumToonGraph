@@ -6,12 +6,18 @@ using Unity.Collections;
 
 public class ToonOutlineRenderFeature : ScriptableRendererFeature
 {
+    [Tooltip("アウトラインの太さの倍率。マテリアルの Outline Width に掛かる（1 でマテリアルのまま）")]
+    [Range(0f, 8f)]
+    public float widthScale = 1f;
+
     DrawObjectsPass drawObjectsPass;
 
     public override void Create()
     {
         // Create the render pass that draws the objects, and pass in the override material
         drawObjectsPass = new DrawObjectsPass();
+        // パスが走る前に読まれても太さが 0 にならないように、作った時点でも入れておく
+        drawObjectsPass.SetWidthScaleGlobal(widthScale);
 
         // Insert render passes after URP's post-processing render pass
         drawObjectsPass.renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
@@ -20,12 +26,20 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
         // Add the render pass to the URP rendering loop
+        // インスペクタで変えた太さをそのフレームから効かせる
+        drawObjectsPass.widthScale = widthScale;
         renderer.EnqueuePass(drawObjectsPass);
     }
 
     class DrawObjectsPass : ScriptableRenderPass
     {
         readonly GlobalKeyword _toonOutlineKeyword = GlobalKeyword.Create("_TOON_OUTLINE");
+
+        /// <summary>アウトラインを描くシェーダーが読む太さの倍率（OutlineTransform.hlsl）</summary>
+        static readonly int s_WidthScaleId = Shader.PropertyToID("_ToonOutlineWidthScale");
+
+        /// <summary>アウトラインの太さの倍率。マテリアルの Outline Width に掛かる</summary>
+        public float widthScale = 1f;
 
         readonly RenderStateBlock _renderStateBlock;
 
@@ -35,10 +49,17 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
             _renderStateBlock.rasterState = new RasterState { cullingMode = CullMode.Front };
         }
        
+        public void SetWidthScaleGlobal(float scale)
+        {
+            Shader.SetGlobalFloat(s_WidthScaleId, scale);
+        }
+
         private class PassData
         {
             // Create a field to store the list of objects to draw
             public RendererListHandle rendererListHandle;
+            // 太さの倍率（このパスの間だけグローバルへ入れる）
+            public float widthScale;
         }
  
         static RenderStateBlock[] s_RenderStateBlocks = new RenderStateBlock[1];
@@ -74,6 +95,7 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
                 };
                 // Convert the list to a list handle that the render graph system can use
                 passData.rendererListHandle = renderGraph.CreateRendererList(rendererListParameters);
+                passData.widthScale = widthScale;
                 
                 // Set the render target as the color and depth textures of the active camera texture
                 UniversalResourceData resourceData = frameContext.Get<UniversalResourceData>();
@@ -88,9 +110,12 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
 
             void ExecutePass(PassData data, RasterGraphContext context)
             {
+                context.cmd.SetGlobalFloat(s_WidthScaleId, data.widthScale);
                 context.cmd.SetKeyword(_toonOutlineKeyword, true);  
                 context.cmd.DrawRendererList(data.rendererListHandle);
                 context.cmd.SetKeyword(_toonOutlineKeyword, false);            
+                // キーワードと同じく、このパスの外へは持ち出さない
+                context.cmd.SetGlobalFloat(s_WidthScaleId, 1f);
             }
 
         }

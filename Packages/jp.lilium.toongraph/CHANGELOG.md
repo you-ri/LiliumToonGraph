@@ -1,5 +1,19 @@
 # Change Log
 
+## [Unreleased]
+- URP のデカール（Decal Projector・DBuffer 方式）に対応。トゥーンの陰影を計算する前に、デカールの色・法線・金属/AO/滑らかさを塗り込む（Toon Lighting の両方のランプ）。URP Lit ターゲットが自分でもデカールを塗って PBR で照らし、Emission のトゥーン結果に足されてしまうので、ランプのファイルの末尾で `_DBUFFER` を消して止めている。使うにはレンダラーに Decal Renderer Feature（Technique = DBuffer）を足す。半透明（Toon (Transparent)）は URP の仕様でデカールを受けない。アウトラインには塗らない
+
+## [0.8.0-pre.1] - 2026-10-02
+- Forward+ で点光源・スポットライト（と反射プローブ）がカメラの位置によって当たったり消えたりしていたのを修正。Toon Lighting サブグラフが渡す Screen Position（0〜1 に正規化済み）を画素の座標とみなしてさらに画面サイズで割っていた（TextureRamp は未設定の値から作っていた）ため、どの画素も画面の隅の区画の光の一覧を引いていた。正規化済みの値をそのまま使うようにした
+- Forward+ で追加のディレクショナルライトが当たらなくなっていたのを修正。URP 6.1 で `USE_FORWARD_PLUS` が `USE_CLUSTER_LIGHT_LOOP` に改名され、旧名が未定義になってディレクショナルライトのループが丸ごと消えていた（ライトレイヤーで分けたディレクショナルライトも効かない状態だった）。新しい名前に合わせ、旧 URP 向けの読み替えを `ClusterLightLoopCompat.hlsl` に置いた
+- SSS が出る境目を 0.3333 から 0.5 にした
+- 直接光の影の境目と SSS の境目をプロジェクト設定で変えられるようにした（Project Settings > Graphics > URP の Lilium Toon。既定は直接光 0.1・SSS 0.5）。`LiliumToonSettings` の値を毎フレーム `_ToonShadeThreshold` / `_ToonSubsurfaceThreshold` としてグローバルへ入れる
+- Occlusion の掛け方を変更。直接光は SSS を含めた結果に掛け、間接光（GI）には半分だけ効かせる（GI の関数側では掛けない）
+- `UniversalFragmentPBR_Toon` に outlineColor（間接光の色）の出力を追加。Toon Lighting (SmoothstepRamp) の ShadeColor はこれを返す
+- 使われていなかった BlinnPhong / BakedLit 用のライティング関数を削除
+- アウトラインの変換で `unity_ObjectToWorld` の代わりに `UNITY_MATRIX_M` を使うようにした
+- ToonOutlineRenderFeature に Width Scale を追加。アウトラインの太さをマテリアルごとの Outline Width に掛ける倍率で、レンダラーの設定から全体をまとめて調整できる（グローバル `_ToonOutlineWidthScale` をアウトラインのパスの間だけ入れ、OutlineTransform.hlsl の 4 つの変換が読む）
+
 ## [0.7.0-preview.1] -
 - Unity6
 - UniversalRP v17

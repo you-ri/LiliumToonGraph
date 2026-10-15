@@ -7,6 +7,12 @@
 
 //#define LILIUM_OUTLINE_SCREENSPACE
 
+// アウトラインの太さの全体倍率。ToonOutlineRenderFeature がアウトラインのパスの間だけ入れる
+// （マテリアルごとの Outline Width に掛かる。パスの外は 1）
+CBUFFER_START(LiliumToonOutline)
+float _ToonOutlineWidthScale;
+CBUFFER_END
+
 
 float4x4 inverse(float4x4 m)
 {
@@ -63,7 +69,9 @@ inline half3 TransformViewToProjection(half3 v)
 // アウトライン処理
 // シンプル
 void TransformOutline_float(float3 Position, float3 Normal, float OutlineWidth, out float3 OutlinePosition)
-{    
+{
+    OutlineWidth *= _ToonOutlineWidthScale;
+    
     // outline size scale. mm to meter.
     Position.xyz += 0.001 * OutlineWidth * Normal.xyz;
 
@@ -74,8 +82,9 @@ void TransformOutline_float(float3 Position, float3 Normal, float OutlineWidth, 
 // UTS2互換
 void TransformOutlineUTS2_float(float3 Position, float3 Normal, float OutlineWidth, float NearestDistance, float FarthestDistance, out float3 OutlinePosition)
 {    
-    float4 vertex = mul(unity_ObjectToWorld, half4(Position, 1.0));    
+    float4 vertex = mul(UNITY_MATRIX_M, half4(Position, 1.0));    
     
+    OutlineWidth *= _ToonOutlineWidthScale;
     OutlineWidth *= smoothstep(FarthestDistance, NearestDistance, distance(vertex.xyz, _WorldSpaceCameraPos));
     
     // outline size scale. mm to meter.
@@ -90,6 +99,7 @@ void TransformOutlineUTS2_float(float3 Position, float3 Normal, float OutlineWid
 void TransformOutlineScaledMaxDistance_float(float3 Position, float3 Normal, float OutlineWidth, float WidthScaledMaxDistance, out float3 OutlinePosition)
 {    
     float4 vertex = mul(UNITY_MATRIX_MVP, float4(Position, 1.0));
+    OutlineWidth *= _ToonOutlineWidthScale;
     half scale = min(vertex.w * (1 / (WidthScaledMaxDistance * abs(UNITY_MATRIX_P._m11))), 1);
     
     // outline size scale. mm to meter.
@@ -104,6 +114,7 @@ void TransformOutlineScaledMaxDistance_float(float3 Position, float3 Normal, flo
 void TransformOutlineToHClipScreenSpace_float(float3 position, float3 normal, float outlineWidth, float OutlineScaledMaxDistance, out float3 outlinePosition)
 {    
     float4 vertex = mul(UNITY_MATRIX_MVP, float4(position, 1.0));
+    outlineWidth *= _ToonOutlineWidthScale;
     float3 viewNormal = mul((float3x3) UNITY_MATRIX_MV, normal.xyz);
     float3 clipNormal = TransformViewToProjection(viewNormal.xyz);
     float2 projectedNormal = normalize(clipNormal.xy);

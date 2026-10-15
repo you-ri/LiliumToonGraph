@@ -3,6 +3,8 @@
 #ifndef TOON_GLOBAL_ILLUMINATION_INCLUDED
 #define TOON_GLOBAL_ILLUMINATION_INCLUDED
 
+#include "ClusterLightLoopCompat.hlsl"
+
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RealtimeLights.hlsl"
@@ -13,7 +15,7 @@
 #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
 #include "Packages/com.unity.render-pipelines.core/Runtime/Lighting/ProbeVolume/ProbeVolume.hlsl"
 #endif
-#if USE_FORWARD_PLUS
+#if USE_CLUSTER_LIGHT_LOOP
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 #endif
 
@@ -260,7 +262,7 @@ half3 CalculateIrradianceFromReflectionProbes_Toon(half3 reflectVector, float3 p
 {
     half3 irradiance = half3(0.0h, 0.0h, 0.0h);
     half mip = PerceptualRoughnessToMipmapLevel(perceptualRoughness);
-#if USE_FORWARD_PLUS
+#if USE_CLUSTER_LIGHT_LOOP
     float totalWeight = 0.0f;
     uint probeIndex;
     ClusterIterator it = ClusterInit(normalizedScreenSpaceUV, positionWS, 1);
@@ -376,7 +378,7 @@ half3 GlossyEnvironmentReflection_Toon(half3 reflectVector, float3 positionWS, h
 #endif // _ENVIRONMENTREFLECTIONS_OFF
 }
 
-#if !USE_FORWARD_PLUS
+#if !USE_CLUSTER_LIGHT_LOOP
 half3 GlossyEnvironmentReflection_Toon(half3 reflectVector, float3 positionWS, half perceptualRoughness, half occlusion)
 {
     return GlossyEnvironmentReflection_Toon(reflectVector, positionWS, perceptualRoughness, occlusion, float2(0.0f, 0.0f));
@@ -463,13 +465,13 @@ half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat
     // Smooth surface & "ambiguous" lighting
     // NOTE: fresnelTerm (above) is pow4 instead of pow5, but should be ok as blend weight.
     half coatFresnel = kDielectricSpec.x + kDielectricSpec.a * fresnelTerm;
-    return (color * (1.0 - coatFresnel * clearCoatMask) + coatColor) * occlusion;
+    return (color * (1.0 - coatFresnel * clearCoatMask) + coatColor);// * occlusion;
 #else
-    return color * occlusion;
+    return color;// * occlusion;
 #endif
 }
 
-#if !USE_FORWARD_PLUS
+#if !USE_CLUSTER_LIGHT_LOOP
 half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, float clearCoatMask,
     half3 bakedGI, half occlusion, float3 positionWS,
     half3 normalWS, half3 viewDirectionWS)

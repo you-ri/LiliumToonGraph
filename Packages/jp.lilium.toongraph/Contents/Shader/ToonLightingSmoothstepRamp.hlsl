@@ -60,7 +60,9 @@ void ToonLight_half(
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     input.positionWS = WorldPosition;
-    input.positionCS = half4(ScreenPosition.xyz, 1);
+    // ScreenPosition はシェーダーグラフの Screen Position(Default)= 0〜1 に正規化済みの画面座標。
+    // 画素の座標ではないので、画素が要る所(APV のノイズなど)のために画素へ戻しておく
+    input.positionCS = float4(ScreenPosition.xy * GetScaledScreenParams().xy, ScreenPosition.z, 1);
     input.tangentWS = float4(WorldTangent.xyz, 1);
     input.normalWS = WorldNormal;
     inputData.tangentToWorld = half3x3(WorldTangent.xyz, WorldBitangent.xyz, WorldNormal.xyz);
@@ -99,7 +101,10 @@ void ToonLight_half(
     #endif
     //inputData.vertexLighting = input.fogFactorAndVertexLight.yzw;
     
-    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+    // Forward+ はこの値で画面の区画を引いて、届く光と反射プローブの一覧を得る。
+    // 以前は正規化済みの値をさらに画面サイズで割っていて、どの画素も画面の隅の区画を引いていた
+    // (隅の区画に届かない点光源が当たらず、カメラが動くと付いたり消えたりした)
+    inputData.normalizedScreenSpaceUV = ScreenPosition.xy;
 
     #if defined(DEBUG_DISPLAY)
     #if defined(DYNAMICLIGHTMAP_ON)
@@ -134,6 +139,17 @@ void ToonLight_half(
     float3 specular = 0;
     float metallic = Specular.r;
 #endif
+
+    // デカールを塗り込む(陰影の前)
+    {
+        half3 decalNormal = inputData.normalWS;
+        half3 decalSpecular = specular;
+        half decalMetallic = metallic;
+        ApplyDecal_Toon(ScreenPosition.xy, Diffuse, decalSpecular, decalNormal, decalMetallic, Occlusion, Smoothness);
+        inputData.normalWS = decalNormal;
+        specular = decalSpecular;
+        metallic = decalMetallic;
+    }
 
 
     // -- InitializeBakedGIData() --
@@ -172,8 +188,7 @@ void ToonLight_half(
     surfaceData.sss = SSS.rgb * surfaceData.albedo;
     surfaceData.subsurface = SSS.a;
 
-    Color = UniversalFragmentPBR_Toon(inputData, surfaceData);
-    ShadeColor = Color.rgb;
+    Color = UniversalFragmentPBR_Toon(inputData, surfaceData, ShadeColor);
 }
 
 
@@ -193,6 +208,10 @@ void ToonLight_half(
 
 
 #endif
+
+// URP Lit ターゲットが自分でデカールを塗るのを止める(塗るのは上の ToonLight_half の中だけ。理由は ToonLighting.hlsl の ApplyDecal_Toon)。
+// カスタム関数のファイルはグラフの前に、URP の PBRForwardPass.hlsl(#if defined(_DBUFFER) でデカールを塗る)はグラフの後に読まれる
+#undef _DBUFFER
 
 
 #endif

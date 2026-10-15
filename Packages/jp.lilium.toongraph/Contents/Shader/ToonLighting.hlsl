@@ -4,12 +4,46 @@
 #ifndef LILIUM_TOON_LIGHTING_INCLUDED
 #define LILIUM_TOON_LIGHTING_INCLUDED
 
+#include "ClusterLightLoopCompat.hlsl"
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/BRDF.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Debug/Debugging3D.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GlobalIllumination.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RealtimeLights.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/AmbientOcclusion.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
+
+// 光が当たる側と影の境目、SSS の境目。プロジェクト設定（LiliumToonSettings）から毎フレーム入る
+half _ToonShadeThreshold;
+half _ToonSubsurfaceThreshold;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// デカール(URP の Decal Projector・DBuffer 方式)
+///////////////////////////////////////////////////////////////////////////////
+
+// Toon Lighting サブグラフが受け取る Screen Position(0〜1 に正規化済み・URP の normalizedScreenSpaceUV と同じ)を、
+// DBuffer を読む画素の座標(SV_Position と同じ向き)に戻す。URP の TransformNormalizedScreenUV の逆
+float4 DecalPositionCS_Toon(float2 normalizedScreenUV)
+{
+    float2 uv = normalizedScreenUV;
+    #if UNITY_UV_STARTS_AT_TOP
+    uv.y = (1.0 - uv.y - _ScaleBiasRt.y) / _ScaleBiasRt.x;
+    #endif
+    return float4(uv * GetScaledScreenParams().xy, 0, 1);
+}
+
+// トゥーンの陰影を計算する前に、デカールの色・法線・金属/AO/滑らかさを塗り込む。
+// URP Lit ターゲットは自分でもグラフの BaseColor にデカールを塗って PBR で照らす(トゥーンの結果は Emission なので上に足される)。
+// それを止めるため、各ランプのファイルの末尾で _DBUFFER を消している(PBRForwardPass.hlsl はグラフの後に読まれる)。
+// アウトラインの描き直し(_TOON_OUTLINE)では塗らない。半透明(_SURFACE_TYPE_TRANSPARENT)は URP の仕様で _DBUFFER が付かず塗られない
+void ApplyDecal_Toon(float2 normalizedScreenUV, inout half3 albedo, inout half3 specular, inout half3 normalWS,
+    inout half metallic, inout half occlusion, inout half smoothness)
+{
+    #if defined(_DBUFFER) && !defined(_TOON_OUTLINE)
+    ApplyDecal(DecalPositionCS_Toon(normalizedScreenUV), albedo, specular, normalWS, metallic, occlusion, smoothness);
+    #endif
+}
 
 
 
@@ -238,14 +272,14 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half NdotL = saturate(dot(normalWS, lightDirectionWS));
 
     // begin toonize
-    half toonizeNdotL = Toonize(NdotL, 0.1, brdfData.toonize);
-    half3 radiance = lightColor * (lightAttenuation * toonizeNdotL) * brdfData.occlusion;
+    half toonizeNdotL = Toonize(NdotL, _ToonShadeThreshold, brdfData.toonize);
+    half3 radiance = lightColor * (lightAttenuation * toonizeNdotL);
     // end toonize
 
     // Subsurface scattering
     half NdotLRaw = dot(normalWS, lightDirectionWS);
 
-    half subsurface = Toonize(LightingSubsurface(NdotLRaw, brdfData.curvature*2), 0.3333f, brdfData.toonize);
+    half subsurface = Toonize(LightingSubsurface(NdotLRaw, brdfData.curvature*2), _ToonSubsurfaceThreshold, brdfData.toonize);
     half3 sss = brdfData.sss;
     half3 sssRadiance = lightColor * subsurface * saturate(1 - (lightAttenuation * toonizeNdotL)) * lightAttenuationSSS;
 
@@ -274,7 +308,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     }
 #endif // _SPECULARHIGHLIGHTS_OFF
 
-    return (brdf * radiance) + (sss * sssRadiance);
+    return (brdf * radiance) * brdfData.occlusion + (sss * sssRadiance) * brdfData.occlusion;
 }
 
 half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, Light light, half3 normalWS, half3 viewDirectionWS, half clearCoatMask, bool specularHighlightsOff)
@@ -400,24 +434,7 @@ half4 CalculateFinalColor_Toon(LightingData lightingData, half alpha)
     return half4(finalColor, alpha);
 }
 
-half4 CalculateFinalColor_Toon(LightingData lightingData, half3 albedo, half alpha, float fogCoord)
-{
-    #if defined(_FOG_FRAGMENT)
-        #if (defined(FOG_LINEAR) || defined(FOG_EXP) || defined(FOG_EXP2))
-        float viewZ = -fogCoord;
-        float nearToFarZ = max(viewZ - _ProjectionParams.y, 0);
-        half fogFactor = ComputeFogFactorZ0ToFar(nearToFarZ);
-    #else
-        half fogFactor = 0;
-        #endif
-    #else
-    half fogFactor = fogCoord;
-    #endif
-    half3 lightingColor = CalculateLightingColor(lightingData, albedo);
-    half3 finalColor = MixFog(lightingColor, fogFactor);
 
-    return half4(finalColor, alpha);
-}
 
 LightingData CreateLightingData_Toon(InputData inputData, SurfaceData_Toon surfaceData)
 {
@@ -432,24 +449,6 @@ LightingData CreateLightingData_Toon(InputData inputData, SurfaceData_Toon surfa
     return lightingData;
 }
 
-half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData_Toon surfaceData)
-{
-    half3 attenuatedLightColor = light.color * (light.distanceAttenuation * light.shadowAttenuation);
-    half3 lightDiffuseColor = LightingLambert_Toon(attenuatedLightColor, light.direction, inputData.normalWS);
-
-    half3 lightSpecularColor = half3(0,0,0);
-    #if defined(_SPECGLOSSMAP) || defined(_SPECULAR_COLOR)
-    half smoothness = exp2(10 * surfaceData.smoothness + 1);
-
-    lightSpecularColor += LightingSpecular_Toon(attenuatedLightColor, light.direction, inputData.normalWS, inputData.viewDirectionWS, half4(surfaceData.specular, 1), smoothness);
-    #endif
-
-#if _ALPHAPREMULTIPLY_ON
-    return lightDiffuseColor * surfaceData.albedo * surfaceData.alpha + lightSpecularColor;
-#else
-    return lightDiffuseColor * surfaceData.albedo + lightSpecularColor;
-#endif
-}
 
 
 
@@ -461,7 +460,7 @@ half3 CalculateBlinnPhong_Toon(Light light, InputData inputData, SurfaceData_Too
 ////////////////////////////////////////////////////////////////////////////////
 /// PBR lighting...
 ////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceData)
+half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceData, out half3 outlineColor)
 {
     #if defined(_SPECULARHIGHLIGHTS_OFF)
     bool specularHighlightsOff = true;
@@ -497,7 +496,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
     lightingData.giColor = GlobalIllumination_Toon(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
-                                              inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
+                                              inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV) * lerp(brdfData.occlusion, 0.5, 0.5);
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
 #endif
@@ -511,10 +510,10 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
     //#if defined(_ADDITIONAL_LIGHTS)  // support defferd rendering
     uint pixelLightCount = GetAdditionalLightsCount();
 
-    #if USE_FORWARD_PLUS
+    #if USE_CLUSTER_LIGHT_LOOP
     [loop] for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
     {
-        FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
+        CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK
 
         Light light = GetAdditionalLight(lightIndex, inputData, shadowMask, aoFactor);
 
@@ -543,9 +542,12 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
     LIGHT_LOOP_END
     //#endif
 
+
     #if defined(_ADDITIONAL_LIGHTS_VERTEX)
     lightingData.vertexLightingColor += inputData.vertexLighting * brdfData.diffuse;
     #endif
+
+    outlineColor = lightingData.giColor;
 
 #if REAL_IS_HALF
     // Clamp any half.inf+ to HALF_MAX
@@ -558,7 +560,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
 half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic, half3 specular,
-    half smoothness, half occlusion, half3 emission, half alpha, half toonize, half3 sss, half subsurface)
+    half smoothness, half occlusion, half3 emission, half alpha, half toonize, half3 sss, half subsurface, out half3 outlineColor)
 {
     SurfaceData_Toon surfaceData;
 
@@ -577,139 +579,10 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic
     surfaceData.sss = sss.rgb * surfaceData.albedo;
     surfaceData.subsurface = subsurface;
 
-    return UniversalFragmentPBR_Toon(inputData, surfaceData);
+    return UniversalFragmentPBR_Toon(inputData, surfaceData, outlineColor);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Phong lighting...
-////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, SurfaceData_Toon surfaceData)
-{
-    #if defined(DEBUG_DISPLAY)
-    half4 debugColor;
 
-    if (CanDebugOverrideOutputColor(inputData, surfaceData, debugColor))
-    {
-        return debugColor;
-    }
-    #endif
-
-    uint meshRenderingLayers = GetMeshRenderingLayer();
-    half4 shadowMask = CalculateShadowMask(inputData);
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, (SurfaceData)surfaceData);
-    Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
-
-    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, aoFactor);
-
-    inputData.bakedGI *= surfaceData.albedo;
-
-    LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
-#ifdef _LIGHT_LAYERS
-    if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
-#endif
-    {
-        lightingData.mainLightColor += CalculateBlinnPhong_Toon(mainLight, inputData, surfaceData);
-    }
-
-    #if defined(_ADDITIONAL_LIGHTS)
-    uint pixelLightCount = GetAdditionalLightsCount();
-
-    #if USE_FORWARD_PLUS
-    [loop] for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
-    {
-        FORWARD_PLUS_SUBTRACTIVE_LIGHT_CHECK
-
-        Light light = GetAdditionalLight(lightIndex, inputData, shadowMask, aoFactor);
-#ifdef _LIGHT_LAYERS
-        if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-#endif
-        {
-            lightingData.additionalLightsColor += CalculateBlinnPhong_Toon(light, inputData, surfaceData);
-        }
-    }
-    #endif
-
-    LIGHT_LOOP_BEGIN(pixelLightCount)
-        Light light = GetAdditionalLight(lightIndex, inputData, shadowMask, aoFactor);
-#ifdef _LIGHT_LAYERS
-        if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-#endif
-        {
-            lightingData.additionalLightsColor += CalculateBlinnPhong_Toon(light, inputData, surfaceData);
-        }
-    LIGHT_LOOP_END
-    #endif
-
-    #if defined(_ADDITIONAL_LIGHTS_VERTEX)
-    lightingData.vertexLightingColor += inputData.vertexLighting * surfaceData.albedo;
-    #endif
-
-    return CalculateFinalColor(lightingData, surfaceData.alpha);
-}
-
-// Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
-half4 UniversalFragmentBlinnPhong_Toon(InputData inputData, half3 diffuse, half4 specularGloss, half smoothness, half3 emission, half alpha, half3 normalTS)
-{
-    SurfaceData_Toon surfaceData;
-
-    surfaceData.albedo = diffuse;
-    surfaceData.alpha = alpha;
-    surfaceData.emission = emission;
-    surfaceData.metallic = 0;
-    surfaceData.occlusion = 1;
-    surfaceData.smoothness = smoothness;
-    surfaceData.specular = specularGloss.rgb;
-    surfaceData.clearCoatMask = 0;
-    surfaceData.clearCoatSmoothness = 1;
-    surfaceData.normalTS = normalTS;
-
-
-    return UniversalFragmentBlinnPhong_Toon(inputData, surfaceData);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Unlit
-////////////////////////////////////////////////////////////////////////////////
-half4 UniversalFragmentBakedLit_Toon(InputData inputData, SurfaceData_Toon surfaceData)
-{
-    #if defined(DEBUG_DISPLAY)
-    half4 debugColor;
-
-    if (CanDebugOverrideOutputColor(inputData, surfaceData, debugColor))
-    {
-        return debugColor;
-    }
-    #endif
-
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, (SurfaceData)surfaceData);
-    LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
-
-    if (IsLightingFeatureEnabled(DEBUGLIGHTINGFEATUREFLAGS_AMBIENT_OCCLUSION))
-    {
-        lightingData.giColor *= aoFactor.indirectAmbientOcclusion;
-    }
-
-    return CalculateFinalColor(lightingData, surfaceData.albedo, surfaceData.alpha, inputData.fogCoord);
-}
-
-// Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
-half4 UniversalFragmentBakedLit_Toon(InputData inputData, half3 color, half alpha, half3 normalTS)
-{
-    SurfaceData_Toon surfaceData;
-
-    surfaceData.albedo = color;
-    surfaceData.alpha = alpha;
-    surfaceData.emission = half3(0, 0, 0);
-    surfaceData.metallic = 0;
-    surfaceData.occlusion = 1;
-    surfaceData.smoothness = 1;
-    surfaceData.specular = half3(0, 0, 0);
-    surfaceData.clearCoatMask = 0;
-    surfaceData.clearCoatSmoothness = 1;
-    surfaceData.normalTS = normalTS;
-
-    return UniversalFragmentBakedLit_Toon(inputData, surfaceData);
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -722,10 +595,9 @@ half4 UniversalFragmentToon(
     half shadowShift, half shadeShift,half shadeToony, 
     half curvature, Texture2D shadeRamp, 
     half toonyLighing, 
-    out half3 shadeColor)
+    out half3 outlineColor)
 {
-    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha, toonyLighing, sss.rgb, sss.a);
-    shadeColor = color.rgb;
+    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha, toonyLighing, sss.rgb, sss.a, outlineColor);
     return color;
 }
 

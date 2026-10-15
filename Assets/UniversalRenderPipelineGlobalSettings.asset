@@ -59,6 +59,7 @@ MonoBehaviour:
       - rid: 3506026580684832770
       - rid: 3506026580684832771
       - rid: 3506026580684832772
+      - rid: 1772161016161107968
     m_RuntimeSettings:
       m_List: []
   m_AssetVersion: 8
@@ -91,6 +92,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 1772161016161107968
+      type: {class: LiliumToonSettings, ns: , asm: Lilium.ToonGraph.Runtime}
+      data:
+        m_Version: 0
+        m_ShadeThreshold: 0.1
+        m_SubsurfaceThreshold: 0.5
     - rid: 3506026580684832768
       type: {class: ScreenSpaceAmbientOcclusionPersistentResources, ns: UnityEngine.Rendering.Universal,
         asm: Unity.RenderPipelines.Universal.Runtime}
