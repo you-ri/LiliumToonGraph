@@ -187,6 +187,12 @@ void ToonLight_half(
     surfaceData.toonize = ToonyLighting;
     surfaceData.sss = SSS.rgb * surfaceData.albedo;
     surfaceData.subsurface = SSS.a;
+#if defined(_TOON_SHADE_SHIFT)
+    // 影マップで光と影の境目をずらす。他のシェーダーは ShadeShift に別の意味の値を流しているので、このキーワードのシェーダーだけ
+    surfaceData.shadeShift = ShadeShift;
+    // このキーワードのシェーダーは Shade Toony の入力でトゥーンランプの縦の位置を渡す(他に使っていない入力)
+    surfaceData.toonRampV = ShadeToony;
+#endif
 
     Color = UniversalFragmentPBR_Toon(inputData, surfaceData, ShadeColor);
 }

@@ -1,6 +1,11 @@
 # Change Log
 
 ## [Unreleased]
+- トゥーンランプで影の階調を決められるように（Project Settings > Graphics > URP > Lilium Toon）。キーワード `_TOON_SHADE_SHIFT` のシェーダーだけが使います。
+- トゥーンランプで影の奥をさらに暗くできるように。横軸は光の裏側まで広げ、G に環境光と SSS の倍率を持たせます。
+- トゥーンランプの段階を使い分けられるように。縦の位置を Shade Toony の入力で渡します。
+- トゥーンランプの段の境目を縮小時に滑らかにするように。画素の大きさに合わせてランプをなだらかに読みます。
+- ToonOutlineRenderFeature のパスを記録するたびに GC Alloc が出ていたのを修正（描画関数が this を掴んでいてデリゲートを毎回作っていた）
 - URP のデカール（Decal Projector・DBuffer 方式）に対応。トゥーンの陰影を計算する前に、デカールの色・法線・金属/AO/滑らかさを塗り込む（Toon Lighting の両方のランプ）。URP Lit ターゲットが自分でもデカールを塗って PBR で照らし、Emission のトゥーン結果に足されてしまうので、ランプのファイルの末尾で `_DBUFFER` を消して止めている。使うにはレンダラーに Decal Renderer Feature（Technique = DBuffer）を足す。半透明（Toon (Transparent)）は URP の仕様でデカールを受けない。アウトラインには塗らない
 - 点光源・スポットライトを半径のある球として扱うようにした。減衰を 1/d² から 1/(d²+r²) にし、光源の中心が面に近づいても明るさが 1/r² で頭打ちになる（半径と同じ距離で元の半分）。プロジェクト設定（Lilium Toon）の Light Source Radius Enabled で有効にし（既定オン）、Default Light Source Radius（既定 0.5m）が全ライトに効く。ライトごとに変えるには `ToonLightSourceRadius` を付ける（0 でそのライトだけ URP のまま）。半径の配列は ToonOutlineRenderFeature のパスが URP の追加ライトと同じ番号で並べてカメラごとに `_ToonLightSourceRadius` へ入れる
 

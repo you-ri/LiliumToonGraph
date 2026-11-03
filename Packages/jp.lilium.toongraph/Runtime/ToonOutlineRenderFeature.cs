@@ -101,7 +101,7 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
 
     class DrawObjectsPass : ScriptableRenderPass
     {
-        readonly GlobalKeyword _toonOutlineKeyword = GlobalKeyword.Create("_TOON_OUTLINE");
+        static readonly GlobalKeyword s_ToonOutlineKeyword = GlobalKeyword.Create("_TOON_OUTLINE");
 
         /// <summary>アウトラインを描くシェーダーが読む太さの倍率（OutlineTransform.hlsl）</summary>
         static readonly int s_WidthScaleId = Shader.PropertyToID("_ToonOutlineWidthScale");
@@ -172,16 +172,17 @@ public class ToonOutlineRenderFeature : ScriptableRendererFeature
                 builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Write);
                 builder.AllowGlobalStateModification(true);
 
-                builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
+                // this を掴むと記録のたびにデリゲートを作って GC Alloc が出るので、static のまま渡す
+                builder.SetRenderFunc(static (PassData data, RasterGraphContext context) => ExecutePass(data, context));
 
             }
 
-            void ExecutePass(PassData data, RasterGraphContext context)
+            static void ExecutePass(PassData data, RasterGraphContext context)
             {
                 context.cmd.SetGlobalFloat(s_WidthScaleId, data.widthScale);
-                context.cmd.SetKeyword(_toonOutlineKeyword, true);  
+                context.cmd.SetKeyword(s_ToonOutlineKeyword, true);  
                 context.cmd.DrawRendererList(data.rendererListHandle);
-                context.cmd.SetKeyword(_toonOutlineKeyword, false);            
+                context.cmd.SetKeyword(s_ToonOutlineKeyword, false);            
                 // キーワードと同じく、このパスの外へは持ち出さない
                 context.cmd.SetGlobalFloat(s_WidthScaleId, 1f);
             }

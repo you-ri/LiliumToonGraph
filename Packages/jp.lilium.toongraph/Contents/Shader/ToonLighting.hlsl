@@ -17,6 +17,27 @@
 half _ToonShadeThreshold;
 half _ToonSubsurfaceThreshold;
 
+// トゥーンランプ（横 = N・L + 影マップのずれ（-1〜1）、縦 = 段階の種類、R = 直接光の強さ、G = 環境光とメインライト（SSS）の倍率）。
+// プロジェクト設定（LiliumToonSettings）から毎フレーム入る。
+// キーワード _TOON_SHADE_SHIFT のシェーダー（パレット形式）だけが使い、他は _ToonShadeThreshold の 2 階調のまま
+TEXTURE2D(_ToonRamp);
+SAMPLER(sampler_ToonRamp);
+
+// 1 画素が覆う N・L の幅(width)の中を 4 点読んで平均する。縮小すると段の境目が画素単位で切れてザラつくので、画素 1 つ分だけなだらかにする。
+// ライトのループの中でも呼ぶので微分は取らず、読み出しも LOD を指定する
+#define TOON_RAMP_MAX_FILTER_WIDTH 0.5
+
+half2 SampleToonRamp(float shadedNdotL, half v, float width)
+{
+    float u = shadedNdotL * 0.5 + 0.5;
+    float offset = min(width, TOON_RAMP_MAX_FILTER_WIDTH) * 0.5 * 0.25;
+    half2 sum = SAMPLE_TEXTURE2D_LOD(_ToonRamp, sampler_ToonRamp, float2(u - offset * 1.5, v), 0).rg;
+    sum += SAMPLE_TEXTURE2D_LOD(_ToonRamp, sampler_ToonRamp, float2(u - offset * 0.5, v), 0).rg;
+    sum += SAMPLE_TEXTURE2D_LOD(_ToonRamp, sampler_ToonRamp, float2(u + offset * 0.5, v), 0).rg;
+    sum += SAMPLE_TEXTURE2D_LOD(_ToonRamp, sampler_ToonRamp, float2(u + offset * 1.5, v), 0).rg;
+    return sum * half(0.25);
+}
+
 // 追加ライトの光源の半径（メートル）。URP の追加ライトと同じ番号で並ぶ。ToonLightSourceRadius の付いた点光源・スポットライトだけ 0 以外。
 // ToonOutlineRenderFeature のパスがカメラごとに入れる
 float _ToonLightSourceRadius[MAX_VISIBLE_LIGHTS];
@@ -93,6 +114,11 @@ struct SurfaceData_Toon
 
     half3 sss;
     half subsurface;
+
+    // 光と影の境目を画素ごとにずらす量（NdotL に足す）。キーワード _TOON_SHADE_SHIFT のシェーダーだけが入れる。他は 0
+    half shadeShift;
+    // トゥーンランプの縦の位置。キーワード _TOON_SHADE_SHIFT のシェーダーだけが入れる。他は 0
+    half toonRampV;
 };
 
 
@@ -120,7 +146,25 @@ struct BRDFData_Toon
     half curvature;
     half toonize;
     half occlusion;
+    half shadeShift;
+    half toonRampV;
+#if defined(_TOON_SHADE_SHIFT)
+    // 隣の画素との差。トゥーンランプをなだらかにする幅をライトごとに求める(ライトのループの中では微分を取れない)
+    float3 normalDdx;
+    float3 normalDdy;
+    float shadeShiftDdx;
+    float shadeShiftDdy;
+#endif
 };
+
+#if defined(_TOON_SHADE_SHIFT)
+// 1 画素が覆う「N・L + 影マップのずれ」の幅
+float ToonRampFilterWidth(BRDFData_Toon brdfData, float3 lightDirectionWS)
+{
+    return abs(dot(brdfData.normalDdx, lightDirectionWS) + brdfData.shadeShiftDdx)
+        + abs(dot(brdfData.normalDdy, lightDirectionWS) + brdfData.shadeShiftDdy);
+}
+#endif
 
 #include "ToonGlobalIllumination.hlsl"
 
@@ -183,6 +227,8 @@ inline void InitializeBRDFData_Toon(half3 albedo, half metallic, half3 specular,
 inline void InitializeBRDFData_Toon(inout SurfaceData_Toon surfaceData, out BRDFData_Toon brdfData)
 {
     InitializeBRDFData_Toon(surfaceData.albedo, surfaceData.metallic, surfaceData.specular, surfaceData.smoothness, surfaceData.occlusion, surfaceData.sss, surfaceData.subsurface, surfaceData.toonize, surfaceData.alpha, brdfData);
+    brdfData.shadeShift = surfaceData.shadeShift;
+    brdfData.toonRampV = surfaceData.toonRampV;
 }
 
 // Computes the scalar specular term for Minimalist CookTorrance BRDF
@@ -293,10 +339,13 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     half lightAttenuation =  distanceAttenuation * shadowAttenuation;
     half lightAttenuationSSS = distanceAttenuation;
 
-    half NdotL = saturate(dot(normalWS, lightDirectionWS));
+    half NdotL = saturate(dot(normalWS, lightDirectionWS) + brdfData.shadeShift);
 
     // begin toonize
     half toonizeNdotL = Toonize(NdotL, _ToonShadeThreshold, brdfData.toonize);
+#if defined(_TOON_SHADE_SHIFT)
+    toonizeNdotL = lerp(SampleToonRamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, brdfData.toonRampV, ToonRampFilterWidth(brdfData, lightDirectionWS)).r, toonizeNdotL, brdfData.toonize);
+#endif
     half3 radiance = lightColor * (lightAttenuation * toonizeNdotL);
     // end toonize
 
@@ -496,6 +545,12 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
     // NOTE: can modify "surfaceData"...
     InitializeBRDFData_Toon(surfaceData, brdfData);
+#if defined(_TOON_SHADE_SHIFT)
+    brdfData.normalDdx = ddx(float3(inputData.normalWS));
+    brdfData.normalDdy = ddy(float3(inputData.normalWS));
+    brdfData.shadeShiftDdx = ddx(float(brdfData.shadeShift));
+    brdfData.shadeShiftDdy = ddy(float(brdfData.shadeShift));
+#endif
 
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
@@ -575,6 +630,13 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
     outlineColor = lightingData.giColor;
 
+#if defined(_TOON_SHADE_SHIFT)
+    // 環境光とメインライト(SSS)の倍率はランプの G で決まる。メインライトの N・L に影マップのずれを足した値で引く
+    half shadeDarken = lerp(SampleToonRamp(dot(inputData.normalWS, mainLight.direction) + brdfData.shadeShift, brdfData.toonRampV, ToonRampFilterWidth(brdfData, mainLight.direction)).g, half(1.0), brdfData.toonize);
+    lightingData.giColor *= shadeDarken;
+    lightingData.mainLightColor *= shadeDarken;
+#endif
+
 #if REAL_IS_HALF
     // Clamp any half.inf+ to HALF_MAX
     return min(CalculateFinalColor_Toon(lightingData, surfaceData.alpha), HALF_MAX);
@@ -586,7 +648,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
 half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic, half3 specular,
-    half smoothness, half occlusion, half3 emission, half alpha, half toonize, half3 sss, half subsurface, out half3 outlineColor)
+    half smoothness, half occlusion, half3 emission, half alpha, half toonize, half3 sss, half subsurface, half shadeShift, out half3 outlineColor)
 {
     SurfaceData_Toon surfaceData;
 
@@ -604,6 +666,8 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic
     surfaceData.toonize = toonize;
     surfaceData.sss = sss.rgb * surfaceData.albedo;
     surfaceData.subsurface = subsurface;
+    surfaceData.shadeShift = shadeShift;
+    surfaceData.toonRampV = 0;
 
     return UniversalFragmentPBR_Toon(inputData, surfaceData, outlineColor);
 }
@@ -623,7 +687,13 @@ half4 UniversalFragmentToon(
     half toonyLighing, 
     out half3 outlineColor)
 {
-    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha, toonyLighing, sss.rgb, sss.a, outlineColor);
+#if defined(_TOON_SHADE_SHIFT)
+    half appliedShadeShift = shadeShift;
+#else
+    // 他のシェーダーは ShadeShift にそれぞれ別の意味の値を流しているので使わない
+    half appliedShadeShift = 0;
+#endif
+    half4 color = UniversalFragmentPBR_Toon(inputData, diffuse, metallic, specular, smoothness, occlusion, emission, alpha, toonyLighing, sss.rgb, sss.a, appliedShadeShift, outlineColor);
     return color;
 }
 
