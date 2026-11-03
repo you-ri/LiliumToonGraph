@@ -1,0 +1,24 @@
+{
+    "name": "Lilium.ToonGraph.Tests.Editor",
+    "rootNamespace": "Lilium.ToonGraph.Tests.Editor",
+    "references": [
+        "GUID:c18c6315450e81d4282a1f0f66b5ca34",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
