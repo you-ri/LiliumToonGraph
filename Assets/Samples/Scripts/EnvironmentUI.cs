@@ -126,9 +126,10 @@ public class EnvironmentUI : MonoBehaviour
 
     void _UpdateLightingEnvironmentIndex()
     {
-        if (_lightingEnvironmentGorup.choices.Count() == 0) return;
-
         var index = _lightingEnvironmentGorup.value;
+        // ラジオボタンがまだ作られていない・範囲外の番号のときは何もしない（Update で毎フレーム入れ直す）
+        if (index < 0 || _lightingEnvironmentGorup.childCount <= index) return;
+
         var selectedRadioButton = _lightingEnvironmentGorup.ElementAt(index);
 
         if (selectedRadioButton == null) return;
