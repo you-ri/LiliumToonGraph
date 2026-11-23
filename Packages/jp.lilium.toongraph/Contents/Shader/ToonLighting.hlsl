@@ -119,6 +119,9 @@ struct SurfaceData_Toon
     half shadeShift;
     // トゥーンランプの縦の位置。キーワード _TOON_SHADE_SHIFT のシェーダーだけが入れる。他は 0
     half toonRampV;
+    // ふつうの反射(直接光のスペキュラと環境の反射)に掛ける倍率。キーワード _TOON_SHADE_SHIFT のシェーダーだけが使う。
+    // 別のハイライト(髪の筋)が反射の一部を受け持つとき、その分だけ下げてエネルギーを保つ
+    half specularScale;
 };
 
 
@@ -148,23 +151,19 @@ struct BRDFData_Toon
     half occlusion;
     half shadeShift;
     half toonRampV;
-#if defined(_TOON_SHADE_SHIFT)
-    // 隣の画素との差。トゥーンランプをなだらかにする幅をライトごとに求める(ライトのループの中では微分を取れない)
+    // 隣の画素との差。陰・SSS の段の境目とトゥーンランプをなだらかにする幅をライトごとに求める(ライトのループの中では微分を取れない)
     float3 normalDdx;
     float3 normalDdy;
     float shadeShiftDdx;
     float shadeShiftDdy;
-#endif
 };
 
-#if defined(_TOON_SHADE_SHIFT)
 // 1 画素が覆う「N・L + 影マップのずれ」の幅
 float ToonRampFilterWidth(BRDFData_Toon brdfData, float3 lightDirectionWS)
 {
     return abs(dot(brdfData.normalDdx, lightDirectionWS) + brdfData.shadeShiftDdx)
         + abs(dot(brdfData.normalDdy, lightDirectionWS) + brdfData.shadeShiftDdy);
 }
-#endif
 
 #include "ToonGlobalIllumination.hlsl"
 
@@ -233,7 +232,8 @@ inline void InitializeBRDFData_Toon(inout SurfaceData_Toon surfaceData, out BRDF
 
 // Computes the scalar specular term for Minimalist CookTorrance BRDF
 // NOTE: needs to be multiplied with reflectance f0, i.e. specular color to complete
-half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS)
+// GGX の項(トゥーンにする前)と、その最大値(NoH = 1)
+half DirectBRDFSpecularTerm_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, out half maxSpecularTerm)
 {
     float3 lightDirectionWSFloat3 = float3(lightDirectionWS);
     float3 halfDir = SafeNormalize(lightDirectionWSFloat3 + float3(viewDirectionWS));
@@ -256,10 +256,22 @@ half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 light
     half LoH2 = LoH * LoH;
     half specularTerm = brdfData.roughness2 / ((d * d) * max(0.1h, LoH2) * brdfData.normalizationTerm);
 
-    // begin toonize
     float maxD = 1 * brdfData.roughness2MinusOne + 1.00001f;
-    half maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
-    specularTerm = Toonize(specularTerm / maxSpecularTerm, 0.1, brdfData.toonize) * maxSpecularTerm;
+    maxSpecularTerm = brdfData.roughness2 / ((maxD * maxD) * max(0.1h, 1) * brdfData.normalizationTerm);
+    return specularTerm;
+}
+
+// Computes the scalar specular term for Minimalist CookTorrance BRDF
+// NOTE: needs to be multiplied with reflectance f0, i.e. specular color to complete
+// pixelWidth: 1 画素あたりの (GGX の項 / 最大値) の変化。トゥーンの段の境目をこの幅以上になだらかにする(ToonizeWidth)。
+// fwidth は追加ライトのループの中では使えない(回数が画素ごとに違うと微分が定まらない)ので、ループの外で求めて渡す。0 なら段のまま
+half DirectBRDFSpecular_Toon(BRDFData_Toon brdfData, half3 normalWS, half3 lightDirectionWS, half3 viewDirectionWS, half pixelWidth = 0)
+{
+    half maxSpecularTerm;
+    half specularTerm = DirectBRDFSpecularTerm_Toon(brdfData, normalWS, lightDirectionWS, viewDirectionWS, maxSpecularTerm);
+
+    // begin toonize
+    specularTerm = ToonizeWidth(specularTerm / maxSpecularTerm, 0.1, brdfData.toonize, pixelWidth, brdfData.toonize) * maxSpecularTerm;
     // end toonize
 
     // On platforms where half actually means something, the denominator has a risk of overflow
@@ -332,7 +344,7 @@ half3 LightingSpecular_Toon(half3 lightColor, half3 lightDir, half3 normal, half
 half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat,
     half3 lightColor, half3 lightDirectionWS, half distanceAttenuation, half shadowAttenuation,
     half3 normalWS, half3 viewDirectionWS,
-    half clearCoatMask, bool specularHighlightsOff)
+    half clearCoatMask, bool specularHighlightsOff, half specularPixelWidth = 0)
 {
     half lightThreshold = 0.01 - HALF_MIN;
     //distanceAttenuation = toonize(distanceAttenuation, lightThreshold, brdfData.toonize);
@@ -341,18 +353,27 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
 
     half NdotL = saturate(dot(normalWS, lightDirectionWS) + brdfData.shadeShift);
 
+    // 1 画素が覆う N・L の幅。陰と SSS の段の境目をこの幅以上になだらかにして、画素の階段(エイリアス)を消す
+    float shadeFilterWidth = ToonRampFilterWidth(brdfData, lightDirectionWS);
+
     // begin toonize
-    half toonizeNdotL = Toonize(NdotL, _ToonShadeThreshold, brdfData.toonize);
+    // Toony Lighting が 0 のとき(brdfData.toonize = 1)は N・L そのもの = URP の PBR と同じ
+    half toonizeNdotL = ToonizeWidth(NdotL, _ToonShadeThreshold, brdfData.toonize, shadeFilterWidth, brdfData.toonize);
 #if defined(_TOON_SHADE_SHIFT)
-    toonizeNdotL = lerp(SampleToonRamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, brdfData.toonRampV, ToonRampFilterWidth(brdfData, lightDirectionWS)).r, toonizeNdotL, brdfData.toonize);
+    toonizeNdotL = lerp(SampleToonRamp(dot(normalWS, lightDirectionWS) + brdfData.shadeShift, brdfData.toonRampV, shadeFilterWidth).r, toonizeNdotL, brdfData.toonize);
 #endif
     half3 radiance = lightColor * (lightAttenuation * toonizeNdotL);
     // end toonize
 
     // Subsurface scattering
-    half NdotLRaw = dot(normalWS, lightDirectionWS);
+    // 陰と同じく影マップのずれを足す。足さないと SSS が出る範囲(陰の側)の縁は陰の境目に、外の縁は形だけの境目に沿い、
+    // ずれの大きい所(AO・影マップの Ink・顔の SDF)で SSS の帯が陰の境目から浮いて見えた
+    half NdotLRaw = dot(normalWS, lightDirectionWS) + brdfData.shadeShift;
 
-    half subsurface = Toonize(LightingSubsurface(NdotLRaw, brdfData.curvature*2), _ToonSubsurfaceThreshold, brdfData.toonize);
+    // LightingSubsurface は N・L を (1 + 広がり) で割るので、1 画素の幅も同じだけ縮める
+    half subsurfaceRadius = brdfData.curvature * 2;
+    half subsurface = ToonizeWidth(LightingSubsurface(NdotLRaw, subsurfaceRadius), _ToonSubsurfaceThreshold, brdfData.toonize,
+        shadeFilterWidth / (1 + subsurfaceRadius), brdfData.toonize);
     half3 sss = brdfData.sss;
     half3 sssRadiance = lightColor * subsurface * saturate(1 - (lightAttenuation * toonizeNdotL)) * lightAttenuationSSS;
 
@@ -360,7 +381,7 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
 #ifndef _SPECULARHIGHLIGHTS_OFF
     [branch] if (!specularHighlightsOff)
     {
-        half specularPower = DirectBRDFSpecular_Toon(brdfData, normalWS, lightDirectionWS, viewDirectionWS);
+        half specularPower = DirectBRDFSpecular_Toon(brdfData, normalWS, lightDirectionWS, viewDirectionWS, specularPixelWidth);
         brdf += brdfData.specular * specularPower;
 
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
@@ -381,12 +402,14 @@ half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClea
     }
 #endif // _SPECULARHIGHLIGHTS_OFF
 
-    return (brdf * radiance) * brdfData.occlusion + (sss * sssRadiance) * brdfData.occlusion;
+    // マテリアルの Occlusion はトゥーンでは直接光にも掛ける。URP の PBR は直接光に掛けないので、Toony Lighting が 0 に近いほど外す
+    half directOcclusion = lerp(brdfData.occlusion, half(1.0), brdfData.toonize);
+    return (brdf * radiance) * directOcclusion + (sss * sssRadiance) * directOcclusion;
 }
 
-half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, Light light, half3 normalWS, half3 viewDirectionWS, half clearCoatMask, bool specularHighlightsOff)
+half3 LightingPhysicallyBased_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat, Light light, half3 normalWS, half3 viewDirectionWS, half clearCoatMask, bool specularHighlightsOff, half specularPixelWidth = 0)
 {
-    return LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation, normalWS, viewDirectionWS, clearCoatMask, specularHighlightsOff);
+    return LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat, light.color, light.direction, light.distanceAttenuation, light.shadowAttenuation, normalWS, viewDirectionWS, clearCoatMask, specularHighlightsOff, specularPixelWidth);
 }
 
 // Backwards compatibility
@@ -546,16 +569,24 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
     // NOTE: can modify "surfaceData"...
     InitializeBRDFData_Toon(surfaceData, brdfData);
 #if defined(_TOON_SHADE_SHIFT)
+    // 反射の色(F0)と浅い角度の反射(grazingTerm)の両方に掛けて、直接光・環境の反射をそろって下げる。拡散はそのまま
+    half specularScale = saturate(surfaceData.specularScale);
+    brdfData.specular *= specularScale;
+    brdfData.grazingTerm *= specularScale;
+#endif
+    // 陰・SSS の段の境目とトゥーンランプをなだらかにする幅の元(他のシェーダーは shadeShift が 0 なので差も 0)
     brdfData.normalDdx = ddx(float3(inputData.normalWS));
     brdfData.normalDdy = ddy(float3(inputData.normalWS));
     brdfData.shadeShiftDdx = ddx(float(brdfData.shadeShift));
     brdfData.shadeShiftDdy = ddy(float(brdfData.shadeShift));
-#endif
 
     #if defined(DEBUG_DISPLAY)
     half4 debugColor;
 
-    if (CanDebugOverrideOutputColor(inputData, surfaceData, brdfData, debugColor))
+    // URP のデバッグ表示は URP の構造体しか受け取らないので、先頭の同じ並びの分を写して渡す
+    SurfaceData debugSurfaceData = (SurfaceData)surfaceData;
+    BRDFData debugBRDFData = (BRDFData)brdfData;
+    if (CanDebugOverrideOutputColor(inputData, debugSurfaceData, debugBRDFData, debugColor))
     {
         return debugColor;
     }
@@ -574,9 +605,16 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
     LightingData lightingData = CreateLightingData_Toon(inputData, surfaceData);
 
 
+    // 環境光への Occlusion: トゥーンでは半分だけ効かせる(Occlusion が 1 なら 1 倍、0 なら 0.5 倍)。
+    // Toony Lighting が 0 に近いほど URP の PBR と同じ掛け方(マテリアルの Occlusion と SSAO の小さい方をそのまま)へ寄せる
+    half toonGIOcclusion = lerp(half(1.0), brdfData.occlusion, half(0.5));
+    half giOcclusion = lerp(toonGIOcclusion, aoFactor.indirectAmbientOcclusion, brdfData.toonize);
     lightingData.giColor = GlobalIllumination_Toon(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
-                                              inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV) * lerp(brdfData.occlusion, 0.5, 0.5);
+                                              inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV) * giOcclusion;
+    // 主光源のハイライトの段の境目を 1 画素ぶんなだらかにする幅(追加ライトのループの中では fwidth が使えないので主光源だけ)
+    half mainMaxSpecularTerm;
+    half mainSpecularPixelWidth = fwidth(DirectBRDFSpecularTerm_Toon(brdfData, inputData.normalWS, mainLight.direction, inputData.viewDirectionWS, mainMaxSpecularTerm) / mainMaxSpecularTerm);
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
 #endif
@@ -584,7 +622,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, SurfaceData_Toon surfaceDat
         lightingData.mainLightColor = LightingPhysicallyBased_Toon(brdfData, brdfDataClearCoat,
                                                               mainLight,
                                                               inputData.normalWS, inputData.viewDirectionWS,
-                                                              surfaceData.clearCoatMask, specularHighlightsOff);
+                                                              surfaceData.clearCoatMask, specularHighlightsOff, mainSpecularPixelWidth);
     }
 
     //#if defined(_ADDITIONAL_LIGHTS)  // support defferd rendering
@@ -668,6 +706,7 @@ half4 UniversalFragmentPBR_Toon(InputData inputData, half3 albedo, half metallic
     surfaceData.subsurface = subsurface;
     surfaceData.shadeShift = shadeShift;
     surfaceData.toonRampV = 0;
+    surfaceData.specularScale = 1;
 
     return UniversalFragmentPBR_Toon(inputData, surfaceData, outlineColor);
 }

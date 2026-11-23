@@ -55,9 +55,9 @@ void ToonLight_half(
     InputData inputData = (InputData)0;
     SurfaceData_Toon surfaceData = (SurfaceData_Toon)0;
 
+    // 値を入れ物として使うだけ。UNITY_SETUP_INSTANCE_ID を呼ばない(フラグメントの入口で設定済み。0 で埋めた値で呼ぶと
+    // インスタンシング・GPU Resident Drawer でインスタンス 0 の行列やプローブを読んでしまう)
     Varyings input = (Varyings)0;
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     input.positionWS = WorldPosition;
     // ScreenPosition はシェーダーグラフの Screen Position(Default)= 0〜1 に正規化済みの画面座標。
@@ -95,7 +95,13 @@ void ToonLight_half(
     #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
         inputData.shadowCoord = input.shadowCoord;              //TODO: shadowCoordの初期化が必要
     #elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
+        #if defined(_TOON_SHADE_SHIFT)
+        // このキーワードのシェーダーは Curvature の入力で、主光源の影を見る点を光の側へずらす距離(m)を渡す(他に使っていない入力。既定 0)。
+        // 顔のように、すぐ前にある物(髪)の影を受けたくない所で使う。ずらした距離より近い物は影を落とさず、遠い物は今までどおり落とす
+        inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS + _MainLightPosition.xyz * max(Curvature, 0));
+        #else
         inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
+        #endif
     #else
         inputData.shadowCoord = float4(0, 0, 0, 0);
     #endif
@@ -106,6 +112,16 @@ void ToonLight_half(
     // (隅の区画に届かない点光源が当たらず、カメラが動くと付いたり消えたりした)
     inputData.normalizedScreenSpaceUV = ScreenPosition.xy;
 
+    inputData.positionCS = input.positionCS;
+    // -- InitializeInputData() --
+
+    float3 vertexSH = 0;
+    float3 cameraDirectionWS = mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
+    float3 normalWSBakedGI = lerp(inputData.normalWS, cameraDirectionWS, ToonyLighting);
+    OUTPUT_SH(normalWSBakedGI, vertexSH);
+    //OUTPUT_SH4(vertexInput.positionWS, normalWS.xyz, GetWorldSpaceNormalizeViewDir(vertexInput.positionWS), output.sh, output.probeOcclusion);
+
+    // Rendering Debugger 用(vertexSH を使うので、求めた後に入れる)
     #if defined(DEBUG_DISPLAY)
     #if defined(DYNAMICLIGHTMAP_ON)
     inputData.dynamicLightmapUV = input.dynamicLightmapUV;
@@ -119,15 +135,6 @@ void ToonLight_half(
     inputData.probeOcclusion = input.probeOcclusion;
     #endif
     #endif
-
-    inputData.positionCS = input.positionCS;
-    // -- InitializeInputData() -- 
-
-    float3 vertexSH;
-    float3 cameraDirectionWS = mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V)) [2].xyz);
-    float3 normalWSBakedGI = lerp(inputData.normalWS, cameraDirectionWS, ToonyLighting);        
-    OUTPUT_SH(normalWSBakedGI, vertexSH);
-    //OUTPUT_SH4(vertexInput.positionWS, normalWS.xyz, GetWorldSpaceNormalizeViewDir(vertexInput.positionWS), output.sh, output.probeOcclusion);
 
     
     //input.sh = vertexSH;
@@ -174,7 +181,8 @@ void ToonLight_half(
 
 
     surfaceData.albedo = Diffuse;
-    surfaceData.specular = Specular;
+    // デカールを塗った後の値(Specular ワークフローではデカールの金属度がここに入る)
+    surfaceData.specular = specular;
     surfaceData.metallic = metallic;
     surfaceData.smoothness = Smoothness;
     surfaceData.normalTS = Normal;
@@ -192,6 +200,8 @@ void ToonLight_half(
     surfaceData.shadeShift = ShadeShift;
     // このキーワードのシェーダーは Shade Toony の入力でトゥーンランプの縦の位置を渡す(他に使っていない入力)
     surfaceData.toonRampV = ShadeToony;
+    // このキーワードのシェーダーは Shadow Shift の入力で反射の倍率を渡す(他に使っていない入力。つながないときの既定は 1)
+    surfaceData.specularScale = ShadowShift;
 #endif
 
     Color = UniversalFragmentPBR_Toon(inputData, surfaceData, ShadeColor);

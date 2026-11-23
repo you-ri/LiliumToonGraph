@@ -28,6 +28,30 @@ inline half3 Toonize(half value, half threshold, half untoonizeRatio = 0)
         value);
 }
 
+// Toonize の境目を画面の 1 画素ぶん以上なだらかにする。段の幅が 1 画素より狭いと、境目が画素の階段(エイリアス)になる。
+// pixelWidth = 1 画素あたりの value の変化(fwidth)。これを段の半幅の下限にする。0 なら Toonize と同じ
+// linearize = 段の S 字を直線へ寄せる割合(マテリアルの Toony Lighting から求めた untoonizeRatio を渡す)。
+// 1 で範囲が 0〜1 の直線 = value そのものになり、URP の PBR と同じ値になる。0 なら今までの smoothstep のまま
+inline half ToonizeWidth(half value, half threshold, half untoonizeRatio, half pixelWidth, half linearize = 0)
+{
+    float lo = saturate(threshold - threshold * untoonizeRatio);
+    float hi = saturate(threshold + (1 - threshold) * untoonizeRatio);
+    float center = 0.5 * (lo + hi);
+    // 直線に寄せるほど段の境目のぼかし(アンチエイリアス)は要らないので、その分だけ下限を外す
+    float halfWidth = max(0.5 * (hi - lo), pixelWidth * (1 - linearize));
+    float a = center - halfWidth;
+    float b = center + halfWidth;
+    half stepped = smoothstep(a, b, value);
+    half straight = saturate((value - a) / max(b - a, 1e-4));
+    return lerp(stepped, straight, linearize);
+}
+
+// fwidth を使うので、フラグメントの、ループ(回数が画素ごとに違う)の外でだけ呼ぶ
+inline half ToonizeAA(half value, half threshold, half untoonizeRatio = 0)
+{
+    return ToonizeWidth(value, threshold, untoonizeRatio, fwidth(value));
+}
+
 
 // If lightmap is not defined than we evaluate GI (ambient + probes) from SH
 
@@ -442,7 +466,7 @@ half3 GlobalIllumination_Toon(BRDFData_Toon brdfData, BRDFData brdfDataClearCoat
 
     // begin toonize
     half3 toonizeReflectVector = lerp(viewDirectionWS, reflectVector, brdfData.toonize);
-    fresnelTerm = lerp(fresnelTerm, Toonize(fresnelTerm, 0.5, 0.1), 1-brdfData.toonize);
+    fresnelTerm = lerp(fresnelTerm, ToonizeAA(fresnelTerm, 0.5, 0.1), 1-brdfData.toonize);
     half toonizePerceptualRoughness = lerp(brdfData.perceptualRoughness, 1,  1-brdfData.toonize);
     // end toonize
 

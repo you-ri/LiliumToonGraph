@@ -1,10 +1,21 @@
 # Change Log
 
 ## [Unreleased]
+- Rendering Debugger のデバッグ表示でトゥーンのシェーダーがコンパイルできない不具合を修正。
+- GPU インスタンシング・GPU Resident Drawer で、ほかの物の行列やプローブを読むおそれがあった不具合を修正。
+- デカールの金属度がスペキュラの色に反映されない不具合を修正。
+- Occlusion が 1 でも環境光が 0.75 倍に暗くなっていた不具合を修正。環境光には Occlusion を半分だけ効かせる、という元の意図どおりにしました（環境光が今までより明るくなります）。
+- Toony Lighting を 0 にすると URP の PBR と同じ明るさになるように。陰影・ハイライト・SSS の段を直線に寄せ、直接光には Occlusion を掛けません。1 のときの見た目は変わりません。
 - トゥーンランプで影の階調を決められるように（Project Settings > Graphics > URP > Lilium Toon）。キーワード `_TOON_SHADE_SHIFT` のシェーダーだけが使います。
 - トゥーンランプで影の奥をさらに暗くできるように。横軸は光の裏側まで広げ、G に環境光と SSS の倍率を持たせます。
 - トゥーンランプの段階を使い分けられるように。縦の位置を Shade Toony の入力で渡します。
 - トゥーンランプの段の境目を縮小時に滑らかにするように。画素の大きさに合わせてランプをなだらかに読みます。
+- ふつうの反射（直接光のスペキュラと環境の反射）を弱める倍率を渡せるように。Shadow Shift の入力で渡し、キーワード `_TOON_SHADE_SHIFT` のシェーダーだけが使います。
+- 陰・SSS・ハイライト・ふちの反射のトゥーンの段の境目を、画面の 1 画素ぶんなだらかにするように。境目のガタガタ（エイリアス）を消します。追加ライトのハイライトは段のままです。
+- アウトライン（Scaled Max Distance）が遠くで細くなりすぎないように。ToonOutlineRenderFeature の Min Pixels で画面上の最低の太さを決めます（既定 1 画素・0 で無効）。
+- 主光源の影を見る点を光の側へずらせるように。すぐ前にある物の影だけを受けないようにできます。Curvature の入力で距離を渡し、キーワード `_TOON_SHADE_SHIFT` のシェーダーだけが使います。
+- 陰影の計算に使う位置をずらせるように。Toon Lighting (SmoothstepRamp) の入力 Position Offset で渡します（既定 0）。描く位置だけを動かす頂点の変形で、影や光がずれないようにするためのものです。
+- SSS の境目が陰の境目とずれていたのを修正。SSS にも影マップのずれを足し、陰と同じ所で切り替わるようにしました。
 - ToonOutlineRenderFeature のパスを記録するたびに GC Alloc が出ていたのを修正（描画関数が this を掴んでいてデリゲートを毎回作っていた）
 - URP のデカール（Decal Projector・DBuffer 方式）に対応。トゥーンの陰影を計算する前に、デカールの色・法線・金属/AO/滑らかさを塗り込む（Toon Lighting の両方のランプ）。URP Lit ターゲットが自分でもデカールを塗って PBR で照らし、Emission のトゥーン結果に足されてしまうので、ランプのファイルの末尾で `_DBUFFER` を消して止めている。使うにはレンダラーに Decal Renderer Feature（Technique = DBuffer）を足す。半透明（Toon (Transparent)）は URP の仕様でデカールを受けない。アウトラインには塗らない
 - 点光源・スポットライトを半径のある球として扱うようにした。減衰を 1/d² から 1/(d²+r²) にし、光源の中心が面に近づいても明るさが 1/r² で頭打ちになる（半径と同じ距離で元の半分）。プロジェクト設定（Lilium Toon）の Light Source Radius Enabled で有効にし（既定オン）、Default Light Source Radius（既定 0.5m）が全ライトに効く。ライトごとに変えるには `ToonLightSourceRadius` を付ける（0 でそのライトだけ URP のまま）。半径の配列は ToonOutlineRenderFeature のパスが URP の追加ライトと同じ番号で並べてカメラごとに `_ToonLightSourceRadius` へ入れる
